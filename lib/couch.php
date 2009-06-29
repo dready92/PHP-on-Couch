@@ -150,7 +150,7 @@ class couch {
 	}
 
 	/**
-	*send a quesry to the CouchDB server
+	*send a query to the CouchDB server
 	*
 	* @param string $method HTTP method to use (GET, POST, ...)
 	* @param string $url URL to fetch
@@ -173,7 +173,7 @@ class couch {
 		$raw_response = $this->_execute($request);
 		$this->_disconnect();
 
-    log_message('debug',"COUCH : Executed query $method $url");
+    //log_message('debug',"COUCH : Executed query $method $url");
 
 		return $raw_response;
 	}
