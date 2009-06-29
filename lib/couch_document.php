@@ -1,8 +1,27 @@
 <?PHP
+/*
+Copyright (C) 2009  Mickael Bailly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
 
 class couch_document {
 
-	/* own data here */
+	/**
+	* @var stdClass object internal data
+	*/
 	protected $__couch_data = NULL;
 
 	/**
@@ -23,6 +42,7 @@ class couch_document {
 	* @return couch_document $this
 	*/
 	public function load ( $id ) {
+		if ( !strlen($id) ) throw new InvalidArgumentException("No id given");
 		$this->__couch_data->fields = $this->__couch_data->client->doc_get($id);
 		return $this;
 	}
@@ -88,7 +108,7 @@ class couch_document {
 	public function get ( $key ) {
     //echo "get for $key\n";
 		$key = (string)$key;
-		if (!strlen($key) )	return FALSE;
+		if (!strlen($key) )	throw new InvalidArgumentException("No key given");
 		return property_exists( $this->__couch_data->fields,$key ) ? $this->__couch_data->fields->$key : NULL;
 	}
 
@@ -112,8 +132,8 @@ class couch_document {
 	*/
 	protected function set_one ($key, $value ) {
 		$key = (string)$key;
-		if ( $key == '_rev' )	throw new Exception("Can't set _rev field");
-		if ( $key == '_id' AND $this->get('_id') )	throw new Exception("Can't set _id field because it's already set");
+		if ( $key == '_rev' )	throw new InvalidArgumentException("Can't set _rev field");
+		if ( $key == '_id' AND $this->get('_id') )	throw new InvalidArgumentException("Can't set _id field because it's already set");
     //echo "setting $key to ".print_r($value,TRUE)."<BR>\n";
 		$this->__couch_data->fields->$key = $value;
 		return TRUE;
@@ -152,7 +172,7 @@ class couch_document {
 	public function set ( $key , $value = NULL ) {
     
 		if ( func_num_args() == 1 ) {
-			if ( !is_array($key) AND !is_object($key) )	throw new Exception("When second argument is null, first argument should ba an array or an object");
+			if ( !is_array($key) AND !is_object($key) )	throw new InvalidArgumentException("When second argument is null, first argument should ba an array or an object");
 			foreach ( $key as $one_key => $one_value ) {
 				$this->set_one($one_key,$one_value);
 			} 
@@ -163,17 +183,42 @@ class couch_document {
 		return TRUE;
 	}
 
+	/**
+	* PHP automagic setter
+	*
+	* modify a document property and store to the Server
+	*
+	* @link http://php.net/__set
+	*
+	* @param string $key name of the property to set
+	* @param mixed $value property value
+	*/
 	public function __set( $key , $value ) {
 		return $this->set($key,$value);
 	}
 
+	/**
+	* PHP automagic isset'er
+	*
+	*
+	* @link http://php.net/__isset
+	*
+	* @param string $key name of the property to test
+	*/
 	public function __isset($key) {
 		return property_exists($this->__couch_data->fields,$key);
 	}
 
+	/**
+	* deletes a document property
+	*
+	* @param string $key the key to remove
+	* @return boolean whether the removal process ran successfully
+	*/
 	public function remove($key) {
-		if ( $key == '_id' OR $key == '_rev' )
-			return FALSE;
+		$key = (string)$key;
+		if ( !strlen($key) )	throw new InvalidArgumentException("Can't remove a key without name");
+		if ( $key == '_id' OR $key == '_rev' )		return FALSE;
 		if ( isset($this->$key) ) {
 			unset($this->__couch_data->fields->$key);
 			$this->record();
@@ -181,6 +226,13 @@ class couch_document {
 		return TRUE;
 	}
 
+	/**
+	* PHP automagic unset'er
+	*
+	* @see remove()
+	* @param string $key the property to delete
+	* @return boolean whether the removal process ran successfully
+	*/
 	public function __unset($key) {
 		return $this->remove($key);
 	}

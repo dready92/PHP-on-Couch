@@ -1,12 +1,45 @@
 <?PHP
+/*
+Copyright (C) 2009  Mickael Bailly
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
+
+/**
+* couch class
+*
+* basics to implement JSON / REST / HTTP CouchDB protocol
+*
+*/
 class couch {
-	// couchdb server host
+	/**
+	* @var string database server hostname
+	*/
 	protected $hostname = '';
-	// couchdb server port
+	/**
+	* @var integer database server TCP port
+	*/
 	protected $port = 0;
-	// methodes HTTP autorisees
+	/**
+	* @var array allowed HTTP methods for REST dialog
+	*/
 	protected $HTTP_METHODS = array('GET','POST','PUT','DELETE','COPY');
-	// socket HTTP vers le serveur
+	/**
+	* @var resource HTTP servfer socket
+	* @see _connect()
+	*/
 	protected $socket = NULL;
 
 	/**
@@ -136,8 +169,7 @@ class couch {
 			$url = $url.'?'.http_build_query($parameters);
 
 		$request = $this->_build_request($method,$url,$data);
-		if ( !$this->_connect() )
-			return FALSE;
+		if ( !$this->_connect() )	return FALSE;
 		$raw_response = $this->_execute($request);
 		$this->_disconnect();
 

@@ -1,8 +1,41 @@
 <?PHP
+/*
+Copyright (C) 2009  Mickael Bailly
 
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+*/
+
+
+
+/**
+* CouchDB client class
+*
+* This class implements all required methods to use with a 
+* CouchDB server
+*
+*
+*/
 class couch_client extends couch {
 
+	/**
+	* @var string database server hostname
+	*/
   protected $dbname = '';
+	/**
+	* @var integer database server TCP port
+	*/
   protected $view_query = array();
 
 
@@ -424,16 +457,36 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
 	}
 }
 
+/**
+* customized Exception class for CouchDB errors
+*
+* this class uses : the Exception message to store the HTTP message sent by the server
+* the Exception code to store the HTTP status code sent by the server
+* and adds a method getBody() to fetch the body sent by the server (if any)
+*
+*/
 class couchException extends Exception {
-    // reponse couchDB une fois parsee
+    // couchDB response once parsed
     protected $couch_response = array();
 
-    // constructeur
+    /**
+		*class constructor
+		*
+		* @param string $raw_response HTTP response from the CouchDB server
+		*/
     function __construct($raw_response) {
         $this->couch_response = couch::parse_raw_response($raw_response);
         parent::__construct($this->couch_response['status_message'], $this->couch_response['status_code']);
     }
 
+		/**
+		* returns CouchDB server response body (if any)
+		*
+		* if the response's "Content-Type" is set to "application/json", the
+		* body is json_decode()d
+		*
+		* @return string|object|null CouchDB server response
+		*/
     function getBody() {
         return $this->couch_response['body'];
     }
