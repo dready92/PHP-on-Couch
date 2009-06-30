@@ -132,8 +132,11 @@ class couch_document {
 	*/
 	protected function set_one ($key, $value ) {
 		$key = (string)$key;
+		if ( !strlen($key) )  throw new InvalidArgumentException("property name can't be empty");
 		if ( $key == '_rev' )	throw new InvalidArgumentException("Can't set _rev field");
 		if ( $key == '_id' AND $this->get('_id') )	throw new InvalidArgumentException("Can't set _id field because it's already set");
+		if ( substr($key,0,1) == '_' AND !in_array($key,couch_client::$allowed_underscored_properties) )
+			throw new InvalidArgumentException("Property $key can't begin with an underscore");
     //echo "setting $key to ".print_r($value,TRUE)."<BR>\n";
 		$this->__couch_data->fields->$key = $value;
 		return TRUE;

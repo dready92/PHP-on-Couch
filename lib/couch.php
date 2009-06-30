@@ -67,6 +67,7 @@ class couch {
 	* @return array CouchDB response
 	*/
 	public static function parse_raw_response($raw_data, $json_as_array = FALSE) {
+		if ( !strlen($raw_data) ) throw new InvalidArgumentException("no data to parse");
 		$response = array();
 		list($headers, $body) = explode("\r\n\r\n", $raw_data);
 		$status_line = reset(explode("\n",$headers));
@@ -160,10 +161,8 @@ class couch {
 	* @return string|false server response on success, false on error
 	*/
 	public function query ( $method, $url, $parameters = array() , $data = NULL ) {
-		if ( !in_array($method, $this->HTTP_METHODS )    ) {
+		if ( !in_array($method, $this->HTTP_METHODS )    )
 			throw new Exception("Bad HTTP method: $method");
-			return FALSE;
-		}
 
 		if ( is_array($parameters) AND count($parameters) )
 			$url = $url.'?'.http_build_query($parameters);
@@ -188,7 +187,9 @@ class couch {
 	* @return string server response
 	*/
   public function store_file ( $url, $file, $content_type ) {
-
+	if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
+	if ( !strlen($file) OR !is_file($file) OR !is_readable($file) )	throw new InvalidArgumentException("Attachment file does not exist or is not readable");
+	if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
     $req  = "PUT $url HTTP/1.0\r\nHost: {$this->hostname}\r\n";
 	  $req .= "Accept: application/json,text/html,text/plain,*/*\r\n";
   	$req .= 'Content-Length: '.filesize($file)."\r\n";
@@ -215,6 +216,8 @@ class couch {
 	* @return string server response
 	*/
   public function store_as_file($url,$data,$content_type) {
+	if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
+	if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
     $req  = "PUT $url HTTP/1.0\r\nHost: {$this->hostname}\r\n";
 	  $req .= "Accept: application/json,text/html,text/plain,*/*\r\n";
   	$req .= 'Content-Length: '.strlen($data)."\r\n";

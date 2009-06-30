@@ -38,6 +38,10 @@ class couch_client extends couch {
 	*/
   protected $view_query = array();
 
+  /**
+  * @var array list of properties beginning with '_' and allowed in CouchDB objects
+  */
+  public static $allowed_underscored_properties = array('_id','_rev','_attachments');
 
 	/**
 	* class constructor
@@ -47,6 +51,7 @@ class couch_client extends couch {
 	* @param string $dbname CouchDB database name
 	*/
   public function __construct($hostname, $port, $dbname) {
+	 if ( !strlen($dbname) )	throw new InvalidArgumentException("Database name can't be empty");
     parent::__construct($hostname,$port);
     $this->dbname = $dbname;
   }
@@ -120,9 +125,9 @@ class couch_client extends couch {
       $back = $this->db_infos();
       return TRUE;
     } catch ( Exception $e ) {
-      // si le status code est 404 la base n'éxiste pas
+      // if status code = 404 database does not exist
       if ( $e->getCode() == 404 )   return FALSE;
-      // sinon il y a eu une autre erreur : nous remontons l'exception
+      // we met another exception so we throw it
       throw $e;
     }
   }
@@ -135,7 +140,7 @@ class couch_client extends couch {
 	*/
   public function doc_get ($id) {
 		if ( !strlen($id) ) 
-			throw new Exception ("Document ID is empty");
+			throw new InvalidArgumentException ("Document ID is empty");
 
     if ( preg_match('/^_design/',$id) )
       $url = '/'.urlencode($this->dbname).'/_design/'.urlencode(str_replace('_design/','',$id));
@@ -152,8 +157,11 @@ class couch_client extends couch {
 	* @return object CouchDB document storage response
 	*/
   public function doc_store ( $doc ) {
-		if ( !is_object($doc) )
-			throw new Exception ("Document should be an object");
+		if ( !is_object($doc) )	throw new InvalidArgumentException ("Document should be an object");
+		foreach ( array_keys(get_object_vars($doc)) as $key ) {
+			if ( substr($key,0,1) == '_' AND !in_array($key,couch_client::$allowed_underscored_properties) )
+				throw new InvalidArgumentException("Property $key can't begin with an underscore");
+		}
     $method = 'POST';
     $url  = '/'.urlencode($this->dbname);
     if ( !empty($doc->_id) )    {
@@ -172,9 +180,9 @@ class couch_client extends couch {
 	*/
   public function doc_copy($id,$new_id) {
 		if ( !strlen($id) )
-			throw new Exception ("Document ID is empty");
+			throw new InvalidArgumentException ("Document ID is empty");
 		if ( !strlen($new_id) ) 
-			throw new Exception ("New document ID is empty");
+			throw new InvalidArgumentException ("New document ID is empty");
 
     $method = 'COPY';
     $url  = '/'.urlencode($this->dbname);
@@ -194,8 +202,8 @@ class couch_client extends couch {
 	* @return object CouchDB attachment storage response
 	*/
   public function as_attachment_store($doc,$data,$filename,$content_type = 'application/octet-stream') {
-		if ( !is_object($doc) )	throw new Exception ("Document should be an object");
-    if ( !$doc->_id )       throw new Exception ("Document should have an ID");
+		if ( !is_object($doc) )	throw new InvalidArgumentException ("Document should be an object");
+    if ( !$doc->_id )       throw new InvalidArgumentException ("Document should have an ID");
     $url  = '/'.urlencode($this->dbname).'/'.urlencode($doc->_id).'/'.urlencode($filename);
     if ( $doc->_rev ) $url.='?rev='.$doc->_rev;
     $raw = $this->store_as_file($url,$data,$content_type);
@@ -215,9 +223,9 @@ class couch_client extends couch {
 	* @return object CouchDB attachment storage response
 	*/
   public function attachment_store($doc,$file,$content_type = 'application/octet-stream',$filename = null) {
-		if ( !is_object($doc) )	throw new Exception ("Document should be an object");
-    if ( !$doc->_id )       throw new Exception ("Document should have an ID");
-    if ( !is_file($file) )  throw new Exception ("File $file does not exist");
+		if ( !is_object($doc) )	throw new InvalidArgumentException ("Document should be an object");
+    if ( !$doc->_id )       throw new InvalidArgumentException ("Document should have an ID");
+    if ( !is_file($file) )  throw new InvalidArgumentException ("File $file does not exist");
     $url  = '/'.urlencode($this->dbname).'/'.urlencode($doc->_id).'/';
     $url .= empty($filename) ? basename($file) : $filename ;
     if ( $doc->_rev ) $url.='?rev='.$doc->_rev;
@@ -234,9 +242,9 @@ class couch_client extends couch {
 	* @return object CouchDB attachment removal response
 	*/
   public function attachment_delete($doc,$attachment_name ) {
-		if ( !is_object($doc) )	throw new Exception ("Document should be an object");
-    if ( !$doc->_id )       throw new Exception ("Document should have an ID");
-    if ( !strlen($attachment_name) )  throw new Exception ("Attachment name not set");
+		if ( !is_object($doc) )	throw new InvalidArgumentException ("Document should be an object");
+    if ( !$doc->_id )       throw new InvalidArgumentException ("Document should have an ID");
+    if ( !strlen($attachment_name) )  throw new InvalidArgumentException ("Attachment name not set");
     $url  = '/'.urlencode($this->dbname).
             '/'.urlencode($doc->_id).
             '/'.urlencode($attachment_name);
@@ -252,7 +260,7 @@ class couch_client extends couch {
 	* @return object CouchDB document removal response
 	*/
   public function doc_delete ( $doc ) {
-		if ( !is_object($doc) )	throw new Exception ("Document should be an object");
+		if ( !is_object($doc) )	throw new InvalidArgumentException ("Document should be an object");
     if ( empty($doc->_id)  OR empty($doc->_rev) )    {
       throw new Exception("Document should contain _id and _rev");
       return FALSE;
@@ -407,7 +415,7 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
 	* @return object CouchDB view query response
 	*/
   public function get_view ( $id, $name ) {
-		if ( !$id OR !$name )    throw new Exception("You should specify view id and name");
+		if ( !$id OR !$name )    throw new InvalidArgumentException("You should specify view id and name");
 		$url = '/'.urlencode($this->dbname).'/_design/'.urlencode($id).'/_view/'.urlencode($name);
 		$view_query = $this->view_query;
 		$this->view_query = array();
@@ -424,8 +432,8 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
 	* @return object CouchDB list query response
 	*/
   public function get_list ( $id, $name, $view_name ) {
-		if ( !$id OR !$name )    throw new Exception("You should specify list id and name");
-		if ( !$view_name )    throw new Exception("You should specify view name");
+		if ( !$id OR !$name )    throw new InvalidArgumentException("You should specify list id and name");
+		if ( !$view_name )    throw new InvalidArgumentException("You should specify view name");
 		$url = '/'.urlencode($this->dbname).'/_design/'.urlencode($id).'/_list/'.urlencode($name).'/'.urlencode($view_name);
 		$view_query = $this->view_query;
 		$this->view_query = array();
