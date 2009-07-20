@@ -59,4 +59,16 @@ Example :
      )
      */
 
+Get database URI
+================
+
+The method **db_uri()** sends back a string giving the HTTP connection URL to the database server.
+
+Example :
+
+    echo $client->db_uri();
+    /*
+    db.example.com:5984/testdb
+    */
+
 

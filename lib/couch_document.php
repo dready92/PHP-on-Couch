@@ -91,6 +91,17 @@ class couch_document {
 	}
 
 	/**
+	* returns document URI
+	*
+	* example : couch.server.com:5984/mydb/thisdoc
+	*
+	* @return string document URI
+	*/
+	public function get_uri() {
+		return $this->__couch_data->client->db_uri().'/'.$this->id();
+	}
+
+	/**
 	* returns document id (or null)
 	*
 	* @return string document id

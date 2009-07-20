@@ -116,6 +116,17 @@ class couch_client extends couch {
   }
 
 	/**
+	*return database uri
+	*
+	* example : couch.server.com:5984/mydb
+	*
+	* @return string database URI
+	*/
+	public function db_uri() {
+		return $this->hostname.':'.$this->port.'/'.$this->dbname;
+	}
+
+	/**
 	* test if the database already exists
 	*
 	* @return boolean wether or not the database exist
@@ -325,6 +336,31 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
 	* CouchDB query option
 	*
 	* @link http://wiki.apache.org/couchdb/HTTP_view_API
+	* @param string $value document id
+	* @return couch_client $this
+	*/
+  public function startkey_docid($value) {
+    $this->view_query['startkey_docid'] = (string)$value;
+    return $this;
+  }
+
+	/**
+	* CouchDB query option
+	*
+	* @link http://wiki.apache.org/couchdb/HTTP_view_API
+	* @param string $value document id
+	* @return couch_client $this
+	*/
+  public function endkey_docid($value) {
+    $this->view_query['endkey_docid'] = (string)$value;
+    return $this;
+  }
+
+
+	/**
+	* CouchDB query option
+	*
+	* @link http://wiki.apache.org/couchdb/HTTP_view_API
 	* @param ineteger $value maximum number of items to fetch
 	* @return couch_client $this
 	*/
@@ -443,13 +479,23 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
 	/**
 	* returns all documents contained in the database
 	*
+	* If $keys is set, a POST request is sent and only documents whose ids are in $keys are sent back
+	*
+	* @param array $keys list of ids to retrieve
+	*
 	* @return object CouchDB _all_docs response
 	*/
-	public function get_all_docs () {
+	public function get_all_docs ( $keys = array() ) {
 		$url = '/'.urlencode($this->dbname).'/_all_docs';
 		$view_query = $this->view_query;
 		$this->view_query = array();
-    return $this->_query_and_test ('GET', $url, array(200),$view_query);
+		$method = 'GET';
+		$data = null;
+		if ( count($keys) ) {
+			$method = 'POST';
+			$data = json_encode(array('keys'=>$keys));
+		}
+    return $this->_query_and_test ($method, $url, array(200),$view_query,$data);
 	}
 
 	/**

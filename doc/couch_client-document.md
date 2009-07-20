@@ -48,6 +48,18 @@ Example :
     }
     echo $doc->_id.' revision '.$doc->_rev;
 
+Getting a document URI
+======================
+
+The method **get_uri()** sends back a string giving the current document URI.
+
+Example :
+
+    echo $doc->get_uri();
+    /*
+    db.example.com:5984/testdb/dome_doc_id
+    */
+
 Storing a document
 ==================
 
@@ -191,5 +203,24 @@ Example :
 
     $doc = $client->get('BlogPost5676');
     $ok = $client->attachment_delete($doc,'GoogleHomepage.html');
+
+
+Bulk operations
+===============
+
+A bulk operation is a unique query performing actions on several documents.
+
+Bulk documents retrieval
+------------------------
+
+To retrieve several documents in one go, knowing their IDs, use the method **get_all_docs($ids)**. $ids is an array of documents IDs. This function acts like a view, so the output is the view output of CouchDB, and you should use "include_docs(TRUE)" to have documents contents.
+
+Example :
+
+    $view = $client->include_docs(true)->get_all_docs( array('BlogPost5676','BlogComments5676') );
+    foreach ( $view->rows as $row ) {
+      echo "doc id :".$row->doc->_id."\n";
+    }
+
 
 
