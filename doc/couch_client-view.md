@@ -11,7 +11,7 @@ Example
     $design_doc->_id = '_design/all';
     $design_doc->language = 'javascript';
     $design_doc->views = array ( 'by_date',$view_fn);
-    $client->store($design_doc);
+    $client->doc_store($design_doc);
 
 Basics of view retrieval
 ========================
@@ -62,12 +62,12 @@ PHP on Couch implements chainable methods to add query parameters. The method na
 
 Example querying a view with a startkey, a limit and include_docs
 
-    $response = $client->startkey(100000000)->limit(100)->include_docs(TRUE)->get('all','by_date');
+    $response = $client->startkey(100000000)->limit(100)->include_docs(TRUE)->get_view('all','by_date');
 
 Which is the same as :
 
     $client->startkey(100000000);
     $client->limit(100);
     $client->include_docs(TRUE);
-    $response = $client->get('all','by_date');
+    $response = $client->get_view('all','by_date');
 

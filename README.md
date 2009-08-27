@@ -93,7 +93,7 @@ Quick-start guide
 Feedback
 ========
 
-Don't hesitate to submit feedback, bugs and feature requests !
+Don't hesitate to submit feedback, bugs and feature requests ! My contact address is mickael dot bailly at free dot fr
 
 Resources
 =========

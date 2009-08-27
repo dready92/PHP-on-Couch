@@ -34,9 +34,15 @@ class couch_client extends couch {
 	*/
   protected $dbname = '';
 	/**
-	* @var integer database server TCP port
+	* @var array CouchDB view query options
 	*/
   protected $view_query = array();
+
+	/**
+	* @var bool option to return couchdb view results as couch_documents objects
+	*/
+  protected $results_as_cd = false;
+
 
   /**
   * @var array list of properties beginning with '_' and allowed in CouchDB objects
@@ -443,6 +449,22 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
   }
 
 	/**
+	* returns couchDB view results as couch_documents objects
+	*
+	* implies include_docs(true)
+	*
+	* when view result is parsed, view documents are translated to objects and sent back
+	*
+	* @view  results_as_couch_documents()
+	* @return couch_client $this
+	*
+	*/
+	public function as_cd() {
+		$this->results_as_cd = true;
+		return $this;
+	}
+
+	/**
 	* request a view from the CouchDB server
 	*
 	* @link http://wiki.apache.org/couchdb/HTTP_view_API
@@ -453,9 +475,62 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
   public function get_view ( $id, $name ) {
 		if ( !$id OR !$name )    throw new InvalidArgumentException("You should specify view id and name");
 		$url = '/'.urlencode($this->dbname).'/_design/'.urlencode($id).'/_view/'.urlencode($name);
+		if ( $this->results_as_cd )		$this->include_docs(true);
 		$view_query = $this->view_query;
+		$results_as_cd = $this->results_as_cd;
 		$this->view_query = array();
-    return $this->_query_and_test ('GET', $url, array(200),$view_query);
+		$this->results_as_cd = false;
+		if ( ! $results_as_cd )
+	    return $this->_query_and_test ('GET', $url, array(200),$view_query);
+		return $this->results_as_couch_documents (
+							$this->_query_and_test ('GET', $url, array(200),$view_query)
+						);
+	}
+	/**
+	* returns couchDB view results as couch_documents objects
+	*
+	* - for string view keys, the object is found on "view key" index
+	*			ex : view returns
+	*			<code>[ "client" : null , "client2" : null ]</code>
+	* 		is translated to :
+	*			array ( 'client' => array(couch_document) , 'client2' => array(couch_document) )
+	*
+	* - for array view keys, the object key in the result array is the last key of the view
+	*			ex : view returns
+	*			<code>[ [ "#44556643", "client" ] : null , [ "#65745767566","client2" : null ]</code>
+	* 		is translated to :
+	*			array ( 'client' => array(couch_document) , 'client2' => array(couch_document) )
+	*
+	*	@param stdClass couchDb view resultset
+	* @return array array of couch_document objects
+	*/
+	public function results_as_couch_documents ( $results ) {
+		if ( !$results->rows or !is_array($results->rows) )	return FALSE;
+		$back = array();
+		foreach ( $results->rows as $row ) {	// should have $row->key & $row->doc
+			if ( !$row->key or !$row->doc ) 	return false;
+			// create couch_document
+			$cd = new couch_document($this);
+			$cd->load_with_object($row->doc);
+			
+			// set key name
+			if ( is_string($row->key) ) $key = $row->key;
+			elseif ( is_array($row->key) ) {
+				if ( !is_array(end($row->key)) && !is_object(end($row->key)) ) 
+					$key = end($row->key);
+				else
+					continue;
+			}
+			
+			// set value in result array
+			if ( isset($back[$key]) ) {
+				if ( is_array($back[$key]) ) 	$back[$key][] = $cd;
+				else													$back[$key]   = array($back[$key],$cd);
+			} else {
+				$back[$key] = $cd;
+			}
+		}
+		return $back;
 	}
 
 	/**
@@ -472,6 +547,7 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
 		if ( !$view_name )    throw new InvalidArgumentException("You should specify view name");
 		$url = '/'.urlencode($this->dbname).'/_design/'.urlencode($id).'/_list/'.urlencode($name).'/'.urlencode($view_name);
 		$view_query = $this->view_query;
+		$this->results_as_cd = false;
 		$this->view_query = array();
     return $this->_query_and_test ('GET', $url, array(200),$view_query);
 	}

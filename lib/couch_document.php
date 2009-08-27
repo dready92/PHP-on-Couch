@@ -57,6 +57,7 @@ class couch_document {
 	*/
   public function load_with_object($doc) {
     $this->__couch_data->fields = clone $doc;
+		return $this;
   }
 
 	/**
@@ -65,7 +66,7 @@ class couch_document {
 	* @static
 	* @param couch_client $client couch_client instance
 	* @param string $id id of the document to load
-	* @return couch_docuument couch document loaded with data of document $id
+	* @return couch_document couch document loaded with data of document $id
 	*/
 	public static function get_instance(couch_client $client,$id) {
 		$back = new couch_document($client);
