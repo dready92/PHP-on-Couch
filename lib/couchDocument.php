@@ -17,7 +17,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-class couch_document {
+class couchDocument {
 
 	/**
 	* @var stdClass object internal data
@@ -43,7 +43,7 @@ class couch_document {
 	*/
 	public function load ( $id ) {
 		if ( !strlen($id) ) throw new InvalidArgumentException("No id given");
-		$this->__couch_data->fields = $this->__couch_data->client->doc_get($id);
+		$this->__couch_data->fields = $this->__couch_data->client->getDoc($id);
 		return $this;
 	}
 
@@ -55,7 +55,7 @@ class couch_document {
 	* @param object $doc CouchDB document (should have $doc->_id  , $doc->_rev, ...)
 	* @return couch_document $this
 	*/
-  public function load_with_object($doc) {
+  public function loadFromOject($doc) {
     $this->__couch_data->fields = clone $doc;
 		return $this;
   }
@@ -68,7 +68,7 @@ class couch_document {
 	* @param string $id id of the document to load
 	* @return couch_document couch document loaded with data of document $id
 	*/
-	public static function get_instance(couch_client $client,$id) {
+	public static function getInstance(couch_client $client,$id) {
 		$back = new couch_document($client);
 		return $back->load($id);
 	}
@@ -78,7 +78,7 @@ class couch_document {
 	*
 	* @return array list of keys available in this document
 	*/
-	public function get_keys ( ) {
+	public function getKeys ( ) {
 		return array_keys(get_object_vars($this->__couch_data->fields));
 	}
 
@@ -87,7 +87,7 @@ class couch_document {
 	*
 	* @return object all fields of the document
 	*/
-  public function get_fields () {
+  public function getFields () {
 		return clone $this->__couch_data->fields;
 	}
 
@@ -98,8 +98,8 @@ class couch_document {
 	*
 	* @return string document URI
 	*/
-	public function get_uri() {
-		return $this->__couch_data->client->db_uri().'/'.$this->id();
+	public function getUri() {
+		return $this->__couch_data->client->getDatabaseUri().'/'.$this->id();
 	}
 
 	/**
@@ -142,7 +142,7 @@ class couch_document {
 	* @param mixed $value field value
 	* @return boolean TRUE
 	*/
-	protected function set_one ($key, $value ) {
+	protected function setOne ($key, $value ) {
 		$key = (string)$key;
 		if ( !strlen($key) )  throw new InvalidArgumentException("property name can't be empty");
 		if ( $key == '_rev' )	throw new InvalidArgumentException("Can't set _rev field");
@@ -160,7 +160,7 @@ class couch_document {
 	*
 	*/
 	protected function record() {
-		$response = $this->__couch_data->client->doc_store($this->__couch_data->fields);
+		$response = $this->__couch_data->client->storeDoc($this->__couch_data->fields);
 		$this->__couch_data->fields->_id = $response->id;
 		$this->__couch_data->fields->_rev = $response->rev;
 	}
@@ -189,10 +189,10 @@ class couch_document {
 		if ( func_num_args() == 1 ) {
 			if ( !is_array($key) AND !is_object($key) )	throw new InvalidArgumentException("When second argument is null, first argument should ba an array or an object");
 			foreach ( $key as $one_key => $one_value ) {
-				$this->set_one($one_key,$one_value);
+				$this->setOne($one_key,$one_value);
 			} 
 		} else {
-			$this->set_one($key,$value);
+			$this->setOne($key,$value);
 		}
 		$this->record();
 		return TRUE;

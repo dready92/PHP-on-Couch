@@ -66,7 +66,7 @@ class couch {
 	* @param boolean $json_as_array is true, the json response will be decoded as an array. Is false, it's decoded as an object
 	* @return array CouchDB response
 	*/
-	public static function parse_raw_response($raw_data, $json_as_array = FALSE) {
+	public static function parseRawResponse($raw_data, $json_as_array = FALSE) {
 		if ( !strlen($raw_data) ) throw new InvalidArgumentException("no data to parse");
 		$response = array();
 		list($headers, $body) = explode("\r\n\r\n", $raw_data);
@@ -93,7 +93,7 @@ class couch {
 	* @param string|object|array $data the request body. If it's an array or an object, $data is json_encode()d
 	* @return string HTTP request
 	*/
-	protected function _build_request($method,$url,$data) {
+	protected function _buildRequest($method,$url,$data) {
 		if ( is_object($data) OR is_array($data) )
 			$data = json_encode($data);
 		$req = "$method $url HTTP/1.0\r\nHost: {$this->hostname}\r\n";
@@ -167,7 +167,7 @@ class couch {
 		if ( is_array($parameters) AND count($parameters) )
 			$url = $url.'?'.http_build_query($parameters);
 
-		$request = $this->_build_request($method,$url,$data);
+		$request = $this->_buildRequest($method,$url,$data);
 		if ( !$this->_connect() )	return FALSE;
 		$raw_response = $this->_execute($request);
 		$this->_disconnect();
@@ -186,7 +186,7 @@ class couch {
 	*	
 	* @return string server response
 	*/
-  public function store_file ( $url, $file, $content_type ) {
+  public function storeFile ( $url, $file, $content_type ) {
 	if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
 	if ( !strlen($file) OR !is_file($file) OR !is_readable($file) )	throw new InvalidArgumentException("Attachment file does not exist or is not readable");
 	if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
@@ -215,7 +215,7 @@ class couch {
 	*	
 	* @return string server response
 	*/
-  public function store_as_file($url,$data,$content_type) {
+  public function storeAsFile($url,$data,$content_type) {
 	if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
 	if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
     $req  = "PUT $url HTTP/1.0\r\nHost: {$this->hostname}\r\n";

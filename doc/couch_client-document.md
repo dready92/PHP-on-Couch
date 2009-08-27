@@ -3,11 +3,11 @@ This section details the available methods to work with documents
 Getting all documents
 =====================
 
-The method **get_all_docs()** retrieve all documents from the database. In fact it only retrieve document IDs, unless you specify the server to include the documents using the [View query parameters syntax](http://dready.byethost31.com/index.php/display/view/196).
+The method **getAllDocs()** retrieve all documents from the database. In fact it only retrieve document IDs, unless you specify the server to include the documents using the [View query parameters syntax](http://dready.byethost31.com/index.php/display/view/196).
 
 Example :
     
-    $all_docs = $client->get_all_docs();
+    $all_docs = $client->getAllDocs();
     echo "Database got ".$all_docs->total_rows." documents.<BR>\n";
     foreach ( $all_docs->rows as $row ) {
         echo "Document ".$row->id."<BR>\n";
@@ -16,11 +16,11 @@ Example :
 Getting documents by update sequence
 ====================================
 
-The method **get_all_docs_by_seq()** retrieval of actions on the database server : whenever a document is stored or deleted, CouchDB updates a sequence number and record the action.
+The method **getAllDocsBySeq()** retrieval of actions on the database server : whenever a document is stored or deleted, CouchDB updates a sequence number and record the action.
 
 Example :
 
-    print_r($client->get_all_docs_by_seq());
+    print_r($client->getAllDocsBySeq());
     /*
     stdClass ( "total_rows" => 4, "offset" => 0, "rows" => array (
         stdClass ( "id" => "doc1", "key" => "1", "value"=> stdClass ("rev" =>"1-4124667444")),
@@ -33,14 +33,14 @@ Example :
 Getting a document by ID
 ========================
 
-The method **doc_get($id)** gives back the document that got ID $id, if it exists. Note that if the document does not exist, the method will throw an error.
+The method **getDoc($id)** gives back the document that got ID $id, if it exists. Note that if the document does not exist, the method will throw an error.
 
 The document is sent back as an HTTP object of class [stdClass](http://fr3.php.net/manual/en/reserved.classes.php).
 
 Example :
 
     try {
-        $doc = $client->doc_get("some_doc_id");
+        $doc = $client->getDoc("some_doc_id");
     } catch ( Exception $e ) {
         if ( $e->getCode() == 404 ) {
            echo "Document some_doc_id does not exist !";
@@ -51,11 +51,11 @@ Example :
 Getting a document URI
 ======================
 
-The method **get_uri()** sends back a string giving the current document URI.
+The method **getUri()** sends back a string giving the current document URI.
 
 Example :
 
-    echo $doc->get_uri();
+    echo $doc->getUri();
     /*
     db.example.com:5984/testdb/dome_doc_id
     */
@@ -63,7 +63,7 @@ Example :
 Storing a document
 ==================
 
-The method **doc_store($doc)** store a document on the CouchDB server. $doc should be an object. If the property $doc->_rev is set, the method understand that it's an update, and as so requires the property $doc->_id to be set. If the property $doc->_rev is not set, the method checks for the existance of property $doc->_id and initiate the appropriate request.
+The method **storeDoc($doc)** store a document on the CouchDB server. $doc should be an object. If the property $doc->_rev is set, the method understand that it's an update, and as so requires the property $doc->_id to be set. If the property $doc->_rev is not set, the method checks for the existance of property $doc->_id and initiate the appropriate request.
 
 The response of this method is the CouchDB server response. In other words if the request ends successfully the returned object should be :
 
@@ -74,19 +74,20 @@ Example : creating a document without specifying id
     $new_doc = new stdClass();
     $new_doc->title = "Some content";
     try {
-        $response = $client->doc_store($new_doc);
+        $response = $client->storeDoc($new_doc);
     } catch (Exception $e) {
         echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
     }
     echo "Doc recorded. id = ".$response->id." and revision = ".$response->rev."<br>\n";
     // Doc recorded. id = 0162ff06747761f6d868c05b7aa8500f and revision = 1-249007504
+
 Example : creating a document specifying the id
 
     $new_doc = new stdClass();
     $new_doc->title = "Some content";
     $new_doc->id = "BlogPost6576";
     try {
-        $response = $client->doc_store($new_doc);
+        $response = $client->storeDoc($new_doc);
     } catch (Exception $e) {
         echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
     }
@@ -97,7 +98,7 @@ Example : updating an existing document :
 
     // get the document
     try {
-        $doc = $client->doc_get('BlogPost6576');
+        $doc = $client->getDoc('BlogPost6576');
     } catch (Exception $e) {
         echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
     }
@@ -108,7 +109,7 @@ Example : updating an existing document :
 
     // update the document on CouchDB server
     try {
-        $response = $client->doc_store($doc);
+        $response = $client->storeDoc($doc);
     } catch (Exception $e) {
         echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
     }
@@ -119,19 +120,19 @@ Example : updating an existing document :
 Deleting a document
 ===================
 
-The method **doc_delete ( $doc )** permanently removes $doc from the CouchDB server. $doc should be an object containing at least _id and _rev properties.
+The method **deleteDoc ( $doc )** permanently removes $doc from the CouchDB server. $doc should be an object containing at least _id and _rev properties.
 
 Example :
 
     // get the document
     try {
-        $doc = $client->doc_get('BlogPost6576');
+        $doc = $client->getDoc('BlogPost6576');
     } catch (Exception $e) {
         echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
     }
     // permanently remove the document
     try {
-        $client->doc_delete($doc);
+        $client->deleteDoc($doc);
     } catch (Exception $e) {
         echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
     }
@@ -140,7 +141,7 @@ Example :
 Copying a document
 ==================
 
-The **doc_copy($id,$new_id)** method provides an handy way to copy a document. $id is the id of the document to copy. $new_id is the id of the new document.
+The **copyDoc($id,$new_id)** method provides an handy way to copy a document. $id is the id of the document to copy. $new_id is the id of the new document.
 
 Upon success, this method returns the CouchDB server response, which has the main form than a document storage :
 
@@ -149,7 +150,7 @@ Upon success, this method returns the CouchDB server response, which has the mai
 Example :
 
     try {
-        $response = $client->doc_copy('BlogPost6576','CopyOfBlogPost6576');
+        $response = $client->copyDoc('BlogPost6576','CopyOfBlogPost6576');
     } catch (Exception $e) {
         echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
     }
@@ -162,7 +163,7 @@ There is two methods handling attachments, it depends whether the file to send a
 On-disk files to attachments
 ----------------------------
 
-The method **attachment_store($doc,$file,$content_type = 'application/octet-stream',$filename = null) ** handles the process of storing an attachment on a CouchDB document.
+The method **storeAttachment($doc,$file,$content_type = 'application/octet-stream',$filename = null) ** handles the process of storing an attachment on a CouchDB document.
 
 * **$doc** is a PHP object containing at least the properties _id ans _rev
 * **$file** is the complete path to the file on disk
@@ -171,15 +172,15 @@ The method **attachment_store($doc,$file,$content_type = 'application/octet-stre
 
 Example :
 
-    $doc = $client->get('BlogPost5676');
-    $ok = $client->attachment_store($doc,'/etc/resolv.conf','text/plain', 'my-resolv.conf');
+    $doc = $client->getDoc('BlogPost5676');
+    $ok = $client->storeAttachment($doc,'/etc/resolv.conf','text/plain', 'my-resolv.conf');
     print_r($ok);
     // stdClass ( "ok" => true, "id" => "BlogPost5676" , "rev" => "5-2342345476" )
 
 PHP data to attachments
 ----------------------------
 
-The method **as_attachment_store($doc,$data,$filename,$content_type = 'application/octet-stream')** records as a CouchDB document's attachment the content of a PHP variable.
+The method **storeAsAttachment($doc,$data,$filename,$content_type = 'application/octet-stream')** records as a CouchDB document's attachment the content of a PHP variable.
 
 * **$doc** is a PHP object containing at least the properties _id ans _rev
 * **$data** is the data (the content of the attachment)
@@ -188,21 +189,21 @@ The method **as_attachment_store($doc,$data,$filename,$content_type = 'applicati
 
 Example :
 
-    $doc = $client->get('BlogPost5676');
+    $doc = $client->getDoc('BlogPost5676');
     $google_home=file_get_contents('http://www.google.com/');
-    $ok = $client->as_attachment_store($doc,$google_home,'text/html', 'GoogleHomepage.html');
+    $ok = $client->storeAsAttachment($doc,$google_home,'text/html', 'GoogleHomepage.html');
     print_r($ok);
     // stdClass ( "ok" => true, "id" => "BlogPost5676" , "rev" => "5-2342345476" )
 
 Delete a document attachment
 ============================
 
-the method **attachment_delete($doc,$attachment_name )** delete an attachment from a CouchDB document. $doc is an object with, at least, _id and _rev properties, and $attachment_name is the name of the attachment to delete.
+the method **deleteAttachment($doc,$attachment_name )** delete an attachment from a CouchDB document. $doc is an object with, at least, _id and _rev properties, and $attachment_name is the name of the attachment to delete.
 
 Example :
 
-    $doc = $client->get('BlogPost5676');
-    $ok = $client->attachment_delete($doc,'GoogleHomepage.html');
+    $doc = $client->getDoc('BlogPost5676');
+    $ok = $client->deleteAttachment($doc,'GoogleHomepage.html');
 
 
 Bulk operations
@@ -213,11 +214,11 @@ A bulk operation is a unique query performing actions on several documents.
 Bulk documents retrieval
 ------------------------
 
-To retrieve several documents in one go, knowing their IDs, use the method **get_all_docs($ids)**. $ids is an array of documents IDs. This function acts like a view, so the output is the view output of CouchDB, and you should use "include_docs(TRUE)" to have documents contents.
+To retrieve several documents in one go, knowing their IDs, use the method **getAllDocs($ids)**. $ids is an array of documents IDs. This function acts like a view, so the output is the view output of CouchDB, and you should use "include_docs(TRUE)" to have documents contents.
 
 Example :
 
-    $view = $client->include_docs(true)->get_all_docs( array('BlogPost5676','BlogComments5676') );
+    $view = $client->include_docs(true)->getAllDocs( array('BlogPost5676','BlogComments5676') );
     foreach ( $view->rows as $row ) {
       echo "doc id :".$row->doc->_id."\n";
     }

@@ -3,50 +3,50 @@ This section give details on actions on the CouchDB server through PHP on Couch.
 List databases
 ==============
 
-The method **dbs_list()** lists the available databases on the CouchDB server.
+The method **listDatabases()** lists the available databases on the CouchDB server.
 
 Example :
 
-    $dbs = $client->dbs_list();
+    $dbs = $client->listDatabases();
     print_r($dbs); // array ('first_database','another_database')
 
 Create a database
 =================
 
-The method **db_create()** will try to create the database according to the name you set when creating couch_client object $client. Note that, is the database already exist, this method will throw an exception.
+The method **createDatabase()** will try to create the database according to the name you set when creating couch_client object $client. Note that, is the database already exist, this method will throw an exception.
 
 Example :
 
-    $client->db_create();
+    $client->createDatabase();
 
 Delete a database
 =================
 
-The method **db_delete()** permanently remove from the server the database according to the name you set when creating couch_client object $client. Note that, if the database does not exist, the method will throw an exception.
+The method **deleteDatabase()** permanently remove from the server the database according to the name you set when creating couch_client object $client. Note that, if the database does not exist, the method will throw an exception.
 
 Example :
 
-    $client->db_delete();
+    $client->deleteDatabase();
 
 Test whether a database exist
 =============================
 
-The method **db_exists()** test if the database already exist on the server.
+The method **databaseExists()** test if the database already exist on the server.
 
 Example :
 
-    if ( !$client->db_exists() ) {
-        $client->db_create();
+    if ( !$client->databaseExists() ) {
+        $client->createDatabase();
     }
 
 Get database informations
 =========================
 
-The method **db_infos()** sends back informations about the database. Informations contains the number of documents in the database, the space of the database on disk, the update sequence number, ...
+The method **getDatabaseInfos()** sends back informations about the database. Informations contains the number of documents in the database, the space of the database on disk, the update sequence number, ...
 
 Example :
 
-    print_r($client->db_infos());
+    print_r($client->getDatabaseInfos());
     /*
     array("db_name" => "testdb",
           "doc_count" => 2, 
@@ -62,11 +62,11 @@ Example :
 Get database URI
 ================
 
-The method **db_uri()** sends back a string giving the HTTP connection URL to the database server.
+The method **getDatabaseUri()** sends back a string giving the HTTP connection URL to the database server.
 
 Example :
 
-    echo $client->db_uri();
+    echo $client->getDatabaseUri();
     /*
     db.example.com:5984/testdb
     */
