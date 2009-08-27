@@ -39,7 +39,7 @@ class couchClient extends couch {
   protected $view_query = array();
 
 	/**
-	* @var bool option to return couchdb view results as couch_documents objects
+	* @var bool option to return couchdb view results as couchDocuments objects
 	*/
   protected $results_as_cd = false;
 
@@ -176,7 +176,7 @@ class couchClient extends couch {
   public function storeDoc ( $doc ) {
 		if ( !is_object($doc) )	throw new InvalidArgumentException ("Document should be an object");
 		foreach ( array_keys(get_object_vars($doc)) as $key ) {
-			if ( substr($key,0,1) == '_' AND !in_array($key,couch_client::$allowed_underscored_properties) )
+			if ( substr($key,0,1) == '_' AND !in_array($key,couchClient::$allowed_underscored_properties) )
 				throw new InvalidArgumentException("Property $key can't begin with an underscore");
 		}
     $method = 'POST';
@@ -294,7 +294,7 @@ CouchDB views : Please read http://wiki.apache.org/couchdb/HTTP_view_API
 
 This class provides method chaining for query options. As an example :
 
-$view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_posts','order_by_date');
+$view_response = $couchClient->limit(50)->include_docs(TRUE)->getView('blog_posts','order_by_date');
 
 
 
@@ -307,7 +307,7 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
 	*
 	* @link http://wiki.apache.org/couchdb/HTTP_view_API
 	* @param mixed $value any json encodable thing
-	* @return couch_client $this
+	* @return couchClient $this
 	*/
   public function key($value) {
     $this->view_query['key'] = json_encode($value);
@@ -319,7 +319,7 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
 	*
 	* @link http://wiki.apache.org/couchdb/HTTP_view_API
 	* @param mixed $value any json encodable thing
-	* @return couch_client $this
+	* @return couchClient $this
 	*/
   public function startkey($value) {
     $this->view_query['startkey'] = json_encode($value);
@@ -331,7 +331,7 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
 	*
 	* @link http://wiki.apache.org/couchdb/HTTP_view_API
 	* @param mixed $value any json encodable thing
-	* @return couch_client $this
+	* @return couchClient $this
 	*/
   public function endkey($value) {
     $this->view_query['endkey'] = json_encode($value);
@@ -343,7 +343,7 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
 	*
 	* @link http://wiki.apache.org/couchdb/HTTP_view_API
 	* @param string $value document id
-	* @return couch_client $this
+	* @return couchClient $this
 	*/
   public function startkey_docid($value) {
     $this->view_query['startkey_docid'] = (string)$value;
@@ -355,7 +355,7 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
 	*
 	* @link http://wiki.apache.org/couchdb/HTTP_view_API
 	* @param string $value document id
-	* @return couch_client $this
+	* @return couchClient $this
 	*/
   public function endkey_docid($value) {
     $this->view_query['endkey_docid'] = (string)$value;
@@ -368,7 +368,7 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
 	*
 	* @link http://wiki.apache.org/couchdb/HTTP_view_API
 	* @param ineteger $value maximum number of items to fetch
-	* @return couch_client $this
+	* @return couchClient $this
 	*/
   public function limit($value) {
     $this->view_query['limit'] = (int)$value;
@@ -380,7 +380,7 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
 	*
 	* @link http://wiki.apache.org/couchdb/HTTP_view_API
 	* @param string $value has to be 'ok'
-	* @return couch_client $this
+	* @return couchClient $this
 	*/
   public function stale($value) {
     if ( $value == 'ok' )
@@ -393,7 +393,7 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
 	*
 	* @link http://wiki.apache.org/couchdb/HTTP_view_API
 	* @param boolean $value order in descending
-	* @return couch_client $this
+	* @return couchClient $this
 	*/
   public function descending($value) {
     $this->view_query['descending'] = json_encode((boolean)$value);
@@ -405,7 +405,7 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
 	*
 	* @link http://wiki.apache.org/couchdb/HTTP_view_API
 	* @param int $value number of items to skip
-	* @return couch_client $this
+	* @return couchClient $this
 	*/
   public function skip($value) {
     $this->view_query['skip'] = (int)$value;
@@ -417,7 +417,7 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
 	*
 	* @link http://wiki.apache.org/couchdb/HTTP_view_API
 	* @param boolean $value whether to group the results
-	* @return couch_client $this
+	* @return couchClient $this
 	*/
   public function group($value) {
     $this->view_query['group'] = json_encode((boolean)$value);
@@ -429,7 +429,7 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
 	*
 	* @link http://wiki.apache.org/couchdb/HTTP_view_API
 	* @param boolean $value whether to execute the reduce function (if any)
-	* @return couch_client $this
+	* @return couchClient $this
 	*/
   public function reduce($value) {
     $this->view_query['reduce'] = json_encode((boolean)$value);
@@ -441,7 +441,7 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
 	*
 	* @link http://wiki.apache.org/couchdb/HTTP_view_API
 	* @param boolean $value whether to include complete documents in the response
-	* @return couch_client $this
+	* @return couchClient $this
 	*/
   public function include_docs($value) {
     $this->view_query['include_docs'] = json_encode((boolean)$value);
@@ -449,14 +449,14 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
   }
 
 	/**
-	* returns couchDB view results as couch_documents objects
+	* returns couchDB view results as couchDocuments objects
 	*
 	* implies include_docs(true)
 	*
 	* when view result is parsed, view documents are translated to objects and sent back
 	*
-	* @view  results_as_couch_documents()
-	* @return couch_client $this
+	* @view  results_as_couchDocuments()
+	* @return couchClient $this
 	*
 	*/
 	public function asCouchDocuments() {
@@ -487,30 +487,30 @@ $view_response = $couch_client->limit(50)->include_docs(TRUE)->get_view('blog_po
 						);
 	}
 	/**
-	* returns couchDB view results as couch_documents objects
+	* returns couchDB view results as couchDocuments objects
 	*
 	* - for string view keys, the object is found on "view key" index
 	*			ex : view returns
 	*			<code>[ "client" : null , "client2" : null ]</code>
 	* 		is translated to :
-	*			array ( 'client' => array(couch_document) , 'client2' => array(couch_document) )
+	*			array ( 'client' => array(couchDocument) , 'client2' => array(couchDocument) )
 	*
 	* - for array view keys, the object key in the result array is the last key of the view
 	*			ex : view returns
 	*			<code>[ [ "#44556643", "client" ] : null , [ "#65745767566","client2" : null ]</code>
 	* 		is translated to :
-	*			array ( 'client' => array(couch_document) , 'client2' => array(couch_document) )
+	*			array ( 'client' => array(couchDocument) , 'client2' => array(couchDocument) )
 	*
 	*	@param stdClass couchDb view resultset
-	* @return array array of couch_document objects
+	* @return array array of couchDocument objects
 	*/
 	public function resultsToCouchDocuments ( $results ) {
 		if ( !$results->rows or !is_array($results->rows) )	return FALSE;
 		$back = array();
 		foreach ( $results->rows as $row ) {	// should have $row->key & $row->doc
 			if ( !$row->key or !$row->doc ) 	return false;
-			// create couch_document
-			$cd = new couch_document($this);
+			// create couchDocument
+			$cd = new couchDocument($this);
 			$cd->loadFromObject($row->doc);
 			
 			// set key name

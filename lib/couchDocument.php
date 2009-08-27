@@ -27,10 +27,10 @@ class couchDocument {
 	/**
 	*class constructor
 	*
-	* @param couch_client $client couch_client connection object
+	* @param couchClient $client couchClient connection object
 	*
 	*/
-	function __construct(couch_client $client) {
+	function __construct(couchClient $client) {
 		$this->__couch_data->client = $client;
 		$this->__couch_data->fields = new stdClass();
 	}
@@ -39,7 +39,7 @@ class couchDocument {
 	* load a CouchDB document from the CouchDB server
 	*
 	* @param string $id CouchDB document ID
-	* @return couch_document $this
+	* @return couchDocument $this
 	*/
 	public function load ( $id ) {
 		if ( !strlen($id) ) throw new InvalidArgumentException("No id given");
@@ -53,23 +53,23 @@ class couchDocument {
 	* note that this method clones the object given in argument
 	*
 	* @param object $doc CouchDB document (should have $doc->_id  , $doc->_rev, ...)
-	* @return couch_document $this
+	* @return couchDocument $this
 	*/
-  public function loadFromOject($doc) {
+  public function loadFromObject($doc) {
     $this->__couch_data->fields = clone $doc;
 		return $this;
   }
 
 	/**
-	* load a document in a couch_document object and return it
+	* load a document in a couchDocument object and return it
 	*
 	* @static
-	* @param couch_client $client couch_client instance
+	* @param couchClient $client couchClient instance
 	* @param string $id id of the document to load
-	* @return couch_document couch document loaded with data of document $id
+	* @return couchDocument couch document loaded with data of document $id
 	*/
-	public static function getInstance(couch_client $client,$id) {
-		$back = new couch_document($client);
+	public static function getInstance(couchClient $client,$id) {
+		$back = new couchDocument($client);
 		return $back->load($id);
 	}
 
@@ -147,7 +147,7 @@ class couchDocument {
 		if ( !strlen($key) )  throw new InvalidArgumentException("property name can't be empty");
 		if ( $key == '_rev' )	throw new InvalidArgumentException("Can't set _rev field");
 		if ( $key == '_id' AND $this->get('_id') )	throw new InvalidArgumentException("Can't set _id field because it's already set");
-		if ( substr($key,0,1) == '_' AND !in_array($key,couch_client::$allowed_underscored_properties) )
+		if ( substr($key,0,1) == '_' AND !in_array($key,couchClient::$allowed_underscored_properties) )
 			throw new InvalidArgumentException("Property $key can't begin with an underscore");
     //echo "setting $key to ".print_r($value,TRUE)."<BR>\n";
 		$this->__couch_data->fields->$key = $value;
