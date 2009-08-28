@@ -246,8 +246,8 @@ class couchClient extends couch {
     $url  = '/'.urlencode($this->dbname).'/'.urlencode($doc->_id).'/';
     $url .= empty($filename) ? basename($file) : $filename ;
     if ( $doc->_rev ) $url.='?rev='.$doc->_rev;
-    $raw = $this->store_file($url,$file,$content_type);
-    $response = $this->parse_raw_response($raw);
+    $raw = $this->storeFile($url,$file,$content_type);
+    $response = $this->parseRawResponse($raw);
     return $response['body'];
   }
 
@@ -266,7 +266,7 @@ class couchClient extends couch {
             '/'.urlencode($doc->_id).
             '/'.urlencode($attachment_name);
     $raw = $this->query('DELETE',$url,array("rev"=>$doc->_rev));
-    $response = $this->parse_raw_response($raw);
+    $response = $this->parseRawResponse($raw);
     return $response['body'];
   }
 

@@ -56,7 +56,7 @@ fetching and storing documents, copy a document, store and delete document attac
 
 calling a view with query options : key, startkey, endkey, limit, stale, ...
 
-couch_document class
+couchDocument class
 --------------------
 
 Easing the manipulation of documents, the couchDocument class uses PHP magic getters and setters.
