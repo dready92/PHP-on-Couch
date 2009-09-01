@@ -173,7 +173,7 @@ class couch {
 		$this->_disconnect();
 
     //log_message('debug',"COUCH : Executed query $method $url");
-
+    //log_message('debug',"COUCH : ".$raw_response);
 		return $raw_response;
 	}
 
