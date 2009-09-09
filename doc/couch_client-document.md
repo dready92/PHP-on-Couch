@@ -44,7 +44,7 @@ Example :
     } catch ( Exception $e ) {
         if ( $e->getCode() == 404 ) {
            echo "Document some_doc_id does not exist !";
-        }
+	        }
         exit(1);
     }
     echo $doc->_id.' revision '.$doc->_rev;

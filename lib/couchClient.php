@@ -169,7 +169,8 @@ class couchClient extends couch {
 			return $back;
 		}
 		$this->results_as_cd = false;
-		return new couchDocument($this)->loadFromObject($back);
+		$c = new  couchDocument($this);
+		return $c->loadFromObject($back);
   }
 
 	/**
