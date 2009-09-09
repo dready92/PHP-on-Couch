@@ -45,8 +45,28 @@ Example :
         if ( $e->getCode() == 404 ) {
            echo "Document some_doc_id does not exist !";
         }
+        exit(1);
     }
     echo $doc->_id.' revision '.$doc->_rev;
+
+Getting a document as a couchDocument object
+--------------------------------------------
+
+The **getDoc($id)** method returns a PHP stdClass object. You can however get back the document as a couchDocument object by calling the **asCouchDocuments()** method before the **getDoc($id)** method.
+
+Example :
+
+    try {
+        $doc = $client->asCouchDocuments()->getDoc("some_doc_id");
+    } catch ( Exception $e ) {
+        if ( $e->getCode() == 404 ) {
+           echo "Document some_doc_id does not exist !";
+        }
+        exit(1);
+    }
+    echo get_class($doc); // should echo "couchDocument"
+
+
 
 Getting a document URI
 ======================
@@ -209,7 +229,7 @@ Example :
 Bulk operations
 ===============
 
-A bulk operation is a unique query performing actions on several documents.
+A bulk operation is a unique query performing actions on several documents. CouchDB Bulk operations API are described in [this wiki page](http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API).
 
 Bulk documents retrieval
 ------------------------
@@ -222,6 +242,46 @@ Example :
     foreach ( $view->rows as $row ) {
       echo "doc id :".$row->doc->_id."\n";
     }
+
+Bulk documents storage
+------------------------
+
+To store several documents in one go, use the method **storeDocs($docs,$all_or_nothing)**. $docs is an array containing the documents to store (as couchDocuments PHP [stdClass](http://fr3.php.net/manual/en/reserved.classes.php) or PHP arrays). $all_or_nothing is related to the updates on the database : if set to false (which is the default), all documents are saved one by one, which means that, in case of a power failure on the database, we could have some documents stored and some not stored. When set to true, couchDB will commit all documents in one go : in case of a power failure, no document will be stored, or all documents will be stored.
+
+Example :
+    $docs = array (
+        array('type'=>'blogpost','title'=>'post'),
+        array('type'=>'blogcomment','blogpost'=>'post','depth'=>1),
+        array('type'=>'blogcomment','blogpost'=>'post','depth'=>2)
+    );
+    $response = $client->storeDocs( $docs );
+    print_r($response);
+
+which should give you something like :
+
+    Array
+    (
+        [0] => stdClass Object
+            (
+                [id] => 8d7bebddc9828ed2edd052773968826b
+                [rev] => 1-3988163576
+            )
+    
+        [1] => stdClass Object
+            (
+                [id] => 37bcfd7d9e94c67617982527c67efe44
+                [rev] => 1-1750264873
+            )
+    
+        [2] => stdClass Object
+            (
+                [id] => 704a51a0b6448326152f8ffb8c3ea6be
+                [rev] => 1-2477909627
+            )
+    
+    )
+
+This method also works to update documents.
 
 
 

@@ -164,7 +164,12 @@ class couchClient extends couch {
     else
       $url = '/'.urlencode($this->dbname).'/'.urlencode($id);
 
-    return $this->_queryAndTest ('GET', $url, array(200));
+    $back = $this->_queryAndTest ('GET', $url, array(200));
+		if ( !$this->results_as_cd ) {
+			return $back;
+		}
+		$this->results_as_cd = false;
+		return new couchDocument($this)->loadFromObject($back);
   }
 
 	/**
@@ -186,6 +191,37 @@ class couchClient extends couch {
       $url.='/'.urlencode($doc->_id);
     }
     return $this->_queryAndTest ($method, $url, array(200,201),array(),$doc);
+  }
+
+/**
+	* store many CouchDB documents
+	*
+	* @link http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API
+	* @param object $docs array of documents to store
+	* @param boolean $all_or_nothing set the bulk update type to "all or nothing"
+	* @return object CouchDB bulk document storage response
+	*/
+  public function storeDocs ( $docs, $all_or_nothing = false ) {
+		if ( !is_array($docs) )	throw new InvalidArgumentException ("docs parameter should be an array");
+		/*
+			create the query content
+		*/
+		$request = array('docs'=>array());
+		foreach ( $docs as $doc ) {
+			if ( $doc instanceof couchDocument ) {
+				$request['docs'][] = $doc->getFields();
+			} else {
+				$request['docs'][] = $doc;
+			}
+		}
+		if ( $all_or_nothing ) {
+			$request['all_or_nothing'] = true;
+		}
+
+    $method = 'POST';
+    $url  = '/'.urlencode($this->dbname).'/_bulk_docs';
+    
+    return $this->_queryAndTest ($method, $url, array(200,201),array(),$request);
   }
 
 	/**
@@ -449,7 +485,7 @@ $view_response = $couchClient->limit(50)->include_docs(TRUE)->getView('blog_post
   }
 
 	/**
-	* returns couchDB view results as couchDocuments objects
+	* returns couchDB results as couchDocuments objects
 	*
 	* implies include_docs(true)
 	*
