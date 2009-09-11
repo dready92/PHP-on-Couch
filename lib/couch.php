@@ -367,5 +367,8 @@ class curlCouch extends baseCouch {
 
 }
 
-
-class couch extends baseCouch {}
+if ( function_exists('curl_init') ) {
+	class couch extends curlCouch {}
+} else {
+	class couch extends baseCouch {}
+}
