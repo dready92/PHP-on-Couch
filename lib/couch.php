@@ -23,7 +23,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 * basics to implement JSON / REST / HTTP CouchDB protocol
 *
 */
-class baseCouch {
+class couch {
 	/**
 	* @var string database server hostname
 	*/
@@ -37,10 +37,15 @@ class baseCouch {
 	*/
 	protected $HTTP_METHODS = array('GET','POST','PUT','DELETE','COPY');
 	/**
-	* @var resource HTTP servfer socket
+	* @var resource HTTP server socket
 	* @see _connect()
 	*/
 	protected $socket = NULL;
+
+	/**
+	* @var boolean tell if curl PHP extension has been detected
+	*/
+	protected $curl = FALSE;
 
 	/**
 	* class constructor
@@ -51,6 +56,7 @@ class baseCouch {
 	public function __construct ($hostname, $port) {
 		$this->hostname = $hostname;
 		$this->port = $port;
+		if ( function_exists('curl_init') )	$this->curl = TRUE;
 	}
 
 	/**
@@ -86,6 +92,83 @@ class baseCouch {
 	}
 
 	/**
+	*send a query to the CouchDB server
+	*
+	* @param string $method HTTP method to use (GET, POST, ...)
+	* @param string $url URL to fetch
+	* @param array $parameters additionnal parameters to send with the request
+	* @param string|array|object $data request body
+	*
+	* @return string|false server response on success, false on error
+	*/
+	public function query ( $method, $url, $parameters = array() , $data = NULL ) {
+		if ( $this->curl )	return $this->_curl_query($method,$url,$parameters, $data);
+		else								return $this->_socket_query($method,$url,$parameters, $data);
+	}
+
+
+
+	/**
+	* record a file located on the disk as a CouchDB attachment
+	*
+	* @param string $url CouchDB URL to store the file to
+	* @param string $file path to the on-disk file
+	* @param string $content_type attachment content_type
+	*
+	* @return string server response
+	*/
+  public function storeFile ( $url, $file, $content_type ) {
+		if ( $this->curl )	return $this->_curl_storeFile($url,$file,$content_type);
+		else								return $this->_socket_storeFile($url,$file,$content_type);
+  }
+
+	/**
+	* store some data as a CouchDB attachment
+	*
+	* @param string $url CouchDB URL to store the file to
+	* @param string $data data to send as the attachment content
+	* @param string $content_type attachment content_type
+	*
+	* @return string server response
+	*/
+  public function storeAsFile($url,$data,$content_type) {
+		if ( $this->curl )	return $this->_curl_storeAsFile($url,$data,$content_type);
+		else								return $this->_socket_storeAsFile($url,$data,$content_type);
+
+	}
+
+
+
+
+	/**
+	*send a query to the CouchDB server
+	*
+	* @param string $method HTTP method to use (GET, POST, ...)
+	* @param string $url URL to fetch
+	* @param array $parameters additionnal parameters to send with the request
+	* @param string|array|object $data request body
+	*
+	* @return string|false server response on success, false on error
+	*/
+	public function _socket_query ( $method, $url, $parameters = array() , $data = NULL ) {
+		if ( !in_array($method, $this->HTTP_METHODS )    )
+			throw new Exception("Bad HTTP method: $method");
+
+		if ( is_array($parameters) AND count($parameters) )
+			$url = $url.'?'.http_build_query($parameters);
+
+		$request = $this->_socket_buildRequest($method,$url,$data);
+		if ( !$this->_connect() )	return FALSE;
+		$raw_response = $this->_execute($request);
+		$this->_disconnect();
+
+    //log_message('debug',"COUCH : Executed query $method $url");
+    //log_message('debug',"COUCH : ".$raw_response);
+		return $raw_response;
+	}
+
+
+	/**
 	* build HTTP request to send to the server
 	*
 	* @param string $method HTTP method to use
@@ -93,7 +176,7 @@ class baseCouch {
 	* @param string|object|array $data the request body. If it's an array or an object, $data is json_encode()d
 	* @return string HTTP request
 	*/
-	protected function _buildRequest($method,$url,$data) {
+	protected function _socket_buildRequest($method,$url,$data) {
 		if ( is_object($data) OR is_array($data) )
 			$data = json_encode($data);
 		$req = "$method $url HTTP/1.0\r\nHost: {$this->hostname}\r\n";
@@ -109,6 +192,64 @@ class baseCouch {
 		}
 		return $req;
 	}
+
+	/**
+	* record a file located on the disk as a CouchDB attachment
+	* uses PHP socket API
+	*
+	* @param string $url CouchDB URL to store the file to
+	* @param string $file path to the on-disk file
+	* @param string $content_type attachment content_type
+	*
+	* @return string server response
+	*/
+	protected function _socket_storeFile($url,$file,$content_type) {
+		if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
+		if ( !strlen($file) OR !is_file($file) OR !is_readable($file) )	throw new InvalidArgumentException("Attachment file does not exist or is not readable");
+		if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
+    $req  = "PUT $url HTTP/1.0\r\nHost: {$this->hostname}\r\n";
+	  $req .= "Accept: application/json,text/html,text/plain,*/*\r\n";
+  	$req .= 'Content-Length: '.filesize($file)."\r\n";
+		$req .= 'Content-Type: '.$content_type."\r\n\r\n";
+    $fstream=fopen($file,'r');
+    $this->_connect();
+    fwrite($this->socket, $req);
+    stream_copy_to_stream($fstream,$this->socket);
+    $response = '';
+    while(!feof($this->socket))
+			$response .= fgets($this->socket);
+    $this->_disconnect();
+    fclose($fstream);
+    return $response;
+	}
+
+
+	/**
+	* store some data as a CouchDB attachment
+	* uses PHP socket API
+	*
+	* @param string $url CouchDB URL to store the file to
+	* @param string $data data to send as the attachment content
+	* @param string $content_type attachment content_type
+	*	
+	* @return string server response
+	*/
+  public function _socket_storeAsFile($url,$data,$content_type) {
+	if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
+	if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
+    $req  = "PUT $url HTTP/1.0\r\nHost: {$this->hostname}\r\n";
+	  $req .= "Accept: application/json,text/html,text/plain,*/*\r\n";
+  	$req .= 'Content-Length: '.strlen($data)."\r\n";
+		$req .= 'Content-Type: '.$content_type."\r\n\r\n";
+    $this->_connect();
+    fwrite($this->socket, $req);
+    fwrite($this->socket, $data);
+    $response = '';
+    while(!feof($this->socket))
+			$response .= fgets($this->socket);
+    $this->_disconnect();
+    return $response;
+  }
 
 	/**
 	*open the connection to the CouchDB server
@@ -135,7 +276,7 @@ class baseCouch {
 	protected function _execute($request) {
 		fwrite($this->socket, $request);
 		$response = '';
-		while(!feof($this->socket)) 
+		while(!feof($this->socket))
 			$response .= fgets($this->socket);
 		return $response;
 	}
@@ -150,125 +291,28 @@ class baseCouch {
 		$this->socket = NULL;
 	}
 
-	/**
-	*send a query to the CouchDB server
-	*
-	* @param string $method HTTP method to use (GET, POST, ...)
-	* @param string $url URL to fetch
-	* @param array $parameters additionnal parameters to send with the request
-	* @param string|array|object $data request body
-	*
-	* @return string|false server response on success, false on error
-	*/
-	public function query ( $method, $url, $parameters = array() , $data = NULL ) {
-		if ( !in_array($method, $this->HTTP_METHODS )    )
-			throw new Exception("Bad HTTP method: $method");
-
-		if ( is_array($parameters) AND count($parameters) )
-			$url = $url.'?'.http_build_query($parameters);
-
-		$request = $this->_buildRequest($method,$url,$data);
-		if ( !$this->_connect() )	return FALSE;
-		$raw_response = $this->_execute($request);
-		$this->_disconnect();
-
-    //log_message('debug',"COUCH : Executed query $method $url");
-    //log_message('debug',"COUCH : ".$raw_response);
-		return $raw_response;
-	}
-
-	/**
-	* record a file located on the disk as a CouchDB attachment
-	*
-	* @param string $url CouchDB URL to store the file to
-	* @param string $file path to the on-disk file
-	* @param string $content_type attachment content_type
-	*	
-	* @return string server response
-	*/
-  public function storeFile ( $url, $file, $content_type ) {
-	if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
-	if ( !strlen($file) OR !is_file($file) OR !is_readable($file) )	throw new InvalidArgumentException("Attachment file does not exist or is not readable");
-	if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
-    $req  = "PUT $url HTTP/1.0\r\nHost: {$this->hostname}\r\n";
-	  $req .= "Accept: application/json,text/html,text/plain,*/*\r\n";
-  	$req .= 'Content-Length: '.filesize($file)."\r\n";
-		$req .= 'Content-Type: '.$content_type."\r\n\r\n";
-    $fstream=fopen($file,'r');
-    $this->_connect();
-    fwrite($this->socket, $req);
-    stream_copy_to_stream($fstream,$this->socket);
-    $response = '';
-    while(!feof($this->socket))
-			$response .= fgets($this->socket);
-    $this->_disconnect();
-    fclose($fstream);
-    return $response;
-  }
-
-	/**
-	* store some data as a CouchDB attachment
-	*
-	* @param string $url CouchDB URL to store the file to
-	* @param string $data data to send as the attachment content
-	* @param string $content_type attachment content_type
-	*	
-	* @return string server response
-	*/
-  public function storeAsFile($url,$data,$content_type) {
-	if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
-	if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
-    $req  = "PUT $url HTTP/1.0\r\nHost: {$this->hostname}\r\n";
-	  $req .= "Accept: application/json,text/html,text/plain,*/*\r\n";
-  	$req .= 'Content-Length: '.strlen($data)."\r\n";
-		$req .= 'Content-Type: '.$content_type."\r\n\r\n";
-    $this->_connect();
-    fwrite($this->socket, $req);
-    fwrite($this->socket, $data);
-    $response = '';
-    while(!feof($this->socket))
-			$response .= fgets($this->socket);
-    $this->_disconnect();
-    return $response;
-  }
-
-}
-
-
-
-
-
-/**
-* curlCouch class
-*
-* curl wrapper for HTTP REST
-*
-*/
-class curlCouch extends baseCouch {
-
 
 	/**
 	* build HTTP request to send to the server
+	* uses PHP cURL API
 	*
 	* @param string $method HTTP method to use
 	* @param string $url the request URL
 	* @param string|object|array $data the request body. If it's an array or an object, $data is json_encode()d
 	* @return resource CURL request resource
 	*/
-	protected function _buildRequest($method,$url,$data) {
+	protected function _curl_buildRequest($method,$url,$data) {
 		$http = curl_init($url);
 		$http_headers = array('Accept: application/json,text/html,text/plain,*/*') ;
 		if ( is_object($data) OR is_array($data) )
 			$data = json_encode($data);
 
-
-		curl_setopt($http, CURLOPT_CUSTOMREQUEST, $method);  
-
+		curl_setopt($http, CURLOPT_CUSTOMREQUEST, $method);
 
     if ( $method == 'COPY') {
       $http_headers[] = "Destination: $data";
     } elseif ($data) {
-			curl_setopt($http, CURLOPT_POSTFIELDS, $data); 
+			curl_setopt($http, CURLOPT_POSTFIELDS, $data);
 		}
 
 		curl_setopt($http, CURLOPT_HTTPHEADER,$http_headers);
@@ -279,6 +323,7 @@ class curlCouch extends baseCouch {
 
 	/**
 	*send a query to the CouchDB server
+	* uses PHP cURL API
 	*
 	* @param string $method HTTP method to use (GET, POST, ...)
 	* @param string $url URL to fetch
@@ -287,18 +332,18 @@ class curlCouch extends baseCouch {
 	*
 	* @return string|false server response on success, false on error
 	*/
-	public function query ( $method, $url, $parameters = array() , $data = NULL ) {
+	public function _curl_query ( $method, $url, $parameters = array() , $data = NULL ) {
 		if ( !in_array($method, $this->HTTP_METHODS )    )
 			throw new Exception("Bad HTTP method: $method");
 
 		$url = 'http://'.$this->hostname.':'.$this->port.$url;
 		if ( is_array($parameters) AND count($parameters) )
 			$url = $url.'?'.http_build_query($parameters);
-		
-		$http = $this->_buildRequest($method,$url,$data);
-		curl_setopt($http,CURLOPT_HEADER, true);  
-		curl_setopt($http,CURLOPT_RETURNTRANSFER, true);  
-		curl_setopt($http,CURLOPT_FOLLOWLOCATION, true);  
+
+		$http = $this->_curl_buildRequest($method,$url,$data);
+		curl_setopt($http,CURLOPT_HEADER, true);
+		curl_setopt($http,CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($http,CURLOPT_FOLLOWLOCATION, true);
 
 		$response = curl_exec($http);
 		curl_close($http);
@@ -312,14 +357,15 @@ class curlCouch extends baseCouch {
 
 	/**
 	* record a file located on the disk as a CouchDB attachment
+	* uses PHP cURL API
 	*
 	* @param string $url CouchDB URL to store the file to
 	* @param string $file path to the on-disk file
 	* @param string $content_type attachment content_type
-	*	
+	*
 	* @return string server response
 	*/
-  public function storeFile ( $url, $file, $content_type ) {
+  public function _curl_storeFile ( $url, $file, $content_type ) {
 	if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
 	if ( !strlen($file) OR !is_file($file) OR !is_readable($file) )	throw new InvalidArgumentException("Attachment file does not exist or is not readable");
 	if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
@@ -329,9 +375,9 @@ class curlCouch extends baseCouch {
 	curl_setopt($http, CURLOPT_PUT, 1);
 	curl_setopt($http, CURLOPT_HTTPHEADER,$http_headers);
 	curl_setopt($http, CURLOPT_UPLOAD, true);
-	curl_setopt($http,CURLOPT_HEADER, true);
-	curl_setopt($http,CURLOPT_RETURNTRANSFER, true);
-	curl_setopt($http,CURLOPT_FOLLOWLOCATION, true);
+	curl_setopt($http, CURLOPT_HEADER, true);
+	curl_setopt($http, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($http, CURLOPT_FOLLOWLOCATION, true);
 	$fstream=fopen($file,'r');
 	curl_setopt($http, CURLOPT_INFILE, $fstream);
 	curl_setopt($http, CURLOPT_INFILESIZE, filesize($file));
@@ -343,14 +389,15 @@ class curlCouch extends baseCouch {
 
 	/**
 	* store some data as a CouchDB attachment
+	* uses PHP cURL API
 	*
 	* @param string $url CouchDB URL to store the file to
 	* @param string $data data to send as the attachment content
 	* @param string $content_type attachment content_type
-	*	
+	*
 	* @return string server response
 	*/
-  public function storeAsFile($url,$data,$content_type) {
+  public function _curl_storeAsFile($url,$data,$content_type) {
 	if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
 	if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
 	$url = 'http://'.$this->hostname.':'.$this->port.$url;
@@ -369,8 +416,3 @@ class curlCouch extends baseCouch {
 
 }
 
-if ( function_exists('curl_init') ) {
-	class couch extends curlCouch {}
-} else {
-	class couch extends baseCouch {}
-}
