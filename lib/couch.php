@@ -268,7 +268,7 @@ class curlCouch extends baseCouch {
     if ( $method == 'COPY') {
       $http_headers[] = "Destination: $data";
     } elseif ($data) {
-			curl_setopt($http, CURLOPT_POSTFIELDS, $data);  
+			curl_setopt($http, CURLOPT_POSTFIELDS, $data); 
 		}
 
 		curl_setopt($http, CURLOPT_HTTPHEADER,$http_headers);
@@ -323,20 +323,22 @@ class curlCouch extends baseCouch {
 	if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
 	if ( !strlen($file) OR !is_file($file) OR !is_readable($file) )	throw new InvalidArgumentException("Attachment file does not exist or is not readable");
 	if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
-    $req  = "PUT $url HTTP/1.0\r\nHost: {$this->hostname}\r\n";
-	  $req .= "Accept: application/json,text/html,text/plain,*/*\r\n";
-  	$req .= 'Content-Length: '.filesize($file)."\r\n";
-		$req .= 'Content-Type: '.$content_type."\r\n\r\n";
-    $fstream=fopen($file,'r');
-    $this->_connect();
-    fwrite($this->socket, $req);
-    stream_copy_to_stream($fstream,$this->socket);
-    $response = '';
-    while(!feof($this->socket))
-			$response .= fgets($this->socket);
-    $this->_disconnect();
-    fclose($fstream);
-    return $response;
+	$url = 'http://'.$this->hostname.':'.$this->port.$url;
+	$http = curl_init($url);
+	$http_headers = array('Accept: application/json,text/html,text/plain,*/*','Content-Type: '.$content_type) ;
+	curl_setopt($http, CURLOPT_PUT, 1);
+	curl_setopt($http, CURLOPT_HTTPHEADER,$http_headers);
+	curl_setopt($http, CURLOPT_UPLOAD, true);
+	curl_setopt($http,CURLOPT_HEADER, true);
+	curl_setopt($http,CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($http,CURLOPT_FOLLOWLOCATION, true);
+	$fstream=fopen($file,'r');
+	curl_setopt($http, CURLOPT_INFILE, $fstream);
+	curl_setopt($http, CURLOPT_INFILESIZE, filesize($file));
+	$response = curl_exec($http);
+	fclose($fstream);
+	curl_close($http);
+	return $response;
   }
 
 	/**
@@ -351,18 +353,18 @@ class curlCouch extends baseCouch {
   public function storeAsFile($url,$data,$content_type) {
 	if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
 	if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
-    $req  = "PUT $url HTTP/1.0\r\nHost: {$this->hostname}\r\n";
-	  $req .= "Accept: application/json,text/html,text/plain,*/*\r\n";
-  	$req .= 'Content-Length: '.strlen($data)."\r\n";
-		$req .= 'Content-Type: '.$content_type."\r\n\r\n";
-    $this->_connect();
-    fwrite($this->socket, $req);
-    fwrite($this->socket, $data);
-    $response = '';
-    while(!feof($this->socket))
-			$response .= fgets($this->socket);
-    $this->_disconnect();
-    return $response;
+	$url = 'http://'.$this->hostname.':'.$this->port.$url;
+	$http = curl_init($url);
+	$http_headers = array('Accept: application/json,text/html,text/plain,*/*','Content-Type: '.$content_type,'Content-Length: '.strlen($data)) ;
+	curl_setopt($http, CURLOPT_CUSTOMREQUEST, 'PUT');
+	curl_setopt($http, CURLOPT_HTTPHEADER,$http_headers);
+	curl_setopt($http, CURLOPT_HEADER, true);
+	curl_setopt($http, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($http, CURLOPT_FOLLOWLOCATION, true);
+	curl_setopt($http, CURLOPT_POSTFIELDS, $data);
+	$response = curl_exec($http);
+	curl_close($http);
+	return $response;
   }
 
 }

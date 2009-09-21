@@ -260,8 +260,8 @@ class couchClient extends couch {
     if ( !$doc->_id )       throw new InvalidArgumentException ("Document should have an ID");
     $url  = '/'.urlencode($this->dbname).'/'.urlencode($doc->_id).'/'.urlencode($filename);
     if ( $doc->_rev ) $url.='?rev='.$doc->_rev;
-    $raw = $this->store_as_file($url,$data,$content_type);
-    $response = $this->parse_raw_response($raw);
+    $raw = $this->storeAsFile($url,$data,$content_type);
+    $response = $this->parseRawResponse($raw);
     return $response['body'];
   }
 
@@ -622,6 +622,25 @@ $view_response = $couchClient->limit(50)->include_docs(TRUE)->getView('blog_post
 		$this->view_query = array();
     return $this->_queryAndTest ('GET', $url, array(200),$view_query);
 	}
+
+	/**
+	* returns a/some universally unique identifier(s)
+	*
+	*
+	* @param integer $count the number of uuids to return
+	* @return array|false an array of uuids on success, false on failure.
+	*/
+	public function getUuids($count = 1) {
+		$count=(int)$count;
+		if ( $count < 1 ) throw new InvalidArgumentException("Uuid count should be greater than 0");
+		$url = '/'.urlencode($this->dbname).'/_uuids?count='+$count;
+		$back = $this->_queryAndTest ('GET', $url, array(200),$view_query);
+		if ( $back && property_exists($back,'uuids') ) {
+			return $back->uuids;
+		}
+		return false;
+	}
+
 }
 
 /**
