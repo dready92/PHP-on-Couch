@@ -8,7 +8,7 @@ Introduction
     require_once 'couchClient.php';
     require_once 'couchDocument.php';
     
-    $client = new couchClient ('my.couch.server.com',5984,'my_database'); // set a new connector to the CouchDB server
+    $client = new couchClient ('http://my.couch.server.com:5984','my_database'); // set a new connector to the CouchDB server
     
     // list databases
     foreach ( $client->listDatabases() as $one_db )
@@ -44,15 +44,15 @@ couchClient class
 
 This class maps all the actions the application can do on the CouchDB server. We can find three main topics :
 
-### database stuff
+### [database stuff](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-database.md)
 
-list databases, create and delete a database, retrieve database informations, test whether a databse exists
+list databases, create and delete a database, retrieve database informations, test whether a databse exists, get uuids
 
-### document stuff
+### [document stuff](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-document.md)
 
 fetching and storing documents, copy a document, store and delete document attachments, getting all documents
 
-### view stuff
+### [view stuff](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-view.md)
 
 calling a view with query options : key, startkey, endkey, limit, stale, ...
 
@@ -73,9 +73,9 @@ Quick-start guide
         require_once "couchClient.php";
         require_once "couchDocument.php";
 
-3. Create a client object. You have to tell it the _hostname_ and _port_ of your CouchDB server, as well as the name of the database you want to work on
+3. Create a client object. You have to tell it the _Data source name_ (dsn) of your CouchDB server, as well as the name of the database you want to work on. The DSN is the URL of your CouchDB server, for example _http://localhost:5984_.
         
-        $client = new couchClient($couchdb_server_hostname, $couchdb_server_port, $couchdb_database_name);
+        $client = new couchClient($couchdb_server_dsn, $couchdb_database_name);
 
 4. Use it !
         
@@ -98,11 +98,11 @@ Don't hesitate to submit feedback, bugs and feature requests ! My contact addres
 Resources
 =========
 
-[PHP on Couch API](http://dready.byethost31.com/index.php/display/view/193)
+[PHP on Couch API](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-database.md)
 
-[Database API](http://dready.byethost31.com/index.php/display/view/194)
+[Database API](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-database.md)
 
-[Document API](http://dready.byethost31.com/index.php/display/view/195)
+[Document API](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-document.md)
 
-[View API](http://dready.byethost31.com/index.php/display/view/196)
+[View API](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-view.md)
 

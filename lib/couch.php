@@ -21,17 +21,23 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 * couch class
 *
 * basics to implement JSON / REST / HTTP CouchDB protocol
-*
+* 
 */
 class couch {
 	/**
-	* @var string database server hostname
+	* @var string database source name
 	*/
-	protected $hostname = '';
+	protected $dsn = '';
+
 	/**
-	* @var integer database server TCP port
+	* @var array database source name parsed
 	*/
-	protected $port = 0;
+	protected $dsn_parsed = null;
+
+	/**
+	* @var array couch options
+	*/
+	protected $options = null;
 	/**
 	* @var array allowed HTTP methods for REST dialog
 	*/
@@ -50,13 +56,29 @@ class couch {
 	/**
 	* class constructor
 	*
-	* @param string $hostname CouchDB server host
-	*	@param integer $port CouchDB server port
+	* @param string $dsn CouchDB Data Source Name
+	*	@param array $options Couch options
 	*/
-	public function __construct ($hostname, $port) {
-		$this->hostname = $hostname;
-		$this->port = $port;
+	public function __construct ($dsn, $options = array() ) {
+		$this->dsn = preg_replace('@/+$@','',$dsn);
+		$this->options = $options;
+		$this->dsn_parsed = parse_url($this->dsn);
+		if ( !isset($this->dsn_parsed['port']) ) {
+			$this->dsn_parsed['port'] = 80;
+		}
 		if ( function_exists('curl_init') )	$this->curl = TRUE;
+	}
+
+	/**
+	* return a part of the data source name
+	*
+	* @param string $part part to return
+	* @return string DSN part
+	*/
+	public function dsn_part($part) {
+		if ( isset($this->dsn_parsed[$part]) ) {
+			return $this->dsn_parsed[$part];
+		}
 	}
 
 	/**
@@ -179,7 +201,7 @@ class couch {
 	protected function _socket_buildRequest($method,$url,$data) {
 		if ( is_object($data) OR is_array($data) )
 			$data = json_encode($data);
-		$req = "$method $url HTTP/1.0\r\nHost: {$this->hostname}\r\n";
+		$req = "$method $url HTTP/1.0\r\nHost: ".$this->dsn_part('host')."\r\n";
 	           $req.= "Accept: application/json,text/html,text/plain,*/*\r\n";
     if ( $method == 'COPY') {
       $req .= 'Destination: '.$data."\r\n\r\n";
@@ -204,10 +226,12 @@ class couch {
 	* @return string server response
 	*/
 	protected function _socket_storeFile($url,$file,$content_type) {
+
 		if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
 		if ( !strlen($file) OR !is_file($file) OR !is_readable($file) )	throw new InvalidArgumentException("Attachment file does not exist or is not readable");
 		if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
-    $req  = "PUT $url HTTP/1.0\r\nHost: {$this->hostname}\r\n";
+
+    $req  = "PUT $url HTTP/1.0\r\nHost: ".$this->dsn_part('host')."\r\n";
 	  $req .= "Accept: application/json,text/html,text/plain,*/*\r\n";
   	$req .= 'Content-Length: '.filesize($file)."\r\n";
 		$req .= 'Content-Type: '.$content_type."\r\n\r\n";
@@ -235,20 +259,21 @@ class couch {
 	* @return string server response
 	*/
   public function _socket_storeAsFile($url,$data,$content_type) {
-	if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
-	if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
-    $req  = "PUT $url HTTP/1.0\r\nHost: {$this->hostname}\r\n";
-	  $req .= "Accept: application/json,text/html,text/plain,*/*\r\n";
-  	$req .= 'Content-Length: '.strlen($data)."\r\n";
+		if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
+		if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
+
+		$req  = "PUT $url HTTP/1.0\r\nHost: ".$this->dsn_part('host')."\r\n";
+		$req .= "Accept: application/json,text/html,text/plain,*/*\r\n";
+		$req .= 'Content-Length: '.strlen($data)."\r\n";
 		$req .= 'Content-Type: '.$content_type."\r\n\r\n";
-    $this->_connect();
-    fwrite($this->socket, $req);
-    fwrite($this->socket, $data);
-    $response = '';
-    while(!feof($this->socket))
+		$this->_connect();
+		fwrite($this->socket, $req);
+		fwrite($this->socket, $data);
+		$response = '';
+		while(!feof($this->socket))
 			$response .= fgets($this->socket);
-    $this->_disconnect();
-    return $response;
+		$this->_disconnect();
+		return $response;
   }
 
 	/**
@@ -259,9 +284,9 @@ class couch {
 	* @return boolean wheter the connection is successful
 	*/
 	protected function _connect() {
-		$this->socket = @fsockopen($this->hostname, $this->port, $err_num, $err_string);
+		$this->socket = @fsockopen($this->dsn_part('host'), $this->dsn_part('port'), $err_num, $err_string);
 		if(!$this->socket) {
-			throw new Exception('Could not open connection to '.$this->hostname.':'.$this->port.': '.$err_string.' ('.$err_num.')');
+			throw new Exception('Could not open connection to '.$this->dsn_part('host').':'.$this->dsn_part('port').': '.$err_string.' ('.$err_num.')');
 			return FALSE;
 		}
 		return TRUE;
@@ -336,7 +361,7 @@ class couch {
 		if ( !in_array($method, $this->HTTP_METHODS )    )
 			throw new Exception("Bad HTTP method: $method");
 
-		$url = 'http://'.$this->hostname.':'.$this->port.$url;
+		$url = $this->dsn.$url;
 		if ( is_array($parameters) AND count($parameters) )
 			$url = $url.'?'.http_build_query($parameters);
 
@@ -369,7 +394,7 @@ class couch {
 	if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
 	if ( !strlen($file) OR !is_file($file) OR !is_readable($file) )	throw new InvalidArgumentException("Attachment file does not exist or is not readable");
 	if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
-	$url = 'http://'.$this->hostname.':'.$this->port.$url;
+	$url = $this->dsn.$url;
 	$http = curl_init($url);
 	$http_headers = array('Accept: application/json,text/html,text/plain,*/*','Content-Type: '.$content_type) ;
 	curl_setopt($http, CURLOPT_PUT, 1);
@@ -400,7 +425,7 @@ class couch {
   public function _curl_storeAsFile($url,$data,$content_type) {
 	if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
 	if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
-	$url = 'http://'.$this->hostname.':'.$this->port.$url;
+	$url = $this->dsn.$url;
 	$http = curl_init($url);
 	$http_headers = array('Accept: application/json,text/html,text/plain,*/*','Content-Type: '.$content_type,'Content-Length: '.strlen($data)) ;
 	curl_setopt($http, CURLOPT_CUSTOMREQUEST, 'PUT');

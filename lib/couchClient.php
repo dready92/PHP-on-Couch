@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 class couchClient extends couch {
 
 	/**
-	* @var string database server hostname
+	* @var string database name
 	*/
   protected $dbname = '';
 	/**
@@ -52,13 +52,13 @@ class couchClient extends couch {
 	/**
 	* class constructor
 	*
-	* @param string $hostname CouchDB server host
+	* @param string $dsn CouchDB server data source name (eg. http://localhost:5984)
 	*	@param integer $port CouchDB server port
 	* @param string $dbname CouchDB database name
 	*/
-  public function __construct($hostname, $port, $dbname) {
+  public function __construct($dsn, $dbname) {
 	 if ( !strlen($dbname) )	throw new InvalidArgumentException("Database name can't be empty");
-    parent::__construct($hostname,$port);
+    parent::__construct($dsn);
     $this->dbname = $dbname;
   }
 
@@ -124,12 +124,12 @@ class couchClient extends couch {
 	/**
 	*return database uri
 	*
-	* example : couch.server.com:5984/mydb
+	* example : http://couch.server.com:5984/mydb
 	*
 	* @return string database URI
 	*/
 	public function getDatabaseUri() {
-		return $this->hostname.':'.$this->port.'/'.$this->dbname;
+		return $this->dsn.'/'.$this->dbname;
 	}
 
 	/**
