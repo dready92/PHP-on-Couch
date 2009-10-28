@@ -43,6 +43,11 @@ class couchClient extends couch {
 	*/
   protected $results_as_cd = false;
 
+    /**
+     * @var boolean tell if documents shall be returned as arrays instead of objects
+     */
+  protected $results_as_array = false;
+
 
   /**
   * @var array list of properties beginning with '_' and allowed in CouchDB objects
@@ -77,7 +82,7 @@ class couchClient extends couch {
 	*/
   protected function _queryAndTest ( $method, $url,$allowed_status_codes, $parameters = array(),$data = NULL ) {
     $raw = $this->query($method,$url,$parameters,$data);
-    $response = $this->parseRawResponse($raw);
+    $response = $this->parseRawResponse($raw, $this->results_as_array);
     if ( in_array($response['status_code'], $allowed_status_codes) ) {
       return $response['body'];
     }
@@ -261,7 +266,7 @@ class couchClient extends couch {
     $url  = '/'.urlencode($this->dbname).'/'.urlencode($doc->_id).'/'.urlencode($filename);
     if ( $doc->_rev ) $url.='?rev='.$doc->_rev;
     $raw = $this->storeAsFile($url,$data,$content_type);
-    $response = $this->parseRawResponse($raw);
+    $response = $this->parseRawResponse($raw, $this->results_as_array);
     return $response['body'];
   }
 
@@ -284,7 +289,7 @@ class couchClient extends couch {
     $url .= empty($filename) ? basename($file) : $filename ;
     if ( $doc->_rev ) $url.='?rev='.$doc->_rev;
     $raw = $this->storeFile($url,$file,$content_type);
-    $response = $this->parseRawResponse($raw);
+    $response = $this->parseRawResponse($raw, $this->results_as_array);
     return $response['body'];
   }
 
@@ -303,7 +308,7 @@ class couchClient extends couch {
             '/'.urlencode($doc->_id).
             '/'.urlencode($attachment_name);
     $raw = $this->query('DELETE',$url,array("rev"=>$doc->_rev));
-    $response = $this->parseRawResponse($raw);
+    $response = $this->parseRawResponse($raw, $this->results_as_array);
     return $response['body'];
   }
 
@@ -490,6 +495,8 @@ $view_response = $couchClient->limit(50)->include_docs(TRUE)->getView('blog_post
 	*
 	* implies include_docs(true)
 	*
+    * cannot be used in conjunction with asArray()
+    *
 	* when view result is parsed, view documents are translated to objects and sent back
 	*
 	* @view  results_as_couchDocuments()
@@ -498,10 +505,24 @@ $view_response = $couchClient->limit(50)->include_docs(TRUE)->getView('blog_post
 	*/
 	public function asCouchDocuments() {
 		$this->results_as_cd = true;
+        $this->results_as_array = false;
 		return $this;
 	}
 
 	/**
+    * returns couchDB results as array
+    *
+    * cannot be used in conjunction with asCouchDocuments()
+    *
+    * @return couchClient $this
+    */
+    public function asArray() {
+        $this->results_as_array = true;
+        $this->results_as_cd = false;
+        return $this;
+    }
+
+    /**
 	* request a view from the CouchDB server
 	*
 	* @link http://wiki.apache.org/couchdb/HTTP_view_API
@@ -661,7 +682,7 @@ class couchException extends Exception {
 		* @param string $raw_response HTTP response from the CouchDB server
 		*/
     function __construct($raw_response) {
-        $this->couch_response = couch::parseRawResponse($raw_response);
+        $this->couch_response = couch::parseRawResponse($raw_response, $this->results_as_array);
         parent::__construct($this->couch_response['status_message'], $this->couch_response['status_code']);
     }
 
