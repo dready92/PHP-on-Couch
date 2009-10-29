@@ -682,7 +682,7 @@ class couchException extends Exception {
 		* @param string $raw_response HTTP response from the CouchDB server
 		*/
     function __construct($raw_response) {
-        $this->couch_response = couch::parseRawResponse($raw_response, $this->results_as_array);
+        $this->couch_response = couch::parseRawResponse($raw_response);
         parent::__construct($this->couch_response['status_message'], $this->couch_response['status_code']);
     }
 
