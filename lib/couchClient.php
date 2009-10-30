@@ -83,6 +83,7 @@ class couchClient extends couch {
   protected function _queryAndTest ( $method, $url,$allowed_status_codes, $parameters = array(),$data = NULL ) {
     $raw = $this->query($method,$url,$parameters,$data);
     $response = $this->parseRawResponse($raw, $this->results_as_array);
+    $this->results_as_array = false;
     if ( in_array($response['status_code'], $allowed_status_codes) ) {
       return $response['body'];
     }
@@ -267,6 +268,7 @@ class couchClient extends couch {
     if ( $doc->_rev ) $url.='?rev='.$doc->_rev;
     $raw = $this->storeAsFile($url,$data,$content_type);
     $response = $this->parseRawResponse($raw, $this->results_as_array);
+    $this->results_as_array = false;
     return $response['body'];
   }
 
@@ -309,6 +311,7 @@ class couchClient extends couch {
             '/'.urlencode($attachment_name);
     $raw = $this->query('DELETE',$url,array("rev"=>$doc->_rev));
     $response = $this->parseRawResponse($raw, $this->results_as_array);
+    $this->results_as_array = false;
     return $response['body'];
   }
 
