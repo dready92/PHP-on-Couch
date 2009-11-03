@@ -303,16 +303,13 @@ class couchClient extends couch {
 	* @return object CouchDB attachment removal response
 	*/
   public function deleteAttachment ($doc,$attachment_name ) {
-		if ( !is_object($doc) )	throw new InvalidArgumentException ("Document should be an object");
+	if ( !is_object($doc) )	throw new InvalidArgumentException ("Document should be an object");
     if ( !$doc->_id )       throw new InvalidArgumentException ("Document should have an ID");
     if ( !strlen($attachment_name) )  throw new InvalidArgumentException ("Attachment name not set");
     $url  = '/'.urlencode($this->dbname).
             '/'.urlencode($doc->_id).
             '/'.urlencode($attachment_name);
-    $raw = $this->query('DELETE',$url,array("rev"=>$doc->_rev));
-    $response = $this->parseRawResponse($raw, $this->results_as_array);
-    $this->results_as_array = false;
-    return $response['body'];
+	return $this->_queryAndTest ('DELETE', $url, array(200),array('rev'=>$doc->_rev));
   }
 
 	/**

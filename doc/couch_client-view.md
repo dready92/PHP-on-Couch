@@ -71,3 +71,41 @@ Which is the same as :
     $client->include_docs(TRUE);
     $response = $client->getView('all','by_date');
 
+Choose JSON decoding option
+===========================
+
+When converting a JSON object to PHP, we can choose the type of the value returned from a couchClient query.
+
+Take for example the following JSON object :
+    { 'blog' : true, 'comments' : { 'title' : 'cool' } }
+
+This can be converted into a PHP object :
+
+    stdClass Object
+    (
+        [blog] => true
+        [comments] => stdClass Object
+            (
+                [title] => "cool"
+            )
+    )
+
+
+OR into a PHP array :
+
+    Array
+    (
+        [blog] => true
+        [comments] => Array
+            (
+                [title] => "cool"
+            )
+    )
+
+
+Using the defaults, JSON objects are mapped to PHP objects. The **asArray()** method can be used to map JSON objects to PHP arrays.
+
+Example :
+
+    $response = $client->startkey(100000000)->limit(100)->include_docs(TRUE)->asArray()->getView('all','by_date');
+
