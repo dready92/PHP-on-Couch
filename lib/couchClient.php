@@ -32,21 +32,24 @@ class couchClient extends couch {
 	/**
 	* @var string database name
 	*/
-  protected $dbname = '';
+	protected $dbname = '';
 	/**
 	* @var array CouchDB view query options
 	*/
-  protected $view_query = array();
-
+	protected $view_query = array();
+	/**
+	* @var array CouchDB changes query options
+	*/
+	protected $changes_query = array();
 	/**
 	* @var bool option to return couchdb view results as couchDocuments objects
 	*/
-  protected $results_as_cd = false;
+	protected $results_as_cd = false;
 
-    /**
-     * @var boolean tell if documents shall be returned as arrays instead of objects
-     */
-  protected $results_as_array = false;
+	/**
+	* @var boolean tell if documents shall be returned as arrays instead of objects
+	*/
+	protected $results_as_array = false;
 
 
   /**
@@ -154,6 +157,98 @@ class couchClient extends couch {
       throw $e;
     }
   }
+
+	/**
+	*CouchDb changes option
+	*
+	*
+	* @link http://books.couchdb.org/relax/reference/change-notifications
+	* @param integer $value sequence number
+	* @return couchClient $this
+	*/
+	public function since($value) {
+		$this->changes_query['since']=(int)$value;
+		return $this;
+	}
+
+	/**
+	*CouchDb changes option
+	*
+	*
+	* @link http://books.couchdb.org/relax/reference/change-notifications
+	* @param integer $value heartbeat in milliseconds
+	* @return couchClient $this
+	*/
+	public function heartbeat($value) {
+		$this->changes_query['heartbeat']=(int)$value;
+		return $this;
+	}
+
+	/**
+	*CouchDb changes option
+	*
+	*
+	* @link http://books.couchdb.org/relax/reference/change-notifications
+	* @param string $value feed type
+	* @return couchClient $this
+	*/
+	public function feed($value) {
+		if ( $value == 'longpoll' ) {
+			$this->changes_query['feed'] = $value;
+		} elseif (!empty($this->changes_query['feed']) ) {
+			unset($this->changes_query['feed']);
+		}
+		return $this;
+	}
+	
+
+	/**
+	*CouchDb changes option
+	*
+	*
+	* @link http://books.couchdb.org/relax/reference/change-notifications
+	* @param string $value designdocname/filtername
+	* @return couchClient $this
+	*/
+	public function filter($value,$additional_query_options = array() ) {
+		if ( strlen(trim($value)) ) {
+			$this->changes_query['filter']=trim($value);
+			$this->changes_query = array_merge($additional_query_options,$this->changes_query);
+		}
+		return $this;
+	}
+
+	/**
+	*CouchDb changes option
+	*
+	*
+	* @link http://books.couchdb.org/relax/reference/change-notifications
+	* @param string $value 'all_docs' to switch style
+	* @return couchClient $this
+	*/
+	public function style($value) {
+		if ( $value != 'all_docs' ) {
+			if ( !empty($this->changes_query['style']) )
+				unset($this->changes_query['style']);
+		} else {
+			$this->changes_query['style'] = 'all_docs';
+		}
+		return $this;
+	}
+
+
+	/**
+	* fetch database changes
+	*
+	* @return object CouchDB changes response
+	*/
+	public function getChanges() {
+		$url = '/'.urlencode($this->dbname).'/_changes';
+		$opts = $this->changes_query;
+		$this->changes_query = array();
+		return $this->_queryAndTest ('GET', $url, array(200,201),$opts);
+	}
+
 
 	/**
 	* fetch a CouchDB document

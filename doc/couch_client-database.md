@@ -88,3 +88,84 @@ Example :
 						4 => "9d9a8214762d06cdf0158d7f6697cac9" )
     */
 
+Database changes interface
+=========================
+
+CouchDB implements database changes feedback and polling.[You'll find more infos here.]](http://books.couchdb.org/relax/reference/change-notifications).
+For any event in the database, CouchDD increments a sequence counter.
+
+Getting changes
+--------------
+
+The method **getChanges()** sends back a CouchDB changes object.
+
+Example :
+
+    print_r($client->getChanges());
+    /*
+        stdClass Object
+        (              
+            [results] => Array
+                (             
+                    [0] => stdClass Object
+                        (                 
+                            [seq] => 3
+                            [id] => 482fa0bed0473fd651239597d1080f03
+                            [changes] => Array
+                                (
+                                    [0] => stdClass Object
+                                        (
+                                            [rev] => 3-58cae2758cea3e82105e1090d81a9e02
+                                        )
+        
+                                )
+        
+                            [deleted] => 1
+                        )
+        
+                    [1] => stdClass Object
+                        (
+                            [seq] => 4
+                            [id] => 2f3f913f34d60e473fad4334c13a24ed
+                            [changes] => Array
+                                (
+                                    [0] => stdClass Object
+                                        (
+                                            [rev] => 1-4c6114c65e295552ab1019e2b046b10e
+                                        )
+        
+                                )
+        
+                        )
+        
+                )
+        
+            [last_seq] => 4
+        )
+    */
+
+
+Chainable methods to use before getChanges()
+------------------------------------------
+
+The following methods allow a fine grained control on the _changes_ request to issue.
+
+**since(integer $value)**: retrieve changes that happened after sequence number $value
+
+**heartbeat(integer $value)**: number of milliseconds between each heartbeat line (an ampty line) one logpoll and continuous feeds
+
+**feed(string $value)**: feed type to use (currently default and "longpoll" is supported: no continuous)
+
+**filter(string $value, array $additional_query_options)**: apply the changes filter $value. Add additional headers if any
+
+**style(string $value)**: changes display style, use "all_docs" to switch to verbose
+
+Example :
+
+    // fetching changes since sequence number 546 using filter "messages/incoming"
+    $changes = $client->since(546)->filter("messages/incoming")->getChanges();
+
+
+
+
+ 
