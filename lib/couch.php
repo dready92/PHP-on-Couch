@@ -96,8 +96,11 @@ class couch {
 	*/
 	public static function parseRawResponse($raw_data, $json_as_array = FALSE) {
 		if ( !strlen($raw_data) ) throw new InvalidArgumentException("no data to parse");
+		if ( !substr_compare($raw_data, "HTTP/1.1 100 Continue\r\n\r\n", 0, 25) ) {
+			$raw_data = substr($raw_data, 25);
+		}
 		$response = array();
-		list($headers, $body) = explode("\r\n\r\n", $raw_data);
+		list($headers, $body) = explode("\r\n\r\n", $raw_data,2);
 		$status_line = reset(explode("\n",$headers));
 		$status_array = explode(' ',$status_line,3);
 		$response['status_code'] = trim($status_array[1]);
@@ -139,10 +142,10 @@ class couch {
 	*
 	* @return string server response
 	*/
-  public function storeFile ( $url, $file, $content_type ) {
+	public function storeFile ( $url, $file, $content_type ) {
 		if ( $this->curl )	return $this->_curl_storeFile($url,$file,$content_type);
 		else								return $this->_socket_storeFile($url,$file,$content_type);
-  }
+	}
 
 	/**
 	* store some data as a CouchDB attachment
@@ -153,7 +156,7 @@ class couch {
 	*
 	* @return string server response
 	*/
-  public function storeAsFile($url,$data,$content_type) {
+	public function storeAsFile($url,$data,$content_type) {
 		if ( $this->curl )	return $this->_curl_storeAsFile($url,$data,$content_type);
 		else								return $this->_socket_storeAsFile($url,$data,$content_type);
 
@@ -202,10 +205,10 @@ class couch {
 		if ( is_object($data) OR is_array($data) )
 			$data = json_encode($data);
 		$req = "$method $url HTTP/1.0\r\nHost: ".$this->dsn_part('host')."\r\n";
-	           $req.= "Accept: application/json,text/html,text/plain,*/*\r\n";
-    if ( $method == 'COPY') {
-      $req .= 'Destination: '.$data."\r\n\r\n";
-    } elseif ($data) {
+		$req.= "Accept: application/json,text/html,text/plain,*/*\r\n";
+		if ( $method == 'COPY') {
+			$req .= 'Destination: '.$data."\r\n\r\n";
+		} elseif ($data) {
 			$req .= 'Content-Length: '.strlen($data)."\r\n";
 			$req .= 'Content-Type: application/json'."\r\n\r\n";
 			$req .= $data."\r\n";
@@ -231,20 +234,20 @@ class couch {
 		if ( !strlen($file) OR !is_file($file) OR !is_readable($file) )	throw new InvalidArgumentException("Attachment file does not exist or is not readable");
 		if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
 
-    $req  = "PUT $url HTTP/1.0\r\nHost: ".$this->dsn_part('host')."\r\n";
-	  $req .= "Accept: application/json,text/html,text/plain,*/*\r\n";
-  	$req .= 'Content-Length: '.filesize($file)."\r\n";
+		$req  = "PUT $url HTTP/1.0\r\nHost: ".$this->dsn_part('host')."\r\n";
+		$req .= "Accept: application/json,text/html,text/plain,*/*\r\n";
+		$req .= 'Content-Length: '.filesize($file)."\r\n";
 		$req .= 'Content-Type: '.$content_type."\r\n\r\n";
-    $fstream=fopen($file,'r');
-    $this->_connect();
-    fwrite($this->socket, $req);
-    stream_copy_to_stream($fstream,$this->socket);
-    $response = '';
-    while(!feof($this->socket))
+		$fstream=fopen($file,'r');
+		$this->_connect();
+		fwrite($this->socket, $req);
+		stream_copy_to_stream($fstream,$this->socket);
+		$response = '';
+		while(!feof($this->socket))
 			$response .= fgets($this->socket);
-    $this->_disconnect();
-    fclose($fstream);
-    return $response;
+		$this->_disconnect();
+		fclose($fstream);
+		return $response;
 	}
 
 
@@ -284,7 +287,9 @@ class couch {
 	* @return boolean wheter the connection is successful
 	*/
 	protected function _connect() {
-		$this->socket = @fsockopen($this->dsn_part('host'), $this->dsn_part('port'), $err_num, $err_string);
+		$ssl = $this->dsn_part('scheme') == 'https' ? 'ssl://' : '';
+		$this->socket = @fsockopen($ssl.$this->dsn_part('host'), $this->dsn_part('port'), $err_num, $err_string);
+		//$this->socket = @fsockopen($this->dsn_part('host'), $this->dsn_part('port'), $err_num, $err_string);
 		if(!$this->socket) {
 			throw new Exception('Could not open connection to '.$this->dsn_part('host').':'.$this->dsn_part('port').': '.$err_string.' ('.$err_num.')');
 			return FALSE;
@@ -334,14 +339,12 @@ class couch {
 
 		curl_setopt($http, CURLOPT_CUSTOMREQUEST, $method);
 
-    if ( $method == 'COPY') {
-      $http_headers[] = "Destination: $data";
-    } elseif ($data) {
+		if ( $method == 'COPY') {
+			$http_headers[] = "Destination: $data";
+		} elseif ($data) {
 			curl_setopt($http, CURLOPT_POSTFIELDS, $data);
 		}
-
 		curl_setopt($http, CURLOPT_HTTPHEADER,$http_headers);
-
 		return $http;
 	}
 
@@ -390,27 +393,27 @@ class couch {
 	*
 	* @return string server response
 	*/
-  public function _curl_storeFile ( $url, $file, $content_type ) {
-	if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
-	if ( !strlen($file) OR !is_file($file) OR !is_readable($file) )	throw new InvalidArgumentException("Attachment file does not exist or is not readable");
-	if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
-	$url = $this->dsn.$url;
-	$http = curl_init($url);
-	$http_headers = array('Accept: application/json,text/html,text/plain,*/*','Content-Type: '.$content_type) ;
-	curl_setopt($http, CURLOPT_PUT, 1);
-	curl_setopt($http, CURLOPT_HTTPHEADER,$http_headers);
-	curl_setopt($http, CURLOPT_UPLOAD, true);
-	curl_setopt($http, CURLOPT_HEADER, true);
-	curl_setopt($http, CURLOPT_RETURNTRANSFER, true);
-	curl_setopt($http, CURLOPT_FOLLOWLOCATION, true);
-	$fstream=fopen($file,'r');
-	curl_setopt($http, CURLOPT_INFILE, $fstream);
-	curl_setopt($http, CURLOPT_INFILESIZE, filesize($file));
-	$response = curl_exec($http);
-	fclose($fstream);
-	curl_close($http);
-	return $response;
-  }
+	public function _curl_storeFile ( $url, $file, $content_type ) {
+		if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
+		if ( !strlen($file) OR !is_file($file) OR !is_readable($file) )	throw new InvalidArgumentException("Attachment file does not exist or is not readable");
+		if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
+		$url = $this->dsn.$url;
+		$http = curl_init($url);
+		$http_headers = array('Accept: application/json,text/html,text/plain,*/*','Content-Type: '.$content_type) ;
+		curl_setopt($http, CURLOPT_PUT, 1);
+		curl_setopt($http, CURLOPT_HTTPHEADER,$http_headers);
+		curl_setopt($http, CURLOPT_UPLOAD, true);
+		curl_setopt($http, CURLOPT_HEADER, true);
+		curl_setopt($http, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($http, CURLOPT_FOLLOWLOCATION, true);
+		$fstream=fopen($file,'r');
+		curl_setopt($http, CURLOPT_INFILE, $fstream);
+		curl_setopt($http, CURLOPT_INFILESIZE, filesize($file));
+		$response = curl_exec($http);
+		fclose($fstream);
+		curl_close($http);
+		return $response;
+	}
 
 	/**
 	* store some data as a CouchDB attachment
@@ -422,22 +425,22 @@ class couch {
 	*
 	* @return string server response
 	*/
-  public function _curl_storeAsFile($url,$data,$content_type) {
-	if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
-	if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
-	$url = $this->dsn.$url;
-	$http = curl_init($url);
-	$http_headers = array('Accept: application/json,text/html,text/plain,*/*','Content-Type: '.$content_type,'Content-Length: '.strlen($data)) ;
-	curl_setopt($http, CURLOPT_CUSTOMREQUEST, 'PUT');
-	curl_setopt($http, CURLOPT_HTTPHEADER,$http_headers);
-	curl_setopt($http, CURLOPT_HEADER, true);
-	curl_setopt($http, CURLOPT_RETURNTRANSFER, true);
-	curl_setopt($http, CURLOPT_FOLLOWLOCATION, true);
-	curl_setopt($http, CURLOPT_POSTFIELDS, $data);
-	$response = curl_exec($http);
-	curl_close($http);
-	return $response;
-  }
+	public function _curl_storeAsFile($url,$data,$content_type) {
+		if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
+		if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
+		$url = $this->dsn.$url;
+		$http = curl_init($url);
+		$http_headers = array('Accept: application/json,text/html,text/plain,*/*','Content-Type: '.$content_type,'Content-Length: '.strlen($data)) ;
+		curl_setopt($http, CURLOPT_CUSTOMREQUEST, 'PUT');
+		curl_setopt($http, CURLOPT_HTTPHEADER,$http_headers);
+		curl_setopt($http, CURLOPT_HEADER, true);
+		curl_setopt($http, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($http, CURLOPT_FOLLOWLOCATION, true);
+		curl_setopt($http, CURLOPT_POSTFIELDS, $data);
+		$response = curl_exec($http);
+		curl_close($http);
+		return $response;
+	}
 
 }
 
