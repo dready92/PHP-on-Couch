@@ -46,7 +46,7 @@ This class maps all the actions the application can do on the CouchDB server. We
 
 ### [database stuff](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-database.md)
 
-list databases, create and delete a database, retrieve database informations, test whether a databse exists, get uuids
+list databases, create and delete a database, retrieve database informations, test whether a databse exists, get uuids, get databases changes
 
 ### [document stuff](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-document.md)
 
