@@ -106,3 +106,4 @@ Resources
 
 [View API](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-view.md)
 
+[couchDocument API](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_document.md)

@@ -171,14 +171,14 @@ class couchDocument {
 	* this method store the object in the database !
 	*
 	* there is 2 ways to use it. Set one field :
-	*	<code>
+	* <code>
 	* $this->set('some_field','some value');
-  * </code>
+	* </code>
 	*
 	* or set multiple fields in one go :
-	*	<code>
+	* <code>
 	* $this->set( array('some_field'=>'some value','some_other_field'=>'another value') );
-  * </code>
+	* </code>
 	*
 	* @param string|array $key
 	* @param mixed $value
