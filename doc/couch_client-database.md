@@ -91,7 +91,7 @@ Example :
 Database changes interface
 =========================
 
-CouchDB implements database changes feedback and polling.[You'll find more infos here.]](http://books.couchdb.org/relax/reference/change-notifications).
+CouchDB implements database changes feedback and polling.[You'll find more infos here.](http://books.couchdb.org/relax/reference/change-notifications).
 For any event in the database, CouchDD increments a sequence counter.
 
 Getting changes
@@ -154,7 +154,9 @@ The following methods allow a fine grained control on the _changes_ request to i
 
 **heartbeat(integer $value)**: number of milliseconds between each heartbeat line (an ampty line) one logpoll and continuous feeds
 
-**feed(string $value)**: feed type to use (currently default and "longpoll" is supported: no continuous)
+**feed(string $value,$callback)**: feed type to use. In case of "continuous" feed type, $callback should be set and should be a PHP callable object (so *is_callable($callback)* should be true)
+
+The callable function or method will receive two arguments : the JSON object decoded as a PHP object, and a couchClient instance, allowing developers to issue CouchDB queries from inside the callback.
 
 **filter(string $value, array $additional_query_options)**: apply the changes filter $value. Add additional headers if any
 
@@ -165,6 +167,23 @@ Example :
     // fetching changes since sequence number 546 using filter "messages/incoming"
     $changes = $client->since(546)->filter("messages/incoming")->getChanges();
 
+Example - Continuous changes with a callback function
+
+    function index_doc($change,$couch) {
+    	if( $change->deleted == true ) {
+    		// won't index a deleted file
+    		return ;
+    	}
+    	echo "indexing ".$change->id."\n";
+    	$doc = $couch->getDoc($change->id);
+    	unset($doc->_rev);
+    	$id = $doc->_id;
+    	unset($doc->_id);
+    	my_super_fulltext_search_appliance::index($id, $doc);
+    }
+    	
+    $client->feed('continuous','index_doc')->getChanges();
+    // will return when index_doc returns false or on socket error
 
 
 

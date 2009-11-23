@@ -17,6 +17,9 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
+function testme () {
+	echo "ping\n";
+}
 
 
 /**
@@ -190,11 +193,15 @@ class couchClient extends couch {
 	*
 	* @link http://books.couchdb.org/relax/reference/change-notifications
 	* @param string $value feed type
+	* @param callable $continuous_callback in case of a continuous feed, the callback to be executed on new event reception
 	* @return couchClient $this
 	*/
-	public function feed($value) {
+	public function feed($value,$continuous_callback = null) {
 		if ( $value == 'longpoll' ) {
 			$this->changes_query['feed'] = $value;
+		}elseif ( $value == 'continuous' ) {
+			$this->changes_query['feed'] = $value;
+			$this->changes_query['continuous_feed'] = $continuous_callback;
 		} elseif (!empty($this->changes_query['feed']) ) {
 			unset($this->changes_query['feed']);
 		}
@@ -243,10 +250,28 @@ class couchClient extends couch {
 	* @return object CouchDB changes response
 	*/
 	public function getChanges() {
+		if ( !empty($this->changes_query['feed']) && $this->changes_query['feed'] == 'continuous' ) {
+			return $this->_continuousChanges();
+		}
 		$url = '/'.urlencode($this->dbname).'/_changes';
 		$opts = $this->changes_query;
 		$this->changes_query = array();
 		return $this->_queryAndTest ('GET', $url, array(200,201),$opts);
+	}
+
+
+	/**
+	* Internal wrapper of a changes request in continuous mode
+	*
+	*
+	*/
+	protected function _continuousChanges() {
+		$url = '/'.urlencode($this->dbname).'/_changes';
+		$opts = $this->changes_query;
+		$this->changes_query = array();
+		$callable = $opts['continuous_feed'];
+		unset($opts['continuous_feed']);
+		return $this->continuousQuery($callable,'GET',$url,$opts);
 	}
 
 

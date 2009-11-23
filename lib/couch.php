@@ -132,6 +132,78 @@ class couch {
 	}
 
 
+	/**
+	*send a query to the CouchDB server
+	*
+	* In a continuous query, the server send headers, and then a JSON object per line.
+	* On each line received, the $callable callback is fired, with two arguments :
+	*
+	* - the JSON object decoded as a PHP object
+	*
+	* - a couchClient instance to use to make queries inside the callback
+	*
+	* If the callable returns the boolean FALSE , continuous reading stops.
+	*
+	* @param callable $callable PHP function name / callable array ( see http://php.net/is_callable )
+	* @param string $method HTTP method to use (GET, POST, ...)
+	* @param string $url URL to fetch
+	* @param array $parameters additionnal parameters to send with the request
+	* @param string|array|object $data request body
+	*
+	* @return string|false server response on success, false on error
+	*/
+	public function continuousQuery($callable,$method,$url,$parameters = array(),$data = null) {
+		if ( !in_array($method, $this->HTTP_METHODS )    )
+			throw new Exception("Bad HTTP method: $method");
+		if ( !is_callable($callable) ) 
+			throw new InvalidArgumentException("callable argument have to success to is_callable PHP function");
+		if ( is_array($parameters) AND count($parameters) )
+			$url = $url.'?'.http_build_query($parameters);
+
+		$request = $this->_socket_buildRequest($method,$url,$data);
+		if ( !$this->_connect() )	return FALSE;
+		fwrite($this->socket, $request);
+		$response = '';
+		$code=0;
+		$headers = false;
+		while (!feof($this->socket)&& !$headers) {
+			if ( !strlen($response) ) {
+				$response.=fgets($this->socket);
+				$split=explode(" ",$response);
+				$code = $split[1];
+				unset($split);
+				continue;
+			}
+			$response.=fgets($this->socket);
+			if (preg_match("/\r\n\r\n$/",$response) ) {
+				//echo "headers received\n";
+				//echo $response;
+				$headers = true;
+			}
+		}
+		//var_dump($this->socket);
+		$c = new couchClient($this->dsn,$this->dbname);
+		while ($this->socket && !feof($this->socket)) {
+			//echo "new try...";
+			$e = NULL;
+			$e2 = NULL;
+			$read = array($this->socket);
+			if (false === ($num_changed_streams = stream_select($read, $e, $e2, 1))) {
+				//echo "socket passed away...\n";
+				$this->socket = null;
+			} elseif ($num_changed_streams > 0) {
+				$line = fgets($this->socket);
+				if ( strlen(trim($line)) ) {
+					$break = call_user_func($callable,json_decode($line),$c);
+					if ( $break === FALSE ) {
+						fclose($this->socket);
+					}
+				}
+			}
+		}
+		//echo "out of the loop";
+		return ;
+	}
 
 	/**
 	* record a file located on the disk as a CouchDB attachment
