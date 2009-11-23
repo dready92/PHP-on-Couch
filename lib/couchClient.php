@@ -718,16 +718,37 @@ $view_response = $couchClient->limit(50)->include_docs(TRUE)->getView('blog_post
 	* @param string $id design document name (without _design)
 	* @param string $name list name
 	* @param string $view_name view name
+	* @param array $additionnal_parameters some other parameters to send in the query
 	* @return object CouchDB list query response
 	*/
-  public function getList ( $id, $name, $view_name ) {
+	public function getList ( $id, $name, $view_name, $additionnal_parameters = array() ) {
 		if ( !$id OR !$name )    throw new InvalidArgumentException("You should specify list id and name");
 		if ( !$view_name )    throw new InvalidArgumentException("You should specify view name");
 		$url = '/'.urlencode($this->dbname).'/_design/'.urlencode($id).'/_list/'.urlencode($name).'/'.urlencode($view_name);
 		$view_query = $this->view_query;
 		$this->results_as_cd = false;
 		$this->view_query = array();
-    return $this->_queryAndTest ('GET', $url, array(200),$view_query);
+		if ( is_array($additionnal_parameters) && count($additionnal_parameters) ) {
+			$view_query = array_merge($additionnal_parameters,$view_query);
+		}
+		return $this->_queryAndTest ('GET', $url, array(200),$view_query);
+	}
+
+	/**
+	* request a show from the CouchDB server
+	*
+	* @link http://wiki.apache.org/couchdb/Formatting_with_Show_and_List
+	* @param string $id design document name (without _design)
+	* @param string $name show name
+	* @param string $doc_id id of the couchDB document (can be null !)
+	* @param array $additionnal_parameters some other parameters to send in the query
+	* @return object CouchDB list query response
+	*/
+	public function getShow ( $id, $name, $doc_id = null, $additionnal_parameters = array() ) {
+		if ( !$id OR !$name )    throw new InvalidArgumentException("You should specify list id and name");
+		$url = '/'.urlencode($this->dbname).'/_design/'.urlencode($id).'/_show/'.urlencode($name);
+		if ( $doc_id )	$url.='/'.urlencode($doc_id);
+		return $this->_queryAndTest ('GET', $url, array(200), $additionnal_parameters);
 	}
 
 	/**
@@ -749,7 +770,7 @@ $view_response = $couchClient->limit(50)->include_docs(TRUE)->getView('blog_post
 			$method = 'POST';
 			$data = json_encode(array('keys'=>$keys));
 		}
-    return $this->_queryAndTest ($method, $url, array(200),$view_query,$data);
+		return $this->_queryAndTest ($method, $url, array(200),$view_query,$data);
 	}
 
 	/**
@@ -761,7 +782,7 @@ $view_response = $couchClient->limit(50)->include_docs(TRUE)->getView('blog_post
 		$url = '/'.urlencode($this->dbname).'/_all_docs_by_seq';
 		$view_query = $this->view_query;
 		$this->view_query = array();
-    return $this->_queryAndTest ('GET', $url, array(200),$view_query);
+		return $this->_queryAndTest ('GET', $url, array(200),$view_query);
 	}
 
 	/**
@@ -794,28 +815,28 @@ $view_response = $couchClient->limit(50)->include_docs(TRUE)->getView('blog_post
 */
 class couchException extends Exception {
     // couchDB response once parsed
-    protected $couch_response = array();
+	protected $couch_response = array();
 
-    /**
-		*class constructor
-		*
-		* @param string $raw_response HTTP response from the CouchDB server
-		*/
-    function __construct($raw_response) {
-        $this->couch_response = couch::parseRawResponse($raw_response);
-        parent::__construct($this->couch_response['status_message'], $this->couch_response['status_code']);
-    }
+	/**
+	*class constructor
+	*
+	* @param string $raw_response HTTP response from the CouchDB server
+	*/
+	function __construct($raw_response) {
+		$this->couch_response = couch::parseRawResponse($raw_response);
+		parent::__construct($this->couch_response['status_message'], $this->couch_response['status_code']);
+	}
 
-		/**
-		* returns CouchDB server response body (if any)
-		*
-		* if the response's "Content-Type" is set to "application/json", the
-		* body is json_decode()d
-		*
-		* @return string|object|null CouchDB server response
-		*/
-    function getBody() {
-        return $this->couch_response['body'];
-    }
+	/**
+	* returns CouchDB server response body (if any)
+	*
+	* if the response's "Content-Type" is set to "application/json", the
+	* body is json_decode()d
+	*
+	* @return string|object|null CouchDB server response
+	*/
+	function getBody() {
+		return $this->couch_response['body'];
+	}
 }
 

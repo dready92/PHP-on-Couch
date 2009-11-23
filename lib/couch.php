@@ -81,6 +81,22 @@ class couch {
 		}
 	}
 
+	/*
+	*returns an array containing status_code and status message of a CouchDB response
+	*
+	* @param string $raw_data data sent back by the server
+	* @return array array with keys 'status_code' and 'status_message'
+	*/
+	/*protected static function parseRawHeaders($raw_data) {
+		$response = array();
+		list($headers, $body) = explode("\r\n\r\n", $raw_data,2);
+		$status_line = reset(explode("\n",$headers));
+		$status_array = explode(' ',$status_line,3);
+		$response['status_code'] = trim($status_array[1]);
+		$response['status_message'] = trim($status_array[2]);
+		return $response;
+	}*/
+
 	/**
 	* parse a CouchDB server response and sends back an array 
 	* the array contains keys :

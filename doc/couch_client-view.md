@@ -109,3 +109,16 @@ Example :
 
     $response = $client->startkey(100000000)->limit(100)->include_docs(TRUE)->asArray()->getView('all','by_date');
 
+Format a view with CouchDB list formatting feature
+==================================================
+
+More infos on CouchDB lists [here](http://wiki.apache.org/couchdb/Formatting_with_Show_and_List).
+
+The method **getList($design_id, $name, $view_name, $additionnal_parameters = array() )** retrive a view and then format it using the algorithm of the $name list.
+
+Example :
+
+    $response = $client->limit(100)->include_docs(TRUE)->getList('all','html','by_date');
+    // will run the view declared in _design/all and named *by_date*, and then
+	// pass it through the list declared in _design/all and name *html*.
+

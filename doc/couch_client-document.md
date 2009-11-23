@@ -225,6 +225,16 @@ Example :
     $doc = $client->getDoc('BlogPost5676');
     $ok = $client->deleteAttachment($doc,'GoogleHomepage.html');
 
+Request a show view on a document
+=================================
+
+The method **getShow($design_id, $name, $doc_id = null, $additionnal_parameters = array() )** request a show formatting of document *$doc_id* with show method *$name* stored in design document *design_id*.
+
+Example :
+
+    $output = $client->getShow('blogs','html','BlogPost5676');
+
+More infos on CouchDB show formatting [here](http://wiki.apache.org/couchdb/Formatting_with_Show_and_List)
 
 Bulk operations
 ===============
