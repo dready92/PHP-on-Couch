@@ -8,7 +8,10 @@
 
 */
 
+### ANON DSN
 $couch_dsn = "http://localhost:5984/";
+### AUTHENTICATED DSN
+### $couch_dsn = "http://user:password@localhost:5984/"
 $couch_db = "example";
 
 

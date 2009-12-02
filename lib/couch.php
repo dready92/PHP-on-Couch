@@ -293,6 +293,12 @@ class couch {
 		if ( is_object($data) OR is_array($data) )
 			$data = json_encode($data);
 		$req = "$method $url HTTP/1.0\r\nHost: ".$this->dsn_part('host')."\r\n";
+
+		if ( $this->dsn_part('user') && $this->dsn_part('pass') ) {
+		  $req .= 'Authorization: Basic '.base64_encode($this->dsn_part('user').':'.
+		        	$this->dsn_part('pass'))."\r\n";
+		} 
+
 		$req.= "Accept: application/json,text/html,text/plain,*/*\r\n";
 		if ( $method == 'COPY') {
 			$req .= 'Destination: '.$data."\r\n\r\n";
