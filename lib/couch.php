@@ -81,22 +81,6 @@ class couch {
 		}
 	}
 
-	/*
-	*returns an array containing status_code and status message of a CouchDB response
-	*
-	* @param string $raw_data data sent back by the server
-	* @return array array with keys 'status_code' and 'status_message'
-	*/
-	/*protected static function parseRawHeaders($raw_data) {
-		$response = array();
-		list($headers, $body) = explode("\r\n\r\n", $raw_data,2);
-		$status_line = reset(explode("\n",$headers));
-		$status_array = explode(' ',$status_line,3);
-		$response['status_code'] = trim($status_array[1]);
-		$response['status_message'] = trim($status_array[2]);
-		return $response;
-	}*/
-
 	/**
 	* parse a CouchDB server response and sends back an array 
 	* the array contains keys :
@@ -115,19 +99,14 @@ class couch {
 		if ( !substr_compare($raw_data, "HTTP/1.1 100 Continue\r\n\r\n", 0, 25) ) {
 			$raw_data = substr($raw_data, 25);
 		}
-		$response = array();
+		$response = array('body'=>null);
 		list($headers, $body) = explode("\r\n\r\n", $raw_data,2);
 		$status_line = reset(explode("\n",$headers));
 		$status_array = explode(' ',$status_line,3);
 		$response['status_code'] = trim($status_array[1]);
 		$response['status_message'] = trim($status_array[2]);
 		if ( strlen($body) ) {
-			if ( preg_match('@Content-Type:\s+application/json@',$headers) )
-				$response['body'] = json_decode($body,$json_as_array);
-			else
-				$response['body'] = $body;
-		} else {
-			$response['body'] = null;
+			$response['body'] = preg_match('@Content-Type:\s+application/json@',$headers) ? json_decode($body,$json_as_array) : $body ;
 		}
 		return $response;
 	}
@@ -144,9 +123,37 @@ class couch {
 	*/
 	public function query ( $method, $url, $parameters = array() , $data = NULL ) {
 		if ( $this->curl )	return $this->_curl_query($method,$url,$parameters, $data);
-		else								return $this->_socket_query($method,$url,$parameters, $data);
+		else				return $this->_socket_query($method,$url,$parameters, $data);
 	}
 
+	/**
+	* record a file located on the disk as a CouchDB attachment
+	*
+	* @param string $url CouchDB URL to store the file to
+	* @param string $file path to the on-disk file
+	* @param string $content_type attachment content_type
+	*
+	* @return string server response
+	*/
+	public function storeFile ( $url, $file, $content_type ) {
+		if ( $this->curl )	return $this->_curl_storeFile($url,$file,$content_type);
+		else				return $this->_socket_storeFile($url,$file,$content_type);
+	}
+
+	/**
+	* store some data as a CouchDB attachment
+	*
+	* @param string $url CouchDB URL to store the file to
+	* @param string $data data to send as the attachment content
+	* @param string $content_type attachment content_type
+	*
+	* @return string server response
+	*/
+	public function storeAsFile($url,$data,$content_type) {
+		if ( $this->curl )	return $this->_curl_storeAsFile($url,$data,$content_type);
+		else				return $this->_socket_storeAsFile($url,$data,$content_type);
+
+	}
 
 	/**
 	*send a query to the CouchDB server
@@ -183,29 +190,23 @@ class couch {
 		$code=0;
 		$headers = false;
 		while (!feof($this->socket)&& !$headers) {
-			if ( !strlen($response) ) {
-				$response.=fgets($this->socket);
-				$split=explode(" ",$response);
-				$code = $split[1];
-				unset($split);
-				continue;
-			}
 			$response.=fgets($this->socket);
 			if (preg_match("/\r\n\r\n$/",$response) ) {
-				//echo "headers received\n";
-				//echo $response;
 				$headers = true;
 			}
 		}
-		//var_dump($this->socket);
-		$c = new couchClient($this->dsn,$this->dbname);
+		$headers = explode("\n",trim($response));
+		$split=explode(" ",trim(reset($headers)));
+		$code = $split[1];
+		unset($split);
+
+		$c = clone $this;
+		
 		while ($this->socket && !feof($this->socket)) {
-			//echo "new try...";
 			$e = NULL;
 			$e2 = NULL;
 			$read = array($this->socket);
 			if (false === ($num_changed_streams = stream_select($read, $e, $e2, 1))) {
-				//echo "socket passed away...\n";
 				$this->socket = null;
 			} elseif ($num_changed_streams > 0) {
 				$line = fgets($this->socket);
@@ -217,41 +218,8 @@ class couch {
 				}
 			}
 		}
-		//echo "out of the loop";
-		return ;
+		return $code;
 	}
-
-	/**
-	* record a file located on the disk as a CouchDB attachment
-	*
-	* @param string $url CouchDB URL to store the file to
-	* @param string $file path to the on-disk file
-	* @param string $content_type attachment content_type
-	*
-	* @return string server response
-	*/
-	public function storeFile ( $url, $file, $content_type ) {
-		if ( $this->curl )	return $this->_curl_storeFile($url,$file,$content_type);
-		else								return $this->_socket_storeFile($url,$file,$content_type);
-	}
-
-	/**
-	* store some data as a CouchDB attachment
-	*
-	* @param string $url CouchDB URL to store the file to
-	* @param string $data data to send as the attachment content
-	* @param string $content_type attachment content_type
-	*
-	* @return string server response
-	*/
-	public function storeAsFile($url,$data,$content_type) {
-		if ( $this->curl )	return $this->_curl_storeAsFile($url,$data,$content_type);
-		else								return $this->_socket_storeAsFile($url,$data,$content_type);
-
-	}
-
-
-
 
 	/**
 	*send a query to the CouchDB server
@@ -282,6 +250,32 @@ class couch {
 
 
 	/**
+	* returns first lines of request headers
+	*
+	* lines :
+	* <code>
+	* VERB HTTP/1.0
+	* Host: my.super.server.com
+	* Authorization: Basic...
+	* Accept: application/json,text/html,text/plain,*/*
+    * </code>
+	*
+	* @param string $method HTTP method to use
+	* @param string $url the request URL
+	* @return string start of HTTP request
+	*/
+	protected function _socket_startRequestHeaders($method,$url) {
+		$req = "$method $url HTTP/1.0\r\nHost: ".$this->dsn_part('host')."\r\n";
+		if ( $this->dsn_part('user') && $this->dsn_part('pass') ) {
+		  $req .= 'Authorization: Basic '.base64_encode($this->dsn_part('user').':'.
+		        	$this->dsn_part('pass'))."\r\n";
+		}
+		$req.="Accept: application/json,text/html,text/plain,*/*\r\n";
+
+		return $req;
+	}
+
+	/**
 	* build HTTP request to send to the server
 	*
 	* @param string $method HTTP method to use
@@ -292,14 +286,8 @@ class couch {
 	protected function _socket_buildRequest($method,$url,$data) {
 		if ( is_object($data) OR is_array($data) )
 			$data = json_encode($data);
-		$req = "$method $url HTTP/1.0\r\nHost: ".$this->dsn_part('host')."\r\n";
+		$req = $this->_socket_startRequestHeaders($method,$url);
 
-		if ( $this->dsn_part('user') && $this->dsn_part('pass') ) {
-		  $req .= 'Authorization: Basic '.base64_encode($this->dsn_part('user').':'.
-		        	$this->dsn_part('pass'))."\r\n";
-		} 
-
-		$req.= "Accept: application/json,text/html,text/plain,*/*\r\n";
 		if ( $method == 'COPY') {
 			$req .= 'Destination: '.$data."\r\n\r\n";
 		} elseif ($data) {
@@ -327,11 +315,9 @@ class couch {
 		if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
 		if ( !strlen($file) OR !is_file($file) OR !is_readable($file) )	throw new InvalidArgumentException("Attachment file does not exist or is not readable");
 		if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
-
-		$req  = "PUT $url HTTP/1.0\r\nHost: ".$this->dsn_part('host')."\r\n";
-		$req .= "Accept: application/json,text/html,text/plain,*/*\r\n";
-		$req .= 'Content-Length: '.filesize($file)."\r\n";
-		$req .= 'Content-Type: '.$content_type."\r\n\r\n";
+		$req = $this->_socket_startRequestHeaders('PUT',$url);
+		$req .= 'Content-Length: '.filesize($file)."\r\n"
+				.'Content-Type: '.$content_type."\r\n\r\n";
 		$fstream=fopen($file,'r');
 		$this->_connect();
 		fwrite($this->socket, $req);
@@ -359,10 +345,9 @@ class couch {
 		if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
 		if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
 
-		$req  = "PUT $url HTTP/1.0\r\nHost: ".$this->dsn_part('host')."\r\n";
-		$req .= "Accept: application/json,text/html,text/plain,*/*\r\n";
-		$req .= 'Content-Length: '.strlen($data)."\r\n";
-		$req .= 'Content-Type: '.$content_type."\r\n\r\n";
+		$req = $this->_socket_startRequestHeaders('PUT',$url);
+		$req .= 'Content-Length: '.strlen($data)."\r\n"
+				.'Content-Type: '.$content_type."\r\n\r\n";
 		$this->_connect();
 		fwrite($this->socket, $req);
 		fwrite($this->socket, $data);
@@ -383,7 +368,6 @@ class couch {
 	protected function _connect() {
 		$ssl = $this->dsn_part('scheme') == 'https' ? 'ssl://' : '';
 		$this->socket = @fsockopen($ssl.$this->dsn_part('host'), $this->dsn_part('port'), $err_num, $err_string);
-		//$this->socket = @fsockopen($this->dsn_part('host'), $this->dsn_part('port'), $err_num, $err_string);
 		if(!$this->socket) {
 			throw new Exception('Could not open connection to '.$this->dsn_part('host').':'.$this->dsn_part('port').': '.$err_string.' ('.$err_num.')');
 			return FALSE;
