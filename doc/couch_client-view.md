@@ -47,6 +47,7 @@ Query parameters
 PHP on Couch implements chainable methods to add query parameters. The method names are mapped on their CouchDB counterparts :
 
 * key
+* keys
 * startkey
 * startkey_docid
 * endkey

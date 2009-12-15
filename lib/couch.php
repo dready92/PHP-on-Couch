@@ -257,7 +257,7 @@ class couch {
 	* VERB HTTP/1.0
 	* Host: my.super.server.com
 	* Authorization: Basic...
-	* Accept: application/json,text/html,text/plain,*/*
+	* Accept: application/json,text/html,text/plain,* /*
     * </code>
 	*
 	* @param string $method HTTP method to use

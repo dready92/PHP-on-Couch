@@ -83,7 +83,7 @@ Example :
 Storing a document
 ==================
 
-The method **storeDoc($doc)** store a document on the CouchDB server. $doc should be an object. If the property $doc->_rev is set, the method understand that it's an update, and as so requires the property $doc->_id to be set. If the property $doc->_rev is not set, the method checks for the existance of property $doc->_id and initiate the appropriate request.
+The method **storeDoc($doc)** store a document on the CouchDB server. $doc should be an object. If the property $doc->_rev is set, the method understand that it's an update, and as so requires the property $doc->\_id to be set. If the property $doc->\_rev is not set, the method checks for the existance of property $doc->\_id and initiate the appropriate request.
 
 The response of this method is the CouchDB server response. In other words if the request ends successfully the returned object should be :
 
@@ -140,7 +140,7 @@ Example : updating an existing document :
 Deleting a document
 ===================
 
-The method **deleteDoc ( $doc )** permanently removes $doc from the CouchDB server. $doc should be an object containing at least _id and _rev properties.
+The method **deleteDoc ( $doc )** permanently removes $doc from the CouchDB server. $doc should be an object containing at least \_id and \_rev properties.
 
 Example :
 
@@ -185,7 +185,7 @@ On-disk files to attachments
 
 The method **storeAttachment($doc,$file,$content_type = 'application/octet-stream',$filename = null) ** handles the process of storing an attachment on a CouchDB document.
 
-* **$doc** is a PHP object containing at least the properties _id ans _rev
+* **$doc** is a PHP object containing at least the properties \_id and \_rev
 * **$file** is the complete path to the file on disk
 * **$content_type** is the file's [content-type](http://en.wikipedia.org/wiki/MIME)
 * **$filename** is the name of the attachment on CouchDB document, if the name is not the name of the file in $file
@@ -202,7 +202,7 @@ PHP data to attachments
 
 The method **storeAsAttachment($doc,$data,$filename,$content_type = 'application/octet-stream')** records as a CouchDB document's attachment the content of a PHP variable.
 
-* **$doc** is a PHP object containing at least the properties _id ans _rev
+* **$doc** is a PHP object containing at least the properties \_id and \_rev
 * **$data** is the data (the content of the attachment)
 * **$filename** is the name of the attachment on CouchDB document
 * **$content_type** is the file's [content-type](http://en.wikipedia.org/wiki/MIME)
@@ -218,7 +218,7 @@ Example :
 Delete a document attachment
 ============================
 
-the method **deleteAttachment($doc,$attachment_name )** delete an attachment from a CouchDB document. $doc is an object with, at least, _id and _rev properties, and $attachment_name is the name of the attachment to delete.
+the method **deleteAttachment($doc,$attachment_name )** delete an attachment from a CouchDB document. $doc is an object with, at least, \_id and \_rev properties, and $attachment_name is the name of the attachment to delete.
 
 Example :
 
@@ -244,11 +244,11 @@ A bulk operation is a unique query performing actions on several documents. Couc
 Bulk documents retrieval
 ------------------------
 
-To retrieve several documents in one go, knowing their IDs, use the method **getAllDocs($ids)**. $ids is an array of documents IDs. This function acts like a view, so the output is the view output of CouchDB, and you should use "include_docs(TRUE)" to have documents contents.
+To retrieve several documents in one go, knowing their IDs, select documents using the **keys($ids)** coupled with the method **getAllDocs()**. $ids is an array of documents IDs. This function acts like a view, so the output is the view output of CouchDB, and you should use "include_docs(TRUE)" to have documents contents.
 
 Example :
 
-    $view = $client->include_docs(true)->getAllDocs( array('BlogPost5676','BlogComments5676') );
+    $view = $client->include_docs(true)->keys->( array('BlogPost5676','BlogComments5676') )->getAllDocs();
     foreach ( $view->rows as $row ) {
       echo "doc id :".$row->doc->_id."\n";
     }

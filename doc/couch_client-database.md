@@ -91,8 +91,8 @@ Example :
 Database changes interface
 =========================
 
-CouchDB implements database changes feedback and polling.[You'll find more infos here.](http://books.couchdb.org/relax/reference/change-notifications).
-For any event in the database, CouchDD increments a sequence counter.
+CouchDB implements database changes feedback and polling. [You'll find more infos here](http://books.couchdb.org/relax/reference/change-notifications).
+For any event in the database, CouchDB increments a sequence counter.
 
 Getting changes
 --------------
