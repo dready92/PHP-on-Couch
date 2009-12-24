@@ -689,9 +689,7 @@ $view_response = $couchClient->limit(50)->include_docs(TRUE)->getView('blog_post
 		if ( !$id OR !$name )    throw new InvalidArgumentException("You should specify view id and name");
 		$url = '/'.urlencode($this->dbname).'/_design/'.urlencode($id).'/_view/'.urlencode($name);
 		if ( $this->results_as_cd )		$this->include_docs(true);
-// 		$view_query = $this->view_query;
 		$results_as_cd = $this->results_as_cd;
-// 		$this->view_query = array();
 		$this->results_as_cd = false;
 
 		list($method, $view_query, $data) = $this->_prepare_view_query();
@@ -764,10 +762,7 @@ $view_response = $couchClient->limit(50)->include_docs(TRUE)->getView('blog_post
 		if ( !$id OR !$name )    throw new InvalidArgumentException("You should specify list id and name");
 		if ( !$view_name )    throw new InvalidArgumentException("You should specify view name");
 		$url = '/'.urlencode($this->dbname).'/_design/'.urlencode($id).'/_list/'.urlencode($name).'/'.urlencode($view_name);
-// 		$view_query = $this->view_query;
 		$this->results_as_cd = false;
-// 		$this->view_query = array();
-
 		list($method, $view_query, $data) = $this->_prepare_view_query();
 
 		if ( is_array($additionnal_parameters) && count($additionnal_parameters) ) {
@@ -801,14 +796,6 @@ $view_response = $couchClient->limit(50)->include_docs(TRUE)->getView('blog_post
 	*/
 	public function getAllDocs ( ) {
 		$url = '/'.urlencode($this->dbname).'/_all_docs';
-// 		$view_query = $this->view_query;
-// 		$this->view_query = array();
-// 		$method = 'GET';
-// 		$data = null;
-// 		if ( count($keys) ) {
-// 			$method = 'POST';
-// 			$data = json_encode(array('keys'=>$keys));
-// 		}
 		list($method, $view_query, $data) = $this->_prepare_view_query();
 		return $this->_queryAndTest ($method, $url, array(200),$view_query,$data);
 	}
@@ -820,8 +807,6 @@ $view_response = $couchClient->limit(50)->include_docs(TRUE)->getView('blog_post
 	*/
 	public function getAllDocsBySeq () {
 		$url = '/'.urlencode($this->dbname).'/_all_docs_by_seq';
-// 		$view_query = $this->view_query;
-// 		$this->view_query = array();
 		list($method, $view_query, $data) = $this->_prepare_view_query();
 		return $this->_queryAndTest ($method, $url, array(200),$view_query,$data);
 	}

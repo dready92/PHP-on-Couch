@@ -106,7 +106,7 @@ class couch {
 		$response['status_code'] = trim($status_array[1]);
 		$response['status_message'] = trim($status_array[2]);
 		if ( strlen($body) ) {
-			$response['body'] = preg_match('@Content-Type:\s+application/json@',$headers) ? json_decode($body,$json_as_array) : $body ;
+			$response['body'] = preg_match('@Content-Type:\s+application/json@i',$headers) ? json_decode($body,$json_as_array) : $body ;
 		}
 		return $response;
 	}
