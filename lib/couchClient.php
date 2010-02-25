@@ -17,10 +17,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-function testme () {
-	echo "ping\n";
-}
-
 
 /**
 * CouchDB client class
@@ -142,6 +138,26 @@ class couchClient extends couch {
 	*/
 	public function getDatabaseUri() {
 		return $this->dsn.'/'.$this->dbname;
+	}
+
+	/**
+	* return database name
+	*
+	* @return string database name
+	*/
+	public function getDatabaseName () {
+		return $this->dbname;
+	}
+
+	/**
+	* returns CouchDB server URI
+	*
+	* example : http://couch.server.com:5984
+	*
+	* @return string CouchDB Server URL
+	*/
+	public function getServerURI () {
+		return $this->dsn;
 	}
 
 	/**
