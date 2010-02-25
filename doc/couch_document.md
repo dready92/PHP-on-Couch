@@ -77,6 +77,23 @@ Example using an object
     $doc = new couchDocument($client);
     $doc->set ( $prop );
 
+Disabling auto-commit feature
+-----------------------------
+
+If, for some reason, you need to disable the auto-commit feature, use the **setAutocommit()** method. In this case, you'll have to explicitely call the **record()** method to store your changes on the database.
+
+Example :
+
+    $doc = new couchDocument($client);
+    $doc->setAutocommit(false);
+    $doc->_id = "some_doc";
+    $doc->type = "page";
+    $doc->title = "Introduction";
+    $doc->record();
+
+To know if the auto-commit feature is activated, use the **getAutocommit()** method : it returns a boolean.
+
+
 Unsetting a property
 --------------------
 

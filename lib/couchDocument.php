@@ -33,6 +33,7 @@ class couchDocument {
 	function __construct(couchClient $client) {
 		$this->__couch_data->client = $client;
 		$this->__couch_data->fields = new stdClass();
+		$this->__couch_data->autocommit = true;
 	}
 
 	/**
@@ -45,6 +46,34 @@ class couchDocument {
 		if ( !strlen($id) ) throw new InvalidArgumentException("No id given");
 		$this->__couch_data->fields = $this->__couch_data->client->getDoc($id);
 		return $this;
+	}
+
+	/**
+	* Set the auto-commit mode (default true)
+	*
+	* If set to false, you should explicitely call the record() method :
+	* <code>
+	* $couchdoc->setAutocommit(false);
+	* $couchdoc->somefield = "foo";
+	* $couchdoc->someotherfield = "bar";
+	* $couchdoc->record();
+	* </code>
+	*
+	* @param boolean $commit turn on or off the autocommit feature
+	* @return couchDocument $this
+	*/
+	public function setAutocommit($commit) {
+		$this->__couch_data->autocommit = (boolean)true;
+		return $this;
+	}
+
+	/**
+	* get current auto-commit state (on or off)
+	*
+	* @return boolean true if auto-commit is enabled
+	*/
+	public function getAutocommit() {
+		return $this->__couch_data->autocommit;
 	}
 
 	/**
@@ -159,7 +188,7 @@ class couchDocument {
 	*
 	*
 	*/
-	protected function record() {
+	public function record() {
 		$response = $this->__couch_data->client->storeDoc($this->__couch_data->fields);
 		$this->__couch_data->fields->_id = $response->id;
 		$this->__couch_data->fields->_rev = $response->rev;
@@ -194,7 +223,9 @@ class couchDocument {
 		} else {
 			$this->setOne($key,$value);
 		}
-		$this->record();
+		if ( $this->__couch_data->autocommit ) {
+			$this->record();
+		}
 		return TRUE;
 	}
 
