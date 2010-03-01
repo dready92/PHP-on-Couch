@@ -43,6 +43,8 @@ To replicate from a database to an existing database, use the **from()** method.
     $response = $replicator->from("http://another.server.com:5984/mydb");
     // database http://another.server.com:5984/mydb will be replicated to http://localhost:5984/mydb
 
+Please note that CouchDB developpers hardly suggest to use the Pull replication mode : that means to prefer the "from()" method.
+
 
 Auto-creating the target database
 ---------------------------------

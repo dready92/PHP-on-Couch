@@ -78,6 +78,10 @@ Quick-start guide
         require_once "couchClient.php";
         require_once "couchDocument.php";
 
+If you need to use replication features, also include the couchReplicator definition :
+
+        require_once "couchReplicator.php";
+
 3. Create a client object. You have to tell it the _Data source name_ (dsn) of your CouchDB server, as well as the name of the database you want to work on. The DSN is the URL of your CouchDB server, for example _http://localhost:5984_.
         
         $client = new couchClient($couchdb_server_dsn, $couchdb_database_name);

@@ -146,6 +146,8 @@ couchDocuments replication
 
 The couchDocuments instance provides an easy way to replicate a document to, or from, another database. Think about replication like a copy-paste operation of the document to CouchDB databases.
 
+For those methods to work, you should have included the couchReplicator class file lib/couchReplicator.php .
+
 Replicating a document to another CouchDB database
 --------------------------------------------------
 
