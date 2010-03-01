@@ -282,4 +282,56 @@ class couchDocument {
 	public function __unset($key) {
 		return $this->remove($key);
 	}
+
+	/**
+	* Replicates document on another couchDB database
+	*
+	* @param string $url the database to replicate to ( eg. "http://localhost:5984/foo" or "foo" )
+	* @param boolean $create_target if set to true, target database will be created if needed
+	* @return boolean tell if document replication succeded
+	*/
+	public function replicateTo($url, $create_target = false) {
+		echo "replicateTo : ".$this->_id.", $url\n";
+		if ( !isset($this->_id) ) {
+			throw new InvalidArgumentException("Can't replicate a document without id");
+		}
+		if ( !class_exists("couchReplicator") ) {
+			return false;
+		}
+		$r = new couchReplicator($this->__couch_data->client);
+		if ( $create_target ) {
+			$r->create_target();
+		}
+		try {
+			$res = $r	->doc_ids( array( $this->_id ) )
+				->to($url);
+		} catch ( Exception $e ) {
+			return false;
+		}
+		print_r($res);
+		return true;
+	}
+
+
+	/**
+	* Replicates document on another couchDB database
+	*
+	* @param string $id id of the document to replicate
+	* @param string $url the database to replicate from ( eg. "http://localhost:5984/foo" or "foo" )
+	* @param boolean $create_target if set to true, target database will be created if needed
+	* @return boolean tell if document replication succeded
+	*/
+	public function replicateFrom($id, $url, $create_target = false) {
+		echo "replicateFrom : $id, $url\n";
+		if ( !class_exists("couchReplicator") ) {
+			return false;
+		}
+		$r = new couchReplicator($this->__couch_data->client);
+		if ( $create_target ) {
+			$r->create_target();
+		}
+		$r->doc_ids( array( $id ) )->from($url);
+		$this->load($id);
+		return true;
+	}
 }

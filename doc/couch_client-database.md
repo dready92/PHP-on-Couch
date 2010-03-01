@@ -1,5 +1,20 @@
 This section give details on actions on the CouchDB server through PHP on Couch.
 
+Testing a database name
+=======================
+
+Database names on CouchDB have restrictions : only lowercase characters (a-z), digits (0-9), and any of the characters _, $, (, ), +, -, and / are allowed. To test if a given database name is valid, use the static **isValidDatabaseName()** couchClient method.
+
+Example :
+
+    $my_database = "user311(public)";
+    if ( couchClient::isValidDatabaseName($my_database) ) {
+        $client = new couchClient("http://couch.server.com:5984/",$my_database);
+    } else {
+        die("Invalid database name");
+    }
+
+
 List databases
 ==============
 

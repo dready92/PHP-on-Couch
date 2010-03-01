@@ -10,7 +10,7 @@
 */
 class couchReplicator {
 	/**
-	* @var reference to our couchDB client
+	* @var reference to our CouchDB client
 	*/
 	private $client = null;
 
@@ -70,6 +70,31 @@ class couchReplicator {
 		$this->opts['doc_ids'] = $ids;
 		return $this;
 	}
+
+	/**
+	* chainable method : set replication filter
+	*
+	* filter design doc should belong to the source database
+	*
+	* @param string $name replication filter name ( ex mydesign/myfilter )
+	* @return couchReplicator $this
+	*/
+	public function filter ( $name ) {
+		$this->opts['filter'] = $name;
+		return $this;
+	}
+
+	/**
+	* chainable method : set query params (for example for a filtered replication)
+	*
+	* @param array|object $ids list of document ids to replicate
+	* @return couchReplicator $this
+	*/
+	public function query_params ( $params ) {
+		$this->opts['query_params'] = $params;
+		return $this;
+	}
+
 
 	/**
 	* replicate from local TO specified url (push replication)

@@ -439,6 +439,7 @@ class couch {
 	* @return string|false server response on success, false on error
 	*/
 	public function _curl_query ( $method, $url, $parameters = array() , $data = NULL ) {
+//  		echo "_curl_query : $method $url ".print_r($parameters,true)." , ".print_r($data,true);
 		if ( !in_array($method, $this->HTTP_METHODS )    )
 			throw new Exception("Bad HTTP method: $method");
 
@@ -453,7 +454,7 @@ class couch {
 
 		$response = curl_exec($http);
 		curl_close($http);
-		//echo $response;
+// 		echo $response;
 
 		return $response;
     //log_message('debug',"COUCH : Executed query $method $url");

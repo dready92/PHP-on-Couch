@@ -141,3 +141,44 @@ Example :
         }
     */
 
+couchDocuments replication
+==========================
+
+The couchDocuments instance provides an easy way to replicate a document to, or from, another database. Think about replication like a copy-paste operation of the document to CouchDB databases.
+
+Replicating a document to another CouchDB database
+--------------------------------------------------
+
+Use the **replicateTo()** method to replicate a couchDocument to another couchDB database.
+
+Example :
+
+    $client = new couchClient("http://couch.server.com:5984/","mydb");
+    // load an existing document
+    $doc = couchDocument::getInstance($client,"some_doc_id");
+    // replicate document to another database
+    $doc->replicateTo("http://another.server.com:5984/mydb/");
+
+The replicateTo can have another argument, a boolean one. If true, the database will be created on the destination server if it doesn't exist.
+
+
+Replicating a document from another CouchDB database
+--------------------------------------------------
+
+Use the **replicateFrom()** method to replicate a couchDocument from another couchDB database, and then load it into the couchDocument instance.
+
+Example :
+
+    $client = new couchClient("http://couch.server.com:5984/","mydb");
+    // load an existing document
+    $doc = new couchDocument($client);
+    
+    // replicate document from another database, and then load it into $doc
+    $doc->replicateFrom("some_doc_id","http://another.server.com:5984/mydb/");
+    echo $doc->_id ; (should return "some_doc_id")
+    $doc->type="foo"; // doc is recorded on "http://couch.server.com:5984/mydb"
+
+    // then replicate $doc back to http://another.server.com:5984/mydb/
+    $doc->replicateTo("http://another.server.com:5984/mydb/");
+
+The replicateFrom can have another argument, a boolean one. If true, the database will be created on the destination server if it doesn't exist.

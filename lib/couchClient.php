@@ -65,6 +65,7 @@ class couchClient extends couch {
 	*/
 	public function __construct($dsn, $dbname) {
 		if ( !strlen($dbname) )	throw new InvalidArgumentException("Database name can't be empty");
+		if ( !$this->isValidDatabaseName($dbname) )	throw new InvalidArgumentException('Database name contains invalid characters. Only lowercase characters (a-z), digits (0-9), and any of the characters _, $, (, ), +, -, and / are allowed.');
 		parent::__construct($dsn);
 		$this->dbname = $dbname;
 	}
@@ -92,6 +93,19 @@ class couchClient extends couch {
 		throw new couchException($raw);
 		return FALSE;
 	}
+
+	/**
+	* Tests a CouchDB database name and tell if it's a valid one
+	*
+	*
+	* @param string $dbname name of the database to test
+	* @return boolean true if the database name is correct
+	*/
+	public static function isValidDatabaseName ( $dbname ) {
+		if (  preg_match ( "@^[a-z0-9_\$\(\)\+\-/]+$@",$dbname) ) return true;
+		return false;
+	}
+
 
 	/**
 	*list all databases on the CouchDB server
@@ -156,7 +170,7 @@ class couchClient extends couch {
 	*
 	* @return string CouchDB Server URL
 	*/
-	public function getServerURI () {
+	public function getServerUri () {
 		return $this->dsn;
 	}
 
