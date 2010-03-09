@@ -104,7 +104,7 @@ Example :
     */
 
 Database changes interface
-=========================
+==========================
 
 CouchDB implements database changes feedback and polling. [You'll find more infos here](http://books.couchdb.org/relax/reference/change-notifications).
 For any event in the database, CouchDB increments a sequence counter.
@@ -202,4 +202,49 @@ Example - Continuous changes with a callback function
 
 
 
- 
+Database maintenance tasks
+==========================
+
+Three main maintenance tasks can be performed on a CouchDB database : compaction, view compaction, and view cleanup.
+
+Database compaction
+-------------------
+
+CouchDB database file is an append only : during any modification on database documents (add, remove, or update), the modification is recorded at the end of the database file. The compact operation removes old versions of database documents, thus reducing database file size and improving performances. To initiate a compact operation, use the **compactDatabase()** method.
+
+Example :
+
+    // asking the server to start a database compact operation
+    $response = $client->compactDatabase(); // should return stdClass ( "ok" => true )
+
+View compaction
+---------------
+
+Just as documents files, view files are also append-only files. To compact all view files of all design documents, use the **compactAllViews()** method.
+
+Example :
+
+    // asking the server to start a view compact operation on all design documents
+    $response = $client->compactAllViews(); // return nothing
+
+To compact only views from a specific design document, use the **compactViews( $id )** method.
+
+Example :
+
+    // asking the server to start a database compact operation on the design document _design/example
+    $response = $client->compactViews( "example" ); // should return stdClass ( "ok" => true )
+
+
+View files cleanup
+------------------
+
+This operation will delete all unused view files. Use the **cleanupDatabaseViews()** method to initiate a cleanup operation on old view files
+Example :
+
+    // asking the server to start a database view files cleanup operation
+    $response = $client->cleanupDatabaseViews(); // should return stdClass ( "ok" => true )
+
+
+
+
+

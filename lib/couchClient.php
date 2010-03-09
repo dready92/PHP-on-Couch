@@ -33,6 +33,10 @@ class couchClient extends couch {
 	*/
 	protected $dbname = '';
 	/**
+	* @var array CouchDB docs query options
+	*/
+	protected $doc_query = array();
+	/**
 	* @var array CouchDB view query options
 	*/
 	protected $view_query = array();
@@ -52,9 +56,14 @@ class couchClient extends couch {
 
 
 	/**
-	* @var array list of properties beginning with '_' and allowed in CouchDB objects
+	* @var array list of properties beginning with '_' and allowed in CouchDB objects in a "store" type operation
 	*/
 	public static $allowed_underscored_properties = array('_id','_rev','_attachments');
+
+	/**
+	* @var array list of properties beginning with '_' and that should be removed from CouchDB objects in a "store" type operation
+	*/
+	public static $underscored_properties_to_remove_on_storage = array('_conflicts','_revs');
 
 	/**
 	* class constructor
@@ -84,7 +93,10 @@ class couchClient extends couch {
 	* @param string|object|array $data the request body. If it's an array or an object, $data is json_encode()d
 	*/
 	protected function _queryAndTest ( $method, $url,$allowed_status_codes, $parameters = array(),$data = NULL ) {
+// 		print_r($method.' '.$url.' ');
+// 		print_r($parameters);
 		$raw = $this->query($method,$url,$parameters,$data);
+// 		echo $raw;k
 		$response = $this->parseRawResponse($raw, $this->results_as_array);
 		$this->results_as_array = false;
 		if ( in_array($response['status_code'], $allowed_status_codes) ) {
@@ -191,6 +203,28 @@ class couchClient extends couch {
 		}
 	}
 
+
+	/**
+	* launch a compact operation on the database
+	*
+	*
+	* @return object CouchDB's compact response ( usually {"ok":true} )
+	*/
+	public function compactDatabase () {
+		return $this->_queryAndTest ( "POST", '/'.urlencode($this->dbname).'/_compact', array(202) );
+	}
+
+	/**
+	* launch a cleanup operation on database views
+	*
+	*
+	* @return object CouchDB's cleanup views response ( usually {"ok":true} )
+	*/
+	public function cleanupDatabaseViews () {
+		return $this->_queryAndTest ( "POST", '/'.urlencode($this->dbname).'/_view_cleanup', array(202) );
+	}
+
+
 	/**
 	*CouchDb changes option
 	*
@@ -281,7 +315,13 @@ class couchClient extends couch {
 	*/
 	public function getChanges() {
 		if ( !empty($this->changes_query['feed']) && $this->changes_query['feed'] == 'continuous' ) {
-			return $this->_continuousChanges();
+// 			return $this->_continuousChanges();
+			$url = '/'.urlencode($this->dbname).'/_changes';
+			$opts = $this->changes_query;
+			$this->changes_query = array();
+			$callable = $opts['continuous_feed'];
+			unset($opts['continuous_feed']);
+			return $this->continuousQuery($callable,'GET',$url,$opts);
 		}
 		$url = '/'.urlencode($this->dbname).'/_changes';
 		$opts = $this->changes_query;
@@ -291,19 +331,29 @@ class couchClient extends couch {
 
 
 	/**
-	* Internal wrapper of a changes request in continuous mode
+	* add eventual conflicts informations on the document
 	*
+	* if present document has existing version conflicts , the conflicting revisions number will be available in
+	* the _conflicts property of the returned object
 	*
+	* @return couchClient $this
 	*/
-	protected function _continuousChanges() {
-		$url = '/'.urlencode($this->dbname).'/_changes';
-		$opts = $this->changes_query;
-		$this->changes_query = array();
-		$callable = $opts['continuous_feed'];
-		unset($opts['continuous_feed']);
-		return $this->continuousQuery($callable,'GET',$url,$opts);
+	public function conflicts () {
+		$this->doc_query['conflicts'] = "true";
+		return $this;
 	}
 
+	/**
+	* add revisions informations on the document
+	*
+	* Add the _revisions property of the returned object , containing the available revisions of a document
+	*
+	* @return couchClient $this
+	*/
+	public function revs () {
+		$this->doc_query['revs'] = "true";
+		return $this;
+	}
 
 	/**
 	* fetch a CouchDB document
@@ -320,7 +370,10 @@ class couchClient extends couch {
 		else
 			$url = '/'.urlencode($this->dbname).'/'.urlencode($id);
 
-		$back = $this->_queryAndTest ('GET', $url, array(200));
+		$doc_query = $this->doc_query;
+		$this->doc_query = array();
+
+		$back = $this->_queryAndTest ('GET', $url, array(200),$doc_query);
 		if ( !$this->results_as_cd ) {
 			return $back;
 		}
@@ -338,7 +391,10 @@ class couchClient extends couch {
 	public function storeDoc ( $doc ) {
 		if ( !is_object($doc) )	throw new InvalidArgumentException ("Document should be an object");
 		foreach ( array_keys(get_object_vars($doc)) as $key ) {
-			if ( substr($key,0,1) == '_' AND !in_array($key,couchClient::$allowed_underscored_properties) )
+			if ( in_array($key,couchClient::$underscored_properties_to_remove_on_storage) ) {
+				unset($doc->$key);
+			}
+			elseif ( substr($key,0,1) == '_' AND !in_array($key,couchClient::$allowed_underscored_properties) )
 				throw new InvalidArgumentException("Property $key can't begin with an underscore");
 		}
 		$method = 'POST';
@@ -818,6 +874,40 @@ $view_response = $couchClient->limit(50)->include_docs(TRUE)->getView('blog_post
 		return $this->_queryAndTest ('GET', $url, array(200), $additionnal_parameters);
 	}
 
+
+	/**
+	* launch a compact operation on a database design document
+	*
+	* to compact views defined in _design/thedoc , use compactViews ("thedoc")
+	*
+	* @param string $id design document name (without _design)
+	* @return object CouchDB's compact response ( usually {"ok":true} )
+	*/
+	public function compactViews ( $id ) {
+		$id = preg_replace("@^_design/@","",$id);
+// 		print_r("calling $id");
+		return $this->_queryAndTest ( "POST", '/'.urlencode($this->dbname).'/_compact/'.urlencode($id), array(202) );
+	}
+
+
+	/**
+	* launch a compact operation on all database design documents
+	*
+	* to compact views defined in _design/thedoc , use compactViews ("thedoc")
+	*
+	* @return void
+	*/
+	public function compactAllViews () {
+		$response = $this->startkey('_design/')->endkey('_design/~~~~~~~~~~~')->getAllDocs();
+// 		print_r($response);
+		if ( property_exists($response,'rows') && is_array($response->rows) ) {
+			foreach ( $response->rows as $view_row ) {
+				$this->compactViews($view_row->key);
+			}
+		}
+	}
+
+
 	/**
 	* returns all documents contained in the database
 	*
@@ -831,7 +921,9 @@ $view_response = $couchClient->limit(50)->include_docs(TRUE)->getView('blog_post
 	}
 
 	/**
-	* returns all documents contained associated wityh a sequence number
+	* returns all documents contained associated with a sequence number
+	*
+	* Warning : in 0.11 this is deprecated in favor of _changes
 	*
 	* @return object CouchDB _all_docs_by_seq response
 	*/
@@ -851,8 +943,12 @@ $view_response = $couchClient->limit(50)->include_docs(TRUE)->getView('blog_post
 	public function getUuids($count = 1) {
 		$count=(int)$count;
 		if ( $count < 1 ) throw new InvalidArgumentException("Uuid count should be greater than 0");
-		$url = '/'.urlencode($this->dbname).'/_uuids?count='+$count;
-		$back = $this->_queryAndTest ('GET', $url, array(200),$view_query);
+
+// 		that changed on 0.11 ?
+// 		$url = '/'.urlencode($this->dbname).'/_uuids?count='+$count;
+		$url = '/_uuids';
+
+		$back = $this->_queryAndTest ('GET', $url, array(200), array("count"=>$count) );
 		if ( $back && property_exists($back,'uuids') ) {
 			return $back->uuids;
 		}

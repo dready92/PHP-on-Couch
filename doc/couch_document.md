@@ -122,6 +122,19 @@ Example :
     echo $doc->_rev."\n";
     echo $doc->type;
 
+
+Getting a document URI
+======================
+
+The method **getUri()** sends back a string giving the current document URI.
+
+Example :
+
+    echo $doc->getUri();
+    /*
+    db.example.com:5984/testdb/dome_doc_id
+    */
+
 Getting back classic PHP object
 ===============================
 

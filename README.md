@@ -37,7 +37,7 @@ Introduction
 Components
 ==========
 
-This library got three main classes, and a custom [Exception](http://php.net/manual/en/language.exceptions.php) class.
+This library got four main classes, and a custom [Exception](http://php.net/manual/en/language.exceptions.php) class.
 
 couch class
 -----------
@@ -65,6 +65,11 @@ couchDocument class
 --------------------
 
 Easing the manipulation of documents, the couchDocument class uses PHP magic getters and setters.
+
+couchReplicator class
+---------------------
+
+A dedicated class to manage replications over different instances of CouchDB databases.
 
 Quick-start guide
 =================
@@ -116,3 +121,5 @@ Resources
 [View API](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-view.md)
 
 [couchDocument API](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_document.md)
+
+[couchReplicator API](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_replicator.md)

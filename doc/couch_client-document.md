@@ -3,7 +3,7 @@ This section details the available methods to work with documents
 Getting all documents
 =====================
 
-The method **getAllDocs()** retrieve all documents from the database. In fact it only retrieve document IDs, unless you specify the server to include the documents using the [View query parameters syntax](http://dready.byethost31.com/index.php/display/view/196).
+The method **getAllDocs()** retrieve all documents from the database. In fact it only retrieve document IDs, unless you specify the server to include the documents using the [View query parameters syntax](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-view.md).
 
 Example :
     
@@ -16,7 +16,7 @@ Example :
 Getting documents by update sequence
 ====================================
 
-The method **getAllDocsBySeq()** retrieval of actions on the database server : whenever a document is stored or deleted, CouchDB updates a sequence number and record the action.
+The method **getAllDocsBySeq()** retrieval of actions on the database server : whenever a document is stored or deleted, CouchDB updates a sequence number and record the action. Note that this method is deprecated in CouchDB 0.11 in favor of _changes
 
 Example :
 
@@ -49,6 +49,9 @@ Example :
     }
     echo $doc->_id.' revision '.$doc->_rev;
 
+Chainable methods to use with getDoc()
+======================================
+
 Getting a document as a couchDocument object
 --------------------------------------------
 
@@ -67,18 +70,43 @@ Example :
     echo get_class($doc); // should echo "couchDocument"
 
 
+Adding conflicts informations (if any)
+--------------------------------------
 
-Getting a document URI
-======================
-
-The method **getUri()** sends back a string giving the current document URI.
+The chainable method **conflicts()** asks CouchDB to add to the document a property *_conflicts* containing conflicting revisions on an object.
 
 Example :
 
-    echo $doc->getUri();
-    /*
-    db.example.com:5984/testdb/dome_doc_id
-    */
+    try {
+        $doc = $client->conflicts()->getDoc("some_doc_id");
+    } catch ( Exception $e ) {
+        if ( $e->getCode() == 404 ) {
+           echo "Document some_doc_id does not exist !";
+        }
+        exit(1);
+    }
+    if ( $doc->_conflicts ) {
+        print_r($doc->_conflicts);
+    }
+    
+
+Adding revisions informations (if any)
+--------------------------------------
+
+The chainable method **revs()** asks CouchDB to add to the document a property *_revisions* containing the list of revisions for an object.
+
+Example :
+
+    try {
+        $doc = $client->revisions()->getDoc("some_doc_id");
+    } catch ( Exception $e ) {
+        if ( $e->getCode() == 404 ) {
+           echo "Document some_doc_id does not exist !";
+        }
+        exit(1);
+    }
+    print_r($doc->_revisions);
+
 
 Storing a document
 ==================

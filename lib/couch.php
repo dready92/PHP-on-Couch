@@ -446,7 +446,7 @@ class couch {
 		$url = $this->dsn.$url;
 		if ( is_array($parameters) AND count($parameters) )
 			$url = $url.'?'.http_build_query($parameters);
-
+// 		echo $url;
 		$http = $this->_curl_buildRequest($method,$url,$data);
 		curl_setopt($http,CURLOPT_HEADER, true);
 		curl_setopt($http,CURLOPT_RETURNTRANSFER, true);

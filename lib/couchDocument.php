@@ -85,7 +85,7 @@ class couchDocument {
 	* @return couchDocument $this
 	*/
   public function loadFromObject($doc) {
-    $this->__couch_data->fields = clone $doc;
+		$this->__couch_data->fields = clone $doc;
 		return $this;
   }
 
@@ -189,6 +189,11 @@ class couchDocument {
 	*
 	*/
 	public function record() {
+		foreach ( couchClient::$underscored_properties_to_remove_on_storage as $key ) {
+			if ( property_exists($this->__couch_data->fields,$key) ) {
+				unset( $this->__couch_data->fields->$key );
+			}
+		}
 		$response = $this->__couch_data->client->storeDoc($this->__couch_data->fields);
 		$this->__couch_data->fields->_id = $response->id;
 		$this->__couch_data->fields->_rev = $response->rev;

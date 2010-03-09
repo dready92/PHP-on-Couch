@@ -5,7 +5,7 @@ Replication of CouchDB databases
 
 CouchDB supports replicating a database on other CouchDB databases. Think of replication as a copy-paste operation on databases.
 
-The couchReplicator object is a simple abstraction of the CouchDB replication model.
+The couchReplicator object is a simple abstraction of the CouchDB replication model. Those replication features are available in CouchDB 0.11 . At the time of this coding, canceling a continuous replication doesn't seem to always work.
 
 To create a new couchReplicator object, you first have to include necessary files, and then instanciate the object, passing in argument a couchClient instance.
 
