@@ -60,6 +60,7 @@ PHP on Couch implements chainable methods to add query parameters. The method na
 * group_level
 * reduce
 * include_docs
+* inclusive_end
 
 Example querying a view with a startkey, a limit and include_docs
 
@@ -122,4 +123,17 @@ Example :
     $response = $client->limit(100)->include_docs(TRUE)->getList('all','html','by_date');
     // will run the view declared in _design/all and named *by_date*, and then
 	// pass it through the list declared in _design/all and named *html*.
+
+
+Getting informations about a view
+=================================
+
+More info on view informations [here](http://wiki.apache.org/couchdb/HTTP_view_API#Getting_Information_about_Design_Documents_.28and_their_Views.29)
+
+The method **getViewInfos($design_id)** sends back some useful informations about a particular design document.
+
+Example :
+
+    $response = $client->getViewInfos("mydesigndoc");
+
 

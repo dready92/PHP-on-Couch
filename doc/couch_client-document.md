@@ -52,6 +52,24 @@ Example :
 Chainable methods to use with getDoc()
 ======================================
 
+Getting a particular revision of the document
+---------------------------------------------
+
+The chainable **rev($value)** method specify the document revision to fetch.
+
+Example :
+
+    try {
+        $doc = $client->rev("1-849aff6ad4a38b1225c80a2119dc31cb")->getDoc("some_doc_id");
+    } catch ( Exception $e ) {
+        if ( $e->getCode() == 404 ) {
+           echo "Document some_doc_id does not exist !";
+        }
+        exit(1);
+    }
+    echo $doc->_rev ; // should echo 1-849aff6ad4a38b1225c80a2119dc31cb
+
+
 Getting a document as a couchDocument object
 --------------------------------------------
 
@@ -90,7 +108,7 @@ Example :
     }
     
 
-Adding revisions informations (if any)
+Adding revisions list
 --------------------------------------
 
 The chainable method **revs()** asks CouchDB to add to the document a property *_revisions* containing the list of revisions for an object.
@@ -98,7 +116,7 @@ The chainable method **revs()** asks CouchDB to add to the document a property *
 Example :
 
     try {
-        $doc = $client->revisions()->getDoc("some_doc_id");
+        $doc = $client->revs()->getDoc("some_doc_id");
     } catch ( Exception $e ) {
         if ( $e->getCode() == 404 ) {
            echo "Document some_doc_id does not exist !";
@@ -107,6 +125,57 @@ Example :
     }
     print_r($doc->_revisions);
 
+Adding revisions informations
+--------------------------------------
+
+The chainable method **revs_info()** asks CouchDB to add to the document a property *_revs_info* containing the avaibility of revisions for an object.
+
+Example :
+
+    try {
+        $doc = $client->revs_info()->getDoc("some_doc_id");
+    } catch ( Exception $e ) {
+        if ( $e->getCode() == 404 ) {
+           echo "Document some_doc_id does not exist !";
+        }
+        exit(1);
+    }
+    print_r($doc->_revs_info);
+
+
+Fetching Several revisions of a document
+========================================
+
+Using the **open_revs( $value )** method, CouchDB returns an array of objects.
+
+**$value** should be an array of revision ids or the special keyword all (to fetch all revisions of a document)
+
+Example :
+
+    try {
+        $doc = $client->open_revs( array("1-fbd8a6da4d669ae4b909fcdb42bb2bfd", "2-5bc3c6319edf62d4c624277fdd0ae191") )->getDoc("some_doc_id");
+    } catch ( Exception $e ) {
+        if ( $e->getCode() == 404 ) {
+           echo "Document some_doc_id does not exist !";
+        }
+        exit(1);
+    }
+    print_r($doc->_revs_info);
+
+Which should return something similar to :
+
+    array (
+        stdClass(
+            "missing" => "1-fbd8a6da4d669ae4b909fcdb42bb2bfd"
+        ),
+        stdClass(
+            "ok" => stdClass(
+                "_id"  => "some_doc_id",
+                "_rev" => "2-5bc3c6319edf62d4c624277fdd0ae191",
+                "hello"=> "foo"
+            )
+        )
+    )
 
 Storing a document
 ==================
@@ -133,7 +202,7 @@ Example : creating a document specifying the id
 
     $new_doc = new stdClass();
     $new_doc->title = "Some content";
-    $new_doc->id = "BlogPost6576";
+    $new_doc->_id = "BlogPost6576";
     try {
         $response = $client->storeDoc($new_doc);
     } catch (Exception $e) {

@@ -317,15 +317,17 @@ class couchClient extends couch {
 		if ( !empty($this->changes_query['feed']) && $this->changes_query['feed'] == 'continuous' ) {
 // 			return $this->_continuousChanges();
 			$url = '/'.urlencode($this->dbname).'/_changes';
-			$opts = $this->changes_query;
+			$opts = array_merge($this->view_query,$this->changes_query);
 			$this->changes_query = array();
+			$this->view_query = array();
 			$callable = $opts['continuous_feed'];
 			unset($opts['continuous_feed']);
 			return $this->continuousQuery($callable,'GET',$url,$opts);
 		}
 		$url = '/'.urlencode($this->dbname).'/_changes';
-		$opts = $this->changes_query;
+		$opts = array_merge($this->view_query,$this->changes_query);
 		$this->changes_query = array();
+		$this->view_query = array();
 		return $this->_queryAndTest ('GET', $url, array(200,201),$opts);
 	}
 
@@ -344,7 +346,7 @@ class couchClient extends couch {
 	}
 
 	/**
-	* add revisions informations on the document
+	* add revisions list for the document
 	*
 	* Add the _revisions property of the returned object , containing the available revisions of a document
 	*
@@ -354,6 +356,47 @@ class couchClient extends couch {
 		$this->doc_query['revs'] = "true";
 		return $this;
 	}
+
+	/**
+	* add revisions informations on the document
+	*
+	* Add the _revisions property of the returned object , containing the available revisions of a document
+	*
+	* @return couchClient $this
+	*/
+	public function revs_infos () {
+		$this->doc_query['revs'] = "true";
+		return $this;
+	}
+
+	/**
+	* fetch multiple revisions at once
+	*
+	* @link http://wiki.apache.org/couchdb/HTTP_Document_API
+	* @param array|all $value array of revisions to fetch, or special keyword all
+	* @return couchClient $this
+	*/
+	public function open_revs ($value) {
+		if ( is_string($value) && $value == 'all' ) {
+			$this->doc_query['open_revs'] = "all";
+		} elseif ( is_array($value) ) {
+			$this->doc_query['open_revs'] = json_encode($value);
+		}
+		return $this;
+	}
+
+	/**
+	* fatch a specific revision of the document
+	*
+	* @param string $value revision number
+	* @return couchClient $this
+	*/
+	public function rev ($value) {
+		$this->doc_query['rev'] = $value;
+		return $this;
+	}
+
+
 
 	/**
 	* fetch a CouchDB document
@@ -713,6 +756,19 @@ $view_response = $couchClient->limit(50)->include_docs(TRUE)->getView('blog_post
 	}
 
 	/**
+	* CouchDB query option
+	*
+	* @link http://wiki.apache.org/couchdb/HTTP_view_API
+	* @param boolean $value when using the endkey query option, set whether to include endkey in the results
+	* @return couchClient $this
+	*/
+	public function inclusive_end($value) {
+		$this->view_query['inclusive_end'] = json_encode((boolean)$value);
+		return $this;
+	}
+
+
+	/**
 	* returns couchDB results as couchDocuments objects
 	*
 	* implies include_docs(true)
@@ -872,6 +928,19 @@ $view_response = $couchClient->limit(50)->include_docs(TRUE)->getView('blog_post
 		$url = '/'.urlencode($this->dbname).'/_design/'.urlencode($id).'/_show/'.urlencode($name);
 		if ( $doc_id )	$url.='/'.urlencode($doc_id);
 		return $this->_queryAndTest ('GET', $url, array(200), $additionnal_parameters);
+	}
+
+    /**
+	* request design doc views informations from the CouchDB server
+	*
+	* @link http://wiki.apache.org/couchdb/HTTP_view_API
+	* @param string $id design document name (without _design)
+	* @return object CouchDB view infos response
+	*/
+	public function getViewInfos ( $id ) {
+		if ( !$id OR !$name )    throw new InvalidArgumentException("You should specify view id and name");
+		$url = '/'.urlencode($this->dbname).'/_design/'.urlencode($id).'/_info';
+		return $this->_queryAndTest ("GET", $url, array(200));
 	}
 
 
