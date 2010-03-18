@@ -63,7 +63,7 @@ Example :
         $doc = $client->rev("1-849aff6ad4a38b1225c80a2119dc31cb")->getDoc("some_doc_id");
     } catch ( Exception $e ) {
         if ( $e->getCode() == 404 ) {
-           echo "Document some_doc_id does not exist !";
+           echo "Document some_doc_id or revision 1-849aff6ad4a38b1225c80a2119dc31cb does not exist !";
         }
         exit(1);
     }

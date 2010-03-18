@@ -101,7 +101,8 @@ class couch {
 		}
 		$response = array('body'=>null);
 		list($headers, $body) = explode("\r\n\r\n", $raw_data,2);
-		$status_line = reset(explode("\n",$headers));
+		$headers_array=explode("\n",$headers);
+		$status_line = reset($headers_array);
 		$status_array = explode(' ',$status_line,3);
 		$response['status_code'] = trim($status_array[1]);
 		$response['status_message'] = trim($status_array[2]);

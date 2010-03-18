@@ -31,6 +31,7 @@ class couchDocument {
 	*
 	*/
 	function __construct(couchClient $client) {
+		$this->__couch_data = new stdClass();
 		$this->__couch_data->client = $client;
 		$this->__couch_data->fields = new stdClass();
 		$this->__couch_data->autocommit = true;
