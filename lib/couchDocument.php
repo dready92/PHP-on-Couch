@@ -340,4 +340,47 @@ class couchDocument {
 		$this->load($id);
 		return true;
 	}
+
+	/**
+	* Attach a file to a document
+	* 
+	*
+	* @param string $file the attachment file (local storage)
+	* @param string $content_type the attachment content-type (defaults to 'application/octet-stream')
+	* @param string $filename the attachment filename. If not specified, the basename of "$file" will be used
+	* @return object CouchDB attachment storage response
+	*/
+	public function storeAttachment($file, $content_type = 'application/octet-stream',$filename = null) {
+		$back = $this->__couch_data->client->storeAttachment($this,$file,$content_type,$filename);
+		$this->load($this->_id);
+		return $back;
+	}
+
+	/**
+	* Attach data as a document attachment
+	* 
+	*
+	* @param string $data the attachment contents
+	* @param string $filename the attachment filename.
+	* @param string $content_type the attachment content-type (defaults to 'application/octet-stream')
+	* @return object CouchDB attachment storage response
+	*/
+	public function storeAsAttachment ($data,$filename,$content_type = 'application/octet-stream') {
+		$back = $this->__couch_data->client->storeAsAttachment($this,$data,$filename,$content_type);
+		$this->load($this->_id);
+		return $back;
+	}
+
+	/**
+	* Deletes an attachment
+	*
+	* @param string $attachment_name name of the document attachment
+	* @return object CouchDB attachment removal response
+	*/
+	public function deleteAttachment ($attachment_name) {
+		$back = $this->__couch_data->client->deleteAttachment( $this , $attachment_name );
+		$this->load($this->_id);
+		return $back;
+	}
+
 }

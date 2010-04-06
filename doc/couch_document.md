@@ -154,6 +154,53 @@ Example :
         }
     */
 
+Add/Update an attachment
+========================
+
+When the attachment is a file on-disk
+-------------------------------------
+
+The method **storeAttachment()** adds a new attachment, or update the attachment if it already exists. The attachment contents is located on a file.
+
+Example - Store the file /path/to/some/file.txt as an attachment of document id "some_doc" :
+
+    $doc = couchDocument::getInstance($client,'some_doc');
+    try {
+        $doc->storeAttachment("/path/to/some/file.txt","text/plain");
+    } catch (Exception $e) {
+        echo "Error: attachment storage failed : ".$e->getMessage().' ('.$e->getCode().')';
+    }
+
+When the attachment is the content of a PHP variable
+----------------------------------------------------
+
+The method **storeAsAttachment()** adds a new attachment, or update the attachment if it already exists. The attachment contents is contained in a PHP variable.
+
+Example - Store "Hello world !\nAnother Line" as an attachment named "file.txt" on document "some_doc" :
+
+    $doc = couchDocument::getInstance($client,'some_doc');
+    try {
+        $doc->storeAsAttachment("Hello world !\nAnother Line", "file.txt" , "text/plain");
+    } catch (Exception $e) {
+        echo "Error: attachment storage failed : ".$e->getMessage().' ('.$e->getCode().')';
+    }
+
+Delete an attachment
+====================
+
+The method **deleteAttachment()** permanently removes an attachment from a document.
+    
+Example - Deletes the attachment "file.txt" of document "some_doc" :
+
+    $doc = couchDocument::getInstance($client,'some_doc');
+    try {
+        $doc->deleteAttachment("file.txt");
+    } catch (Exception $e) {
+        echo "Error: attachment removal failed : ".$e->getMessage().' ('.$e->getCode().')';
+    }
+
+
+
 couchDocuments replication
 ==========================
 
