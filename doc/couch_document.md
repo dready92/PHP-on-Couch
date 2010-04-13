@@ -199,6 +199,25 @@ Example - Deletes the attachment "file.txt" of document "some_doc" :
         echo "Error: attachment removal failed : ".$e->getMessage().' ('.$e->getCode().')';
     }
 
+Getting the URI of an attachment
+================================
+
+The method **getAttachmentUri()** returns the URI of an attachment.
+
+Example :
+
+    $doc = couchDocument::getInstance($client,'some_doc');
+    if ( $doc->_attachments ) {
+        foreach ( $doc->_attachments as $name => $infos ) {
+            echo $name.' '.$doc->getAttachmentURI($name); 
+            // should say something like "file.txt http://localhost:5984/dbname/some_doc/file.txt"
+        }
+    }
+    try {
+        $doc->deleteAttachment("file.txt");
+    } catch (Exception $e) {
+        echo "Error: attachment removal failed : ".$e->getMessage().' ('.$e->getCode().')';
+    }
 
 
 couchDocuments replication

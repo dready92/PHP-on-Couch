@@ -383,4 +383,14 @@ class couchDocument {
 		return $back;
 	}
 
+	/**
+	* returns the URI of a document attachment
+	*
+	* @param string $attachment_name the name of the attachment (relative to the document)
+	* @return string the attachment URI
+	*/
+	public function getAttachmentUri ($attachment_name ) {
+		return $this->getUri().'/'.$attachment_name;
+	}
+
 }

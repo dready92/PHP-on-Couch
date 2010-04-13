@@ -112,8 +112,6 @@ Don't hesitate to submit feedback, bugs and feature requests ! My contact addres
 Resources
 =========
 
-[PHP on Couch API](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-database.md)
-
 [Database API](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-database.md)
 
 [Document API](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-document.md)
