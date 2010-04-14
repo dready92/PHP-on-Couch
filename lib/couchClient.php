@@ -32,18 +32,46 @@ class couchClient extends couch {
 	* @var string database name
 	*/
 	protected $dbname = '';
+
 	/**
-	* @var array CouchDB docs query options
+	* @var array query parameters
 	*/
-	protected $doc_query = array();
+	protected $query_parameters = array();
+
 	/**
-	* @var array CouchDB view query options
+	* @var array CouchDB query options definitions
+	*
+	* key is the couchClient method (mapped with __call)
+	* value is a hash containing :
+	*	- name : the query option name (couchdb side)
+	*	- filter : the type of filter to apply to the value (ex to force a cast to an integer ...)
 	*/
-	protected $view_query = array();
-	/**
-	* @var array CouchDB changes query options
-	*/
-	protected $changes_query = array();
+	protected $query_defs = array (
+		"since" 			=> array ("name" => "since", "filter" => "int"),
+		"heartbeat" 		=> array ("name" => "heartbeat", "filter" => "int"),
+		"style"				=> array ("name" => "style", "filter"=>null),
+		"conflicts" 		=> array ("name" => "conflicts", "filter"=>"staticValue", "staticValue"=> "true"),
+		"revs" 				=> array ("name" => "revs", "filter"=>"staticValue", "staticValue"=> "true"),
+		"revs_info" 		=> array ("name" => "revs_info", "filter"=>"staticValue", "staticValue"=> "true"),
+		"rev" 				=> array ("name" => "rev", "filter"=>null),
+		"key"				=> array ("name" => "key", "filter"=> "jsonEncode"),
+		"keys"				=> array ("name" => "keys", "filter"=> "ensureArray"),
+		"startkey"			=> array ("name" => "startkey", "filter"=> "jsonEncode"),
+		"endkey"			=> array ("name" => "endkey", "filter"=> "jsonEncode"),
+		"startkey_docid"	=> array ("name" => "startkey_docid", "filter"=> "string"),
+		"endkey_docid"		=> array ("name" => "endkey_docid", "filter"=> "string"),
+		"limit"				=> array ("name" => "limit", "filter"=> "int"),
+		"stale" 			=> array ("name" => "stale", "filter"=>"staticValue", "staticValue"=> "ok"),
+		"descending" 		=> array ("name" => "descending", "filter"=>"jsonEncodeBoolean"),
+		"skip"				=> array ("name" => "skip", "filter"=> "int"),
+		"group" 			=> array ("name" => "group", "filter"=>"jsonEncodeBoolean"),
+		"group_level"		=> array ("name" => "group_level", "filter"=>"int"),
+		"reduce" 			=> array ("name" => "reduce", "filter"=>"jsonEncodeBoolean"),
+		"include_docs" 		=> array ("name" => "include_docs", "filter"=>"jsonEncodeBoolean"),
+		"inclusive_end"		=> array ("name" => "inclusive_end", "filter"=>"jsonEncodeBoolean")
+	);
+
+
 	/**
 	* @var bool option to return couchdb view results as couchDocuments objects
 	*/
@@ -63,7 +91,7 @@ class couchClient extends couch {
 	/**
 	* @var array list of properties beginning with '_' and that should be removed from CouchDB objects in a "store" type operation
 	*/
-	public static $underscored_properties_to_remove_on_storage = array('_conflicts','_revs');
+	public static $underscored_properties_to_remove_on_storage = array('_conflicts','_revisions','_revs_info');
 
 	/**
 	* class constructor
@@ -104,6 +132,29 @@ class couchClient extends couch {
 		}
 		throw new couchException($raw);
 		return FALSE;
+	}
+
+	function __call($name, $args) {
+		if ( !array_key_exists($name,$this->query_defs) ) {
+			throw new Exception("Method $name does not exist");
+		}
+		if ( $this->query_defs[$name]['filter'] == 'int' ) {
+			$this->query_parameters[ $this->query_defs[$name]['name'] ] = (int)reset($args);
+		} elseif ( $this->query_defs[$name]['filter'] == 'staticValue' ) {
+			$this->query_parameters[ $this->query_defs[$name]['name'] ] = $this->query_defs[$name]['staticValue'];
+		} elseif ( $this->query_defs[$name]['filter'] == 'jsonEncode' ) {
+			$this->query_parameters[ $this->query_defs[$name]['name'] ] = json_encode(reset($args));
+		} elseif ( $this->query_defs[$name]['filter'] == 'ensureArray' ) {
+			if ( is_array(reset($args)) ) {
+				$this->query_parameters[ $this->query_defs[$name]['name'] ] = reset($args);
+			}
+		} elseif ( $this->query_defs[$name]['filter'] == 'string' ) {
+			$this->query_parameters[ $this->query_defs[$name]['name'] ] = (string)reset($args);
+		} elseif ( $this->query_defs[$name]['filter'] == 'jsonEncodeBoolean' ) {
+			$this->query_parameters[ $this->query_defs[$name]['name'] ] = json_encode((boolean)reset($args));
+		}
+// 		print_r($this->query_parameters);
+		return $this;
 	}
 
 	/**
@@ -224,33 +275,6 @@ class couchClient extends couch {
 		return $this->_queryAndTest ( "POST", '/'.urlencode($this->dbname).'/_view_cleanup', array(202) );
 	}
 
-
-	/**
-	*CouchDb changes option
-	*
-	*
-	* @link http://books.couchdb.org/relax/reference/change-notifications
-	* @param integer $value sequence number
-	* @return couchClient $this
-	*/
-	public function since($value) {
-		$this->changes_query['since']=(int)$value;
-		return $this;
-	}
-
-	/**
-	*CouchDb changes option
-	*
-	*
-	* @link http://books.couchdb.org/relax/reference/change-notifications
-	* @param integer $value heartbeat in milliseconds
-	* @return couchClient $this
-	*/
-	public function heartbeat($value) {
-		$this->changes_query['heartbeat']=(int)$value;
-		return $this;
-	}
-
 	/**
 	*CouchDb changes option
 	*
@@ -262,12 +286,12 @@ class couchClient extends couch {
 	*/
 	public function feed($value,$continuous_callback = null) {
 		if ( $value == 'longpoll' ) {
-			$this->changes_query['feed'] = $value;
+			$this->query_parameters['feed'] = $value;
 		}elseif ( $value == 'continuous' ) {
-			$this->changes_query['feed'] = $value;
-			$this->changes_query['continuous_feed'] = $continuous_callback;
-		} elseif (!empty($this->changes_query['feed']) ) {
-			unset($this->changes_query['feed']);
+			$this->query_parameters['feed'] = $value;
+			$this->query_parameters['continuous_feed'] = $continuous_callback;
+		} elseif (!empty($this->query_parameters['feed']) ) {
+			unset($this->query_parameters['feed']);
 		}
 		return $this;
 	}
@@ -283,30 +307,11 @@ class couchClient extends couch {
 	*/
 	public function filter($value,$additional_query_options = array() ) {
 		if ( strlen(trim($value)) ) {
-			$this->changes_query['filter']=trim($value);
-			$this->changes_query = array_merge($additional_query_options,$this->changes_query);
+			$this->query_parameters['filter']=trim($value);
+			$this->query_parameters = array_merge($additional_query_options,$this->query_parameters);
 		}
 		return $this;
 	}
-
-	/**
-	*CouchDb changes option
-	*
-	*
-	* @link http://books.couchdb.org/relax/reference/change-notifications
-	* @param string $value 'all_docs' to switch style
-	* @return couchClient $this
-	*/
-	public function style($value) {
-		if ( $value != 'all_docs' ) {
-			if ( !empty($this->changes_query['style']) )
-				unset($this->changes_query['style']);
-		} else {
-			$this->changes_query['style'] = 'all_docs';
-		}
-		return $this;
-	}
-
 
 	/**
 	* fetch database changes
@@ -314,60 +319,21 @@ class couchClient extends couch {
 	* @return object CouchDB changes response
 	*/
 	public function getChanges() {
-		if ( !empty($this->changes_query['feed']) && $this->changes_query['feed'] == 'continuous' ) {
+		if ( !empty($this->query_parameters['feed']) && $this->query_parameters['feed'] == 'continuous' ) {
 // 			return $this->_continuousChanges();
 			$url = '/'.urlencode($this->dbname).'/_changes';
-			$opts = array_merge($this->view_query,$this->changes_query);
-			$this->changes_query = array();
-			$this->view_query = array();
+			$opts = $this->query_parameters;
+			$this->query_parameters = array();
 			$callable = $opts['continuous_feed'];
 			unset($opts['continuous_feed']);
 			return $this->continuousQuery($callable,'GET',$url,$opts);
 		}
 		$url = '/'.urlencode($this->dbname).'/_changes';
-		$opts = array_merge($this->view_query,$this->changes_query);
-		$this->changes_query = array();
-		$this->view_query = array();
+		$opts = $this->query_parameters;
+		$this->query_parameters = array();
 		return $this->_queryAndTest ('GET', $url, array(200,201),$opts);
 	}
 
-
-	/**
-	* add eventual conflicts informations on the document
-	*
-	* if present document has existing version conflicts , the conflicting revisions number will be available in
-	* the _conflicts property of the returned object
-	*
-	* @return couchClient $this
-	*/
-	public function conflicts () {
-		$this->doc_query['conflicts'] = "true";
-		return $this;
-	}
-
-	/**
-	* add revisions list for the document
-	*
-	* Add the _revisions property of the returned object , containing the available revisions of a document
-	*
-	* @return couchClient $this
-	*/
-	public function revs () {
-		$this->doc_query['revs'] = "true";
-		return $this;
-	}
-
-	/**
-	* add revisions informations on the document
-	*
-	* Add the _revisions property of the returned object , containing the available revisions of a document
-	*
-	* @return couchClient $this
-	*/
-	public function revs_infos () {
-		$this->doc_query['revs'] = "true";
-		return $this;
-	}
 
 	/**
 	* fetch multiple revisions at once
@@ -378,25 +344,12 @@ class couchClient extends couch {
 	*/
 	public function open_revs ($value) {
 		if ( is_string($value) && $value == 'all' ) {
-			$this->doc_query['open_revs'] = "all";
+			$this->query_parameters['open_revs'] = "all";
 		} elseif ( is_array($value) ) {
-			$this->doc_query['open_revs'] = json_encode($value);
+			$this->query_parameters['open_revs'] = json_encode($value);
 		}
 		return $this;
 	}
-
-	/**
-	* fatch a specific revision of the document
-	*
-	* @param string $value revision number
-	* @return couchClient $this
-	*/
-	public function rev ($value) {
-		$this->doc_query['rev'] = $value;
-		return $this;
-	}
-
-
 
 	/**
 	* fetch a CouchDB document
@@ -413,8 +366,8 @@ class couchClient extends couch {
 		else
 			$url = '/'.urlencode($this->dbname).'/'.urlencode($id);
 
-		$doc_query = $this->doc_query;
-		$this->doc_query = array();
+		$doc_query = $this->query_parameters;
+		$this->query_parameters = array();
 
 		$back = $this->_queryAndTest ('GET', $url, array(200),$doc_query);
 		if ( !$this->results_as_cd ) {
@@ -577,197 +530,6 @@ class couchClient extends couch {
 		return $this->_queryAndTest ('DELETE', $url, array(200));
 	}
 
-
-/*
-
-CouchDB views : Please read http://wiki.apache.org/couchdb/HTTP_view_API
-
-This class provides method chaining for query options. As an example :
-
-$view_response = $couchClient->limit(50)->include_docs(TRUE)->getView('blog_posts','order_by_date');
-
-
-
-*/
-
-
-
-
-
-	/**
-	* CouchDB query option
-	*
-	* @link http://wiki.apache.org/couchdb/HTTP_view_API
-	* @param mixed $value any json encodable thing
-	* @return couchClient $this
-	*/
-	public function key($value) {
-		$this->view_query['key'] = json_encode($value);
-		return $this;
-	}
-
-	/**
-	* CouchDB query option
-	*
-	* @link http://wiki.apache.org/couchdb/HTTP_view_API
-	* @param mixed $value an array of JSON encodable things
-	* @return couchClient $this
-	*/
-	public function keys($value) {
-		// we don't encode value here, we'll prep it before view query
-		if ( is_array($value) ) {
-			$this->view_query['keys'] = $value;
-		}
-		return $this;
-	}
-
-	/**
-	* CouchDB query option
-	*
-	* @link http://wiki.apache.org/couchdb/HTTP_view_API
-	* @param mixed $value any json encodable thing
-	* @return couchClient $this
-	*/
-	public function startkey($value) {
-		$this->view_query['startkey'] = json_encode($value);
-		return $this;
-	}
-
-	/**
-	* CouchDB query option
-	*
-	* @link http://wiki.apache.org/couchdb/HTTP_view_API
-	* @param mixed $value any json encodable thing
-	* @return couchClient $this
-	*/
-	public function endkey($value) {
-		$this->view_query['endkey'] = json_encode($value);
-		return $this;
-	}
-
-	/**
-	* CouchDB query option
-	*
-	* @link http://wiki.apache.org/couchdb/HTTP_view_API
-	* @param string $value document id
-	* @return couchClient $this
-	*/
-	public function startkey_docid($value) {
-		$this->view_query['startkey_docid'] = (string)$value;
-		return $this;
-	}
-
-	/**
-	* CouchDB query option
-	*
-	* @link http://wiki.apache.org/couchdb/HTTP_view_API
-	* @param string $value document id
-	* @return couchClient $this
-	*/
-	public function endkey_docid($value) {
-		$this->view_query['endkey_docid'] = (string)$value;
-		return $this;
-	}
-
-
-	/**
-	* CouchDB query option
-	*
-	* @link http://wiki.apache.org/couchdb/HTTP_view_API
-	* @param ineteger $value maximum number of items to fetch
-	* @return couchClient $this
-	*/
-	public function limit($value) {
-		$this->view_query['limit'] = (int)$value;
-		return $this;
-	}
-
-	/**
-	* CouchDB query option
-	*
-	* @link http://wiki.apache.org/couchdb/HTTP_view_API
-	* @param string $value has to be 'ok'
-	* @return couchClient $this
-	*/
-	public function stale($value) {
-		if ( $value == 'ok' )
-		$this->view_query['stale'] = $value;
-		return $this;
-	}
-
-	/**
-	* CouchDB query option
-	*
-	* @link http://wiki.apache.org/couchdb/HTTP_view_API
-	* @param boolean $value order in descending
-	* @return couchClient $this
-	*/
-	public function descending($value) {
-		$this->view_query['descending'] = json_encode((boolean)$value);
-		return $this;
-	}
-
-	/**
-	* CouchDB query option
-	*
-	* @link http://wiki.apache.org/couchdb/HTTP_view_API
-	* @param int $value number of items to skip
-	* @return couchClient $this
-	*/
-	public function skip($value) {
-		$this->view_query['skip'] = (int)$value;
-		return $this;
-	}
-
-	/**
-	* CouchDB query option
-	*
-	* @link http://wiki.apache.org/couchdb/HTTP_view_API
-	* @param boolean $value whether to group the results
-	* @return couchClient $this
-	*/
-	public function group($value) {
-		$this->view_query['group'] = json_encode((boolean)$value);
-		return $this;
-	}
-
-	/**
-	* CouchDB query option
-	*
-	* @link http://wiki.apache.org/couchdb/HTTP_view_API
-	* @param boolean $value whether to execute the reduce function (if any)
-	* @return couchClient $this
-	*/
-	public function reduce($value) {
-		$this->view_query['reduce'] = json_encode((boolean)$value);
-		return $this;
-	}
-
-	/**
-	* CouchDB query option
-	*
-	* @link http://wiki.apache.org/couchdb/HTTP_view_API
-	* @param boolean $value whether to include complete documents in the response
-	* @return couchClient $this
-	*/
-	public function include_docs($value) {
-		$this->view_query['include_docs'] = json_encode((boolean)$value);
-		return $this;
-	}
-
-	/**
-	* CouchDB query option
-	*
-	* @link http://wiki.apache.org/couchdb/HTTP_view_API
-	* @param boolean $value when using the endkey query option, set whether to include endkey in the results
-	* @return couchClient $this
-	*/
-	public function inclusive_end($value) {
-		$this->view_query['inclusive_end'] = json_encode((boolean)$value);
-		return $this;
-	}
-
-
 	/**
 	* returns couchDB results as couchDocuments objects
 	*
@@ -807,8 +569,8 @@ $view_response = $couchClient->limit(50)->include_docs(TRUE)->getView('blog_post
 	* @return array [ HTTP method , array of view options, data ]
 	*/
 	protected function _prepare_view_query() {
-		$view_query = $this->view_query;
-		$this->view_query = array();
+		$view_query = $this->query_parameters;
+		$this->query_parameters = array();
 		$method = 'GET';
 		$data = null;
 		if ( isset($view_query['keys']) ) {
