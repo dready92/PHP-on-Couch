@@ -121,12 +121,13 @@ class couchClient extends couch {
 	* @param string|object|array $data the request body. If it's an array or an object, $data is json_encode()d
 	*/
 	protected function _queryAndTest ( $method, $url,$allowed_status_codes, $parameters = array(),$data = NULL ) {
-// 		print_r($method.' '.$url.' ');
+// 		print_r($method.' '.$url."\n");
 // 		print_r($parameters);
 		$raw = $this->query($method,$url,$parameters,$data);
-// 		echo $raw;k
+// 		echo $raw."\n";
 		$response = $this->parseRawResponse($raw, $this->results_as_array);
 		$this->results_as_array = false;
+// 		print_r($response);
 		if ( in_array($response['status_code'], $allowed_status_codes) ) {
 			return $response['body'];
 		}
@@ -666,6 +667,41 @@ class couchClient extends couch {
 		if ( !$id OR !$name )    throw new InvalidArgumentException("You should specify list id and name");
 		if ( !$view_name )    throw new InvalidArgumentException("You should specify view name");
 		$url = '/'.urlencode($this->dbname).'/_design/'.urlencode($id).'/_list/'.urlencode($name).'/'.urlencode($view_name);
+		$this->results_as_cd = false;
+		list($method, $view_query, $data) = $this->_prepare_view_query();
+
+		if ( is_array($additionnal_parameters) && count($additionnal_parameters) ) {
+			$view_query = array_merge($additionnal_parameters,$view_query);
+		}
+		return $this->_queryAndTest ($method, $url, array(200),$view_query,$data);
+	}
+
+	/**
+	* request a list from the CouchDB server
+	*
+	* Beginning in CouchDB 0.11, the design doc where the list function is defined can be different from
+	* the design doc where the view function is defined
+	*
+	* So if you got a design doc "_design/example1" with a defined view "view1", and
+	* a design doc "_design/example2" with a defined list "list1", you can query the view view1 
+	* and then pass it through the list list1 by using :
+	*
+	* getForeignList("example2","list1","example1","view1");
+	*
+	* @link http://wiki.apache.org/couchdb/Formatting_with_Show_and_List
+	* @param string $id the name of the design document containing the list (without _design)
+	* @param string $name list name
+	* @param string $view_id the name of the design document containing the view (without _design)
+	* @param string $view_name view name
+	* @param array $additionnal_parameters some other parameters to send in the query
+	* @return object CouchDB list query response
+	*/
+	public function getForeignList ( $id, $name, $view_id, $view_name, $additionnal_parameters = array() ) {
+		if ( !$id OR !$name )    throw new InvalidArgumentException("You should specify list id and name");
+		if ( !$view_id OR !$view_name )    throw new InvalidArgumentException("You should specify view id and view name");
+		$url = '/'.urlencode($this->dbname).
+				'/_design/'.urlencode($id).'/_list/'.urlencode($name).
+				'/'.urlencode($view_id).'/'.urlencode($view_name);
 		$this->results_as_cd = false;
 		list($method, $view_query, $data) = $this->_prepare_view_query();
 
