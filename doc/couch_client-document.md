@@ -233,6 +233,30 @@ Example : updating an existing document :
     echo "Doc recorded. id = ".$response->id." and revision = ".$response->rev."<br>\n";
     // Doc recorded. id = BlogPost6576 and revision = 2-456769086
 
+Updating a document
+===================
+
+Using CouchDB [Update handlers](http://wiki.apache.org/couchdb/Document_Update_Handlers), you can easily update any document part without having to send back the whole document.
+The method **updateDoc( $ddoc_id, $handler_name, $params, $doc_id = null )** will try to update document according to the code defined in the update handler *$handler_name* of th design document *_design/$ddoc_id*.
+
+Example : incrementing a document counter
+
+Let's say we have a design document _design/myapp containing :
+
+    "updates": {
+        "bump-counter" : "function(doc, req) {
+            if ( !doc ) return [null, {\"code\": 404, \"body\": \"Document not found / not specified\"}]
+            if (!doc.counter) doc.counter = 0;
+            doc.counter += 1;
+            var message = \"<h1>bumped it!</h1>\";
+            return [doc, message];
+        }",
+    }
+
+To bump the counter of the document "some_doc" , use :
+
+    $client->updateDoc("myapp","bump-counter",array(),"some_doc");
+
 
 Deleting a document
 ===================

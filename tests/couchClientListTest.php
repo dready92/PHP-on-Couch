@@ -108,7 +108,7 @@ class couchClientListTest extends PHPUnit_Framework_TestCase
 			$this->assertEquals($row->value,'test2');
 		}
 
-		$test = $this	->client
+		$test = $this->client
 						->startkey( array('test2') )
 						->endkey( array('test2', array()) )
 						->include_docs(TRUE)

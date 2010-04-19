@@ -166,7 +166,7 @@ class couchClient extends couch {
 	* @return boolean true if the database name is correct
 	*/
 	public static function isValidDatabaseName ( $dbname ) {
-		if (  preg_match ( "@^[a-z0-9_\$\(\)\+\-/]+$@",$dbname) ) return true;
+		if (  preg_match ( "@^[a-z][a-z0-9_\$\(\)\+\-/]*$@",$dbname) ) return true;
 		return false;
 	}
 
@@ -432,6 +432,25 @@ class couchClient extends couch {
 		$url  = '/'.urlencode($this->dbname).'/_bulk_docs';
 
 		return $this->_queryAndTest ($method, $url, array(200,201),array(),$request);
+	}
+
+
+	/**
+	* update a couchDB document through an Update Handler 
+	*
+	* @link http://wiki.apache.org/couchdb/Document_Update_Handlers
+	* @param string $ddoc_id name of the design doc containing the update handler definition (without _design)
+	* @param string $handler_name name of the update handler
+	* @param array|object $params parameters to send to the update handler
+	* @param string $doc_id id of the document to update (can be null)
+	*/
+	public function updateDoc ( $ddoc_id, $handler_name, $params, $doc_id = null ) {
+		if ( !is_array($params) && !is_object($params) ) throw new InvalidArgumentException ("params parameter should be an array or an object");
+		if ( is_object($params) )	$params = (array)$params;
+		$method = 'PUT';
+		$url  = '/'.urlencode($this->dbname).'/_design/'.urlencode($ddoc_id).'/_update/'.$handler_name.'/';
+		if ( $doc_id )	$url .= urlencode($doc_id);
+		return $this->_queryAndTest ($method, $url, array(200,201),$params);
 	}
 
 	/**

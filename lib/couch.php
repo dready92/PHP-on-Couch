@@ -480,7 +480,7 @@ class couch {
 		if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
 		$url = $this->dsn.$url;
 		$http = curl_init($url);
-		$http_headers = array('Accept: application/json,text/html,text/plain,*/*','Content-Type: '.$content_type) ;
+		$http_headers = array('Accept: application/json,text/html,text/plain,*/*','Content-Type: '.$content_type,'Expect: ') ;
 		curl_setopt($http, CURLOPT_PUT, 1);
 		curl_setopt($http, CURLOPT_HTTPHEADER,$http_headers);
 		curl_setopt($http, CURLOPT_UPLOAD, true);
@@ -511,7 +511,7 @@ class couch {
 		if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
 		$url = $this->dsn.$url;
 		$http = curl_init($url);
-		$http_headers = array('Accept: application/json,text/html,text/plain,*/*','Content-Type: '.$content_type,'Content-Length: '.strlen($data)) ;
+		$http_headers = array('Accept: application/json,text/html,text/plain,*/*','Content-Type: '.$content_type,'Expect: ','Content-Length: '.strlen($data)) ;
 		curl_setopt($http, CURLOPT_CUSTOMREQUEST, 'PUT');
 		curl_setopt($http, CURLOPT_HTTPHEADER,$http_headers);
 		curl_setopt($http, CURLOPT_HEADER, true);

@@ -34,7 +34,8 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 		$matches = array (
 			"Azerty"=>false,
 			"a-zer_ty" => true,
-			"a(zert)y" => true
+			"a(zert)y" => true,
+			"4azerty" => false
 		);
 		foreach ( $matches as $key => $val ) {
 			$this->assertEquals ( $val, couchClient::isValidDatabaseName($key) );
