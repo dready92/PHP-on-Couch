@@ -263,3 +263,38 @@ Example :
     $doc->replicateTo("http://another.server.com:5984/mydb/");
 
 The replicateFrom can have another argument, a boolean one. If true, the database will be created on the destination server if it doesn't exist.
+
+Formating Documents with show functions
+=======================================
+
+The **show($id,$name,$additionnal_parameters)** method parses the current document through a CouchDB show function.
+
+Example : the database contains the following design document :
+
+    {
+        "_id": "_design/clean",
+        "shows": {
+            "html": "function (doc, req) {
+                        send('<p>ID: '+doc._id+', rev: '+doc._rev+'</p>');
+                    }"
+        }
+    }
+
+and another document that got the id "some_doc". We load the "some_doc" document as a couchDocument object:
+
+    $doc = couchDocument::getInstance($client,"some_doc");
+
+We can then request couchDB to parse this document through a show function :
+
+    $html = $doc->show("clean","html");
+    // html should contain "<p>ID: some_doc, rev: 3-2342342346</p>"
+
+The show method is a proxy method to the **getShow()** method of **couchClient**.
+
+Updating a document using update handlers
+=========================================
+
+The **update($id,$name,$additionnal_params)** method allows to use the CouchDB [update handlers](http://wiki.apache.org/couchdb/Document_Update_Handlers) feature to update an existing document.
+The couchDocument object shouldd have an id for this to work ! Please see **couchClient** *updateDoc* method for more infos.
+
+

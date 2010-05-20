@@ -88,7 +88,7 @@ Example :
 
 
 Get Universally Unique IDentifiers
-================
+==================================
 
 The method **getUuids($count)** sends back an array of universally unique identifiers (that is, big strings that can be used as document ids)
 
@@ -96,12 +96,25 @@ Example :
 
     print_r($client->getUuids(5));
     /*
-		array (	0 => "65a8f6d272b3e5e62ee9de8eacc083a5",
-						1 => "e43b04e44233d72b353c1cd8915b886d",
-						2 => "7498fb296f19ebc2554a4812f3d9ae12",
-						3 => "f3f855a15eb90e9fcdbda5e017b9f2cd",
-						4 => "9d9a8214762d06cdf0158d7f6697cac9" )
+        array ( 0 => "65a8f6d272b3e5e62ee9de8eacc083a5",
+                1 => "e43b04e44233d72b353c1cd8915b886d",
+                2 => "7498fb296f19ebc2554a4812f3d9ae12",
+                3 => "f3f855a15eb90e9fcdbda5e017b9f2cd",
+                4 => "9d9a8214762d06cdf0158d7f6697cac9" )
     */
+
+Change the current database on a server
+=======================================
+
+The method **useDatabase($dbname)** changes the working database on the CouchDB server.
+
+Example :
+
+    $client = new couchClient("http://localhost:5984", "db1");
+    $all_docs_db1 = $client->getAllDocs(); //retrieve all docs of database db1
+    $client->useDatabase("db2");           //switch to "db2" database
+    $all_docs_db2 = $client->getAllDocs(); //retrieve all docs of database db2
+
 
 Database changes interface
 ==========================

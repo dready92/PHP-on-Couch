@@ -29,7 +29,7 @@ How to use it
 - copy the PHP on Couch classes *couch.php*, *couchClient.php*, *couchDocument.php* and *couchReplicator.php* inside the **libraries** folder of your CodeIgniter application.
 - copy the *libraries/couchdb.php* file inside the **libraries** folder of your CodeIgniter application.
 - copy the *config/couchdb.php* file inside the **config** folder of your application
-- edit the config/couchdb.php file to set the two configuration options *couch_dsn* and *couch_database* :
+- edit the *config/couchdb.php* file to set the two configuration options *couch_dsn* and *couch_database* :
 
 
     $config['couch_dsn'] = "http://localhost:5984/";

@@ -393,4 +393,31 @@ class couchDocument {
 		return $this->getUri().'/'.$attachment_name;
 	}
 
+	/**
+	* just a proxy method to couchClient->getShow()
+	*
+	* @param string $id name of the design document containing the show function
+	* @param string $name name of the show function
+	* @param array $additionnal_params other parameters to send to couchServer
+	* @return mixed CouchDB show response
+	*/
+	public function show ( $id,$name,$additionnal_params = array() ) {
+		return $this->__couch_data->client->getShow($id,$name,$this->_id,$additionnal_params);
+	}
+	
+	/**
+	* just a proxy method to couchClient->updateDoc
+	*
+	* @param string $id name of the design document containing the update function
+	* @param string $name name of the update function
+	* @param array $additionnal_params other parameters to send to couch
+	* @return mixed couchDB update response
+	*/
+	public function update( $id,$name,$additionnal_params = array() ) {
+		if ( !$this->_id )	return false;
+		$back = $this->__couch_data->client->updateDoc($id,$name, $additionnal_params, $this->_id);
+		// we should reload document to be sure that we have an up-to-date version
+		$this->load($this->_id);
+		return $back;
+	}
 }

@@ -101,10 +101,9 @@ class couchClient extends couch {
 	* @param string $dbname CouchDB database name
 	*/
 	public function __construct($dsn, $dbname) {
-		if ( !strlen($dbname) )	throw new InvalidArgumentException("Database name can't be empty");
-		if ( !$this->isValidDatabaseName($dbname) )	throw new InvalidArgumentException('Database name contains invalid characters. Only lowercase characters (a-z), digits (0-9), and any of the characters _, $, (, ), +, -, and / are allowed.');
+		$this->useDatabase($dbname);
 		parent::__construct($dsn);
-		$this->dbname = $dbname;
+		
 	}
 
 	/**
@@ -155,6 +154,19 @@ class couchClient extends couch {
 			$this->query_parameters[ $this->query_defs[$name]['name'] ] = json_encode((boolean)reset($args));
 		}
 // 		print_r($this->query_parameters);
+		return $this;
+	}
+
+	/**
+	* set the name of the couchDB database to work on
+	*
+	* @param string $dbname name of the database
+	* @return couchClient $this
+	*/
+	public function useDatabase( $dbname ) {
+		if ( !strlen($dbname) )	throw new InvalidArgumentException("Database name can't be empty");
+		if ( !$this->isValidDatabaseName($dbname) )	throw new InvalidArgumentException('Database name contains invalid characters. Only lowercase characters (a-z), digits (0-9), and any of the characters _, $, (, ), +, -, and / are allowed.');
+		$this->dbname = $dbname;
 		return $this;
 	}
 
