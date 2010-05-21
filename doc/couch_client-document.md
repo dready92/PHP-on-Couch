@@ -377,7 +377,7 @@ Example :
 Bulk documents storage
 ------------------------
 
-To store several documents in one go, use the method **storeDocs($docs,$all_or_nothing)**. $docs is an array containing the documents to store (as couchDocuments PHP [stdClass](http://fr3.php.net/manual/en/reserved.classes.php) or PHP arrays). $all_or_nothing is related to the updates on the database : if set to false (which is the default), all documents are saved one by one, which means that, in case of a power failure on the database, we could have some documents stored and some not stored. When set to true, couchDB will commit all documents in one go : in case of a power failure, no document will be stored, or all documents will be stored.
+To store several documents in one go, use the method **storeDocs($docs,$all_or_nothing)**. $docs is an array containing the documents to store (as couchDocuments, PHP [stdClass](http://fr3.php.net/manual/en/reserved.classes.php) or PHP arrays). $all_or_nothing is related to the updates on the database : if set to false (which is the default), all documents are saved one by one, which means that, in case of a power failure on the database, we could have some documents stored and some not stored. When set to true, couchDB will commit all documents in one go : in case of a power failure, no document will be stored, or all documents will be stored.
 
 Example :
     $docs = array (
@@ -413,6 +413,11 @@ which should give you something like :
     )
 
 This method also works to update documents.
+
+Bulk documents removal
+----------------------
+
+To delete several documents in a single HTTP request, use the method **deleteDocs($docs,$all_or_nothing)**. $docs is an array containing the documents to store (as couchDocuments, PHP [stdClass](http://fr3.php.net/manual/en/reserved.classes.php) or PHP arrays). $all_or_nothing is related to the updates on the database : if set to false (which is the default), all documents are saved one by one, which means that, in case of a power failure on the database, we could have some documents deleted and some not deleted. When set to true, couchDB will commit all documents in one go : in case of a power failure, no document will be deleted, or all documents will be deleted.
 
 
 Choosing couchClient output format

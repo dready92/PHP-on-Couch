@@ -440,10 +440,40 @@ class couchClient extends couch {
 			$request['all_or_nothing'] = true;
 		}
 
-		$method = 'POST';
 		$url  = '/'.urlencode($this->dbname).'/_bulk_docs';
+		return $this->_queryAndTest ('POST', $url, array(200,201),array(),$request);
+	}
 
-		return $this->_queryAndTest ($method, $url, array(200,201),array(),$request);
+
+	/**
+	* delete many CouchDB documents in a single HTTP request
+	*
+	* @link http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API
+	* @param object $docs array of documents to delete
+	* @param boolean $all_or_nothing set the bulk update type to "all or nothing"
+	* @return object CouchDB bulk document storage response
+	*/
+	public function deleteDocs ( $docs, $all_or_nothing = false ) {
+		if ( !is_array($docs) )	throw new InvalidArgumentException ("docs parameter should be an array");
+		/*
+			create the query content
+		*/
+		$request = array('docs'=>array());
+		foreach ( $docs as $doc ) {
+			$destDoc = null;
+			if ( $doc instanceof couchDocument )	$destDoc = $doc->getFields();
+			else 									$destDoc = $doc;
+
+			if ( is_array($destDoc) )	$destDoc['_deleted'] = true;
+			else 						$destDoc->_deleted   = true;
+			$request['docs'][] = $destDoc;
+		}
+		if ( $all_or_nothing ) {
+			$request['all_or_nothing'] = true;
+		}
+
+		$url  = '/'.urlencode($this->dbname).'/_bulk_docs';
+		return $this->_queryAndTest ('POST', $url, array(200,201),array(),$request);
 	}
 
 
