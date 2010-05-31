@@ -904,7 +904,11 @@ class couchException extends Exception {
 	*/
 	function __construct($raw_response) {
 		$this->couch_response = couch::parseRawResponse($raw_response);
-		parent::__construct($this->couch_response['status_message'], $this->couch_response['status_code']);
+		if ( is_object($this->couch_response['body']) and isset($this->couch_response['body']->reason) )
+			$message = $this->couch_response['status_message'] . ' - ' . $this->couch_response['body']->reason;
+		else
+			$message = $this->couch_response['status_message'];
+		parent::__construct($message , $this->couch_response['status_code']);
 	}
 
 	/**
