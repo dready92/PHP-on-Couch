@@ -136,7 +136,7 @@ class couchAdmin {
 		}
 		$user = new stdClass();
 		$user->salt = sha1( microtime(),false);
-		$user->password_sha = sha1( $password + $user->salt, false);
+		$user->password_sha = sha1( $password . $user->salt, false);
 		$user->name=$login;
 		$user->type = "user";
 		$user->roles = $roles;
