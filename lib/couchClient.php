@@ -178,6 +178,7 @@ class couchClient extends couch {
 	* @return boolean true if the database name is correct
 	*/
 	public static function isValidDatabaseName ( $dbname ) {
+		if ( $dbname == "_users" )	return true;
 		if (  preg_match ( "@^[a-z][a-z0-9_\$\(\)\+\-/]*$@",$dbname) ) return true;
 		return false;
 	}
@@ -826,7 +827,7 @@ class couchClient extends couch {
 	* @return void
 	*/
 	public function compactAllViews () {
-		$response = $this->startkey('_design/')->endkey('_design/~~~~~~~~~~~')->getAllDocs();
+		$response = $this->startkey('_design/')->endkey('_designa')->getAllDocs();
 // 		print_r($response);
 		if ( property_exists($response,'rows') && is_array($response->rows) ) {
 			foreach ( $response->rows as $view_row ) {

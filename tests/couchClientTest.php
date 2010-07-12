@@ -96,8 +96,8 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 	}
 
 	/**
-     	* @expectedException InvalidArgumentException
-     	*/
+	* @expectedException InvalidArgumentException
+	*/
 	public function testStoreDocException () {
 		$test = array ("_id"=>"great","type"=> "array");
 		$this->client->storeDoc($test);
@@ -107,18 +107,18 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 	* @expectedException InvalidArgumentException
 	*/
 	public function testStoreDocException2 () {
-			$test = new stdclass();
-	$test->_id = "great";
-	$test->_type = "object";
-			$this->client->storeDoc($test);
+		$test = new stdclass();
+		$test->_id = "great";
+		$test->_type = "object";
+		$this->client->storeDoc($test);
 	}
 
 	public function testStoreDoc () {
 		$infos = $this->client->getDatabaseInfos();
 		$test = new stdclass();
-                $test->_id = "great";
-                $test->type = "object";
-                $this->client->storeDoc($test);
+		$test->_id = "great";
+		$test->type = "object";
+		$this->client->storeDoc($test);
 		$infos2 = $this->client->getDatabaseInfos();
 		$this->assertEquals ( $infos->doc_count+1, $infos2->doc_count );
 		$doc = $this->client->getDoc("great");

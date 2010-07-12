@@ -69,13 +69,28 @@ class couch {
 		if ( function_exists('curl_init') )	$this->curl = TRUE;
 	}
 
+
+	/**
+	* returns the DSN, untouched
+	*
+	* @return string DSN
+	*/
+	public function dsn() {
+		return $this->dsn;
+	}
+
 	/**
 	* return a part of the data source name
+	*
+	* if $part parameter is empty, returns dns array
 	*
 	* @param string $part part to return
 	* @return string DSN part
 	*/
-	public function dsn_part($part) {
+	public function dsn_part($part = null) {
+		if ( !$part ) {
+			return $this->dsn_parsed;
+		}
 		if ( isset($this->dsn_parsed[$part]) ) {
 			return $this->dsn_parsed[$part];
 		}
@@ -245,8 +260,8 @@ class couch {
 		$raw_response = $this->_execute($request);
 		$this->_disconnect();
 
-    //log_message('debug',"COUCH : Executed query $method $url");
-    //log_message('debug',"COUCH : ".$raw_response);
+// 		echo 'debug',"COUCH : Executed query $method $url";
+// 		echo 'debug',"COUCH : ".$raw_response;
 		return $raw_response;
 	}
 
@@ -289,12 +304,11 @@ class couch {
 		if ( is_object($data) OR is_array($data) )
 			$data = json_encode($data);
 		$req = $this->_socket_startRequestHeaders($method,$url);
-
+		$req .= 'Content-Type: application/json'."\r\n";
 		if ( $method == 'COPY') {
 			$req .= 'Destination: '.$data."\r\n\r\n";
 		} elseif ($data) {
-			$req .= 'Content-Length: '.strlen($data)."\r\n";
-			$req .= 'Content-Type: application/json'."\r\n\r\n";
+			$req .= 'Content-Length: '.strlen($data)."\r\n\r\n";
 			$req .= $data."\r\n";
 		} else {
 			$req .= "\r\n";
@@ -414,8 +428,11 @@ class couch {
 	protected function _curl_buildRequest($method,$url,$data) {
 		$http = curl_init($url);
 		$http_headers = array('Accept: application/json,text/html,text/plain,*/*') ;
-		if ( is_object($data) OR is_array($data) )
+		if ( is_object($data) OR is_array($data) ) {
 			$data = json_encode($data);
+		}
+
+		$http_headers[] = 'Content-Type: application/json';
 
 		curl_setopt($http, CURLOPT_CUSTOMREQUEST, $method);
 

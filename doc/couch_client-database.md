@@ -1,5 +1,16 @@
 This section give details on actions on the CouchDB server through PHP on Couch.
 
+
+Get server DSN
+==============
+
+The method **dsn()** returns the DSN of the server. Database is not included in the DSN.
+
+Example :
+
+    $client = new couchClient("http://couch.server.com:5984/","hello");
+    echo $client->dsn(); // will echo : http://couch.server.com:5984
+
 Testing a database name
 =======================
 
@@ -13,7 +24,6 @@ Example :
     } else {
         die("Invalid database name");
     }
-
 
 List databases
 ==============
@@ -83,7 +93,7 @@ Example :
 
     echo $client->getDatabaseUri();
     /*
-    db.example.com:5984/testdb
+    http://db.example.com:5984/testdb
     */
 
 
