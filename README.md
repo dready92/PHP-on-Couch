@@ -47,7 +47,7 @@ This is the most basic of the three classes, and is responsible for the low leve
 couchClient class
 ------------------
 
-This class maps all the actions the application can do on the CouchDB server. We can find three main topics :
+This class maps all the actions the application can do on the CouchDB server. Documentation is split in three main topics :
 
 ### [database stuff](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-database.md)
 
@@ -66,10 +66,15 @@ couchDocument class
 
 Easing the manipulation of documents, the couchDocument class uses PHP magic getters and setters.
 
-couchReplicator class
+[couchReplicator class](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_replicator.md)
 ---------------------
 
 A dedicated class to manage replications over different instances of CouchDB databases.
+
+[couchAdmin class](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_admin.md)
+----------------
+
+A class to manage users and database/users associations
 
 Quick-start guide
 =================
@@ -121,3 +126,5 @@ Resources
 [couchDocument API](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_document.md)
 
 [couchReplicator API](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_replicator.md)
+
+[couchAdmin API](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_admin.md)
