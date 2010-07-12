@@ -96,7 +96,7 @@ class couch {
 	*/
 	public static function parseRawResponse($raw_data, $json_as_array = FALSE) {
 		if ( !strlen($raw_data) ) throw new InvalidArgumentException("no data to parse");
-		if ( !substr_compare($raw_data, "HTTP/1.1 100 Continue\r\n\r\n", 0, 25) ) {
+		while ( !substr_compare($raw_data, "HTTP/1.1 100 Continue\r\n\r\n", 0, 25) ) {
 			$raw_data = substr($raw_data, 25);
 		}
 		$response = array('body'=>null);
