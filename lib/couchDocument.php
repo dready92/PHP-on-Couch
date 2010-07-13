@@ -64,7 +64,7 @@ class couchDocument {
 	* @return couchDocument $this
 	*/
 	public function setAutocommit($commit) {
-		$this->__couch_data->autocommit = (boolean)true;
+		$this->__couch_data->autocommit = (boolean)$commit;
 		return $this;
 	}
 
