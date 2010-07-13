@@ -19,6 +19,11 @@ class couchAdmin {
 
 
 	/**
+	* @var the name of the CouchDB server "users" database
+	*/
+	private $userdb = "_users";
+
+	/**
 	*constructor
 	*
 	* @param couchClient $client the couchClient instance
@@ -83,7 +88,7 @@ class couchAdmin {
 		$dsn = $this->client->dsn_part();
 		$dsn["user"] = $login;
 		$dsn["pass"] = $password;
-		$client = new couchClient( $this->build_url($dsn), "_users" );
+		$client = new couchClient( $this->build_url($dsn), $this->userdb );
 		$user = new stdClass();
 		$user->name=$login;
 		$user->type = "user";
@@ -135,26 +140,42 @@ class couchAdmin {
 			throw new InvalidArgumentException("Password can't be empty");
 		}
 		$user = new stdClass();
-		$user->salt = sha1( microtime(),false);
+		$user->salt = sha1( microtime().mt_rand(1000000,9999999),false);
 		$user->password_sha = sha1( $password . $user->salt, false);
 		$user->name=$login;
 		$user->type = "user";
 		$user->roles = $roles;
 		$user->_id = "org.couchdb.user:".$login;
-		$client = new couchClient( $this->client->dsn() , "_users");
+		$client = new couchClient( $this->client->dsn() , $this->userdb);
 		return $client->storeDoc($user);
 	}
 
 
 // 	public function deleteUser ( $login ) {
-// 		$login = urlencode($login);
 // 		if ( strlen($login) < 1 ) {
 // 			throw new InvalidArgumentException("Login can't be empty");
 // 		}
 // 		$client = new couchClient( $this->client->dsn() , "_users");
 // 		$doc = $client->getDoc("org.couchdb.user:".$login);
+// 		// ugly hack bc REST DELETE query don't work on Couch 1.0.0
+// 		$doc->_deleted = true;
 // 		print_r($doc);
-// 		return $client->deleteDocs(array($doc));
+// 		$url = '/_users/'.urlencode($doc->_id);
+// 		try {
+// 			$raw = $client->query(
+// 				"PUT",
+// 				$url,
+// 				array(),
+// 				json_encode($doc)
+// 			);
+// 		} catch ( Exception $e ) {
+// 			throw $e;
+// 		}
+// 		$resp = couch::parseRawResponse($raw);
+// 		if ( $resp['status_code'] != 200 ) {
+// 			throw new couchException($raw);
+// 		}
+// 		return $resp["body"];
 // 	}
 
 	/**
@@ -167,7 +188,7 @@ class couchAdmin {
 		if ( strlen($login) < 1 ) {
 			throw new InvalidArgumentException("Login can't be empty");
 		}
-		$client = new couchClient( $this->client->dsn() , "_users");
+		$client = new couchClient( $this->client->dsn() , $this->userdb);
 		return $client->getDoc("org.couchdb.user:".$login);
 	}
 
@@ -178,7 +199,7 @@ class couchAdmin {
 	* @return array users array : each row is a stdObject with "id", "rev" and optionally "doc" properties
 	*/
 	public function getAllUsers($include_docs = false) {
-		$client = new couchClient( $this->client->dsn() , "_users");
+		$client = new couchClient( $this->client->dsn() , $this->userdb);
 		if ( $include_docs ) {
 			$client->include_docs(true);
 		}
@@ -197,8 +218,6 @@ class couchAdmin {
 			"GET",
 			"/".$dbname."/_security"
 		);
-// 		print_r("hereerere");
-// 		print_r($raw);
 		$resp = couch::parseRawResponse($raw);
 		if ( $resp['status_code'] != 200 ) {
 			throw new couchException($raw);

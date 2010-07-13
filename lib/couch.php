@@ -257,6 +257,7 @@ class couch {
 
 		$request = $this->_socket_buildRequest($method,$url,$data);
 		if ( !$this->_connect() )	return FALSE;
+// 		echo "DEBUG: Request ------------------ \n$request\n";
 		$raw_response = $this->_execute($request);
 		$this->_disconnect();
 

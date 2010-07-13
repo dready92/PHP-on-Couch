@@ -1,7 +1,7 @@
 Introduction
 ============
 
-[PHP On Couch](http://dready.byethost31.com/index.php/display/edit/192) try to provide an easy way to work with your [CouchDB](http://couchdb.apache.org) [documents](http://wiki.apache.org/couchdb/HTTP_Document_API) with [PHP](http://php.net). Some code first :
+[PHP On Couch](http://github.com/dready92/PHP-on-Couch/) try to provide an easy way to work with your [CouchDB](http://couchdb.apache.org) [documents](http://wiki.apache.org/couchdb/HTTP_Document_API) with [PHP](http://php.net). Some code first :
 
     <?PHP
     require_once 'couch.php';

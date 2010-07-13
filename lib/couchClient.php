@@ -86,7 +86,7 @@ class couchClient extends couch {
 	/**
 	* @var array list of properties beginning with '_' and allowed in CouchDB objects in a "store" type operation
 	*/
-	public static $allowed_underscored_properties = array('_id','_rev','_attachments');
+	public static $allowed_underscored_properties = array('_id','_rev','_attachments','_deleted');
 
 	/**
 	* @var array list of properties beginning with '_' and that should be removed from CouchDB objects in a "store" type operation

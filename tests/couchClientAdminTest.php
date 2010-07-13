@@ -177,5 +177,15 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals("jack",reset($users));
 	}
 
+// 	public function testDeleteUser() {
+// 		$adm = new couchAdmin($this->aclient);
+// 		$response = $adm->deleteUser("joe");
+// 		$this->assertType("object", $ok);
+// 		$this->assertObjectHasAttribute("ok",$ok);
+// 		$this->assertEquals($ok->ok,true);
+// 		$ok = $adm->getAllUsers(true);
+// 		$this->assertType("array", $ok);
+// 		$this->assertEquals(count($ok),2);
+// 	}
 
 }
