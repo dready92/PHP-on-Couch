@@ -177,6 +177,106 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals("jack",reset($users));
 	}
 
+// roles
+
+	public function testDatabaseAdminRole () {
+		$adm = new couchAdmin($this->aclient);
+		$security = $adm->getSecurity();
+		$this->assertEquals(count($security->admins->roles),0);
+		$ok = $adm->addDatabaseAdminRole("cowboy");
+		$this->assertType("boolean", $ok);
+		$this->assertEquals($ok,true);
+		$security = $adm->getSecurity();
+		$this->assertEquals(count($security->admins->roles),1);
+		$this->assertEquals(reset($security->admins->roles),"cowboy");
+		$ok = $adm->removeDatabaseAdminRole("cowboy");
+		$this->assertType("boolean", $ok);
+		$this->assertEquals($ok,true);
+		$security = $adm->getSecurity();
+		$this->assertEquals(count($security->admins->roles),0);
+	}
+
+	public function testDatabaseReaderRole () {
+		$adm = new couchAdmin($this->aclient);
+		$security = $adm->getSecurity();
+		$this->assertEquals(count($security->readers->roles),0);
+		$ok = $adm->addDatabaseReaderRole("cowboy");
+		$this->assertType("boolean", $ok);
+		$this->assertEquals($ok,true);
+		$security = $adm->getSecurity();
+		$this->assertEquals(count($security->readers->roles),1);
+		$this->assertEquals(reset($security->readers->roles),"cowboy");
+		$ok = $adm->removeDatabaseReaderRole("cowboy");
+		$this->assertType("boolean", $ok);
+		$this->assertEquals($ok,true);
+		$security = $adm->getSecurity();
+		$this->assertEquals(count($security->readers->roles),0);
+	}
+
+	public function testGetDatabaseAdminRoles () {
+		$adm = new couchAdmin($this->aclient);
+		$users = $adm->getDatabaseAdminRoles();
+		$this->assertType("array", $users);
+		$this->assertEquals(0,count($users));
+// 		$this->assertEquals("joe",reset($users));
+	}
+
+	public function testGetDatabaseReaderRoles () {
+		$adm = new couchAdmin($this->aclient);
+		$users = $adm->getDatabaseReaderRoles();
+		$this->assertType("array", $users);
+		$this->assertEquals(0,count($users));
+// 		$this->assertEquals("jack",reset($users));
+	}
+
+// /roles
+
+
+
+	public function testUserRoles () {
+		$adm = new couchAdmin($this->aclient);
+		$user = $adm->getUser("joe");
+		$this->assertType("object", $user);
+		$this->assertObjectHasAttribute("_id",$user);
+		$this->assertObjectHasAttribute("roles",$user);
+		$this->assertType("array", $user->roles);
+		$this->assertEquals(0,count($user->roles));
+		$adm->addRoleToUser($user,"cowboy");
+		$user = $adm->getUser("joe");
+		$this->assertType("object", $user);
+		$this->assertObjectHasAttribute("_id",$user);
+		$this->assertObjectHasAttribute("roles",$user);
+		$this->assertType("array", $user->roles);
+		$this->assertEquals(1,count($user->roles));
+		$this->assertEquals("cowboy",reset($user->roles));
+		$adm->addRoleToUser("joe","trainstopper");
+		$user = $adm->getUser("joe");
+		$this->assertType("object", $user);
+		$this->assertObjectHasAttribute("_id",$user);
+		$this->assertObjectHasAttribute("roles",$user);
+		$this->assertType("array", $user->roles);
+		$this->assertEquals(2,count($user->roles));
+		$this->assertEquals("cowboy",reset($user->roles));
+		$this->assertEquals("trainstopper",end($user->roles));
+		$adm->removeRoleFromUser($user,"cowboy");
+		$user = $adm->getUser("joe");
+		$this->assertType("object", $user);
+		$this->assertObjectHasAttribute("_id",$user);
+		$this->assertObjectHasAttribute("roles",$user);
+		$this->assertType("array", $user->roles);
+		$this->assertEquals(1,count($user->roles));
+		$this->assertEquals("trainstopper",reset($user->roles));
+		$adm->removeRoleFromUser("joe","trainstopper");
+		$user = $adm->getUser("joe");
+		$this->assertType("object", $user);
+		$this->assertObjectHasAttribute("_id",$user);
+		$this->assertObjectHasAttribute("roles",$user);
+		$this->assertType("array", $user->roles);
+		$this->assertEquals(0,count($user->roles));
+	}
+
+
+
 // 	public function testDeleteUser() {
 // 		$adm = new couchAdmin($this->aclient);
 // 		$response = $adm->deleteUser("joe");

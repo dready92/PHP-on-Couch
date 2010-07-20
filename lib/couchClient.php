@@ -97,12 +97,12 @@ class couchClient extends couch {
 	* class constructor
 	*
 	* @param string $dsn CouchDB server data source name (eg. http://localhost:5984)
-	*	@param integer $port CouchDB server port
 	* @param string $dbname CouchDB database name
+	* @param array $options Additionnal configuration options
 	*/
-	public function __construct($dsn, $dbname) {
+	public function __construct($dsn, $dbname, $options = array() ) {
 		$this->useDatabase($dbname);
-		parent::__construct($dsn);
+		parent::__construct($dsn,$options);
 		
 	}
 
@@ -120,13 +120,9 @@ class couchClient extends couch {
 	* @param string|object|array $data the request body. If it's an array or an object, $data is json_encode()d
 	*/
 	protected function _queryAndTest ( $method, $url,$allowed_status_codes, $parameters = array(),$data = NULL ) {
-// 		print_r($method.' '.$url."\n");
-// 		print_r($parameters);
 		$raw = $this->query($method,$url,$parameters,$data);
-// 		echo $raw."\n";
 		$response = $this->parseRawResponse($raw, $this->results_as_array);
 		$this->results_as_array = false;
-// 		print_r($response);
 		if ( in_array($response['status_code'], $allowed_status_codes) ) {
 			return $response['body'];
 		}

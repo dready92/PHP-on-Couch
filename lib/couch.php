@@ -80,6 +80,16 @@ class couch {
 	}
 
 	/**
+	* returns the options array
+	*
+	* @return string DSN
+	*/
+	public function options() {
+		return $this->options;
+	}
+
+
+	/**
 	* return a part of the data source name
 	*
 	* if $part parameter is empty, returns dns array
@@ -416,6 +426,15 @@ class couch {
 		$this->socket = NULL;
 	}
 
+	/*
+	* add user-defined options to Curl resource
+	*/
+	protected function _curl_addCustomOptions ($res) {
+		if ( array_key_exists("curl",$this->options) && is_array($this->options["curl"]) ) {
+			curl_setopt_array($res,$this->options["curl"]);
+		}
+	}
+
 
 	/**
 	* build HTTP request to send to the server
@@ -468,6 +487,7 @@ class couch {
 			$url = $url.'?'.http_build_query($parameters);
 // 		echo $url;
 		$http = $this->_curl_buildRequest($method,$url,$data);
+		$this->_curl_addCustomOptions ($http);
 		curl_setopt($http,CURLOPT_HEADER, true);
 		curl_setopt($http,CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($http,CURLOPT_FOLLOWLOCATION, true);
@@ -508,6 +528,7 @@ class couch {
 		$fstream=fopen($file,'r');
 		curl_setopt($http, CURLOPT_INFILE, $fstream);
 		curl_setopt($http, CURLOPT_INFILESIZE, filesize($file));
+		$this->_curl_addCustomOptions ($http);
 		$response = curl_exec($http);
 		fclose($fstream);
 		curl_close($http);
@@ -536,6 +557,7 @@ class couch {
 		curl_setopt($http, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($http, CURLOPT_FOLLOWLOCATION, true);
 		curl_setopt($http, CURLOPT_POSTFIELDS, $data);
+		$this->_curl_addCustomOptions ($http);
 		$response = curl_exec($http);
 		curl_close($http);
 		return $response;

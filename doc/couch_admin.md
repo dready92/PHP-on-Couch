@@ -295,6 +295,54 @@ Example - including user documents and not showing the design documents
     **/
 
 
+Assigning roles to users
+========================
+
+Assigning a role to a user
+-----------------------
+
+The method **addRoleToUser($user, $role)** adds the role *$role* to the list of roles user *$user* belongs to. **$user** can be a PHP stdClass representing a CouchDB user object (as returned by getUser() method), or a user login.
+
+Example : adding the role *cowboy* to user *joe*
+
+    <?PHP
+    require_once "lib/couch.php";
+    require_once "lib/couchClient.php";
+    require_once "lib/couchAdmin.php";
+    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new couchAdmin($client);
+    
+    try {
+        $adm->addRoleToUser("joe","cowboy");
+    } catch ( Exception $e ) {
+        die("unable to add a role to user: ".$e->getMessage());
+    }
+    echo "Joe now got role cowboy";
+
+
+Removing a role from the list of roles a user belongs to
+--------------------------------------------------------
+
+The method **removeRoleFromUser($user, $role)** removes the role *$role* from the list of roles user *$user* belongs to. **$user** can be a PHP stdClass representing a CouchDB user object (as returned by getUser() method), or a user login.
+
+Example : removing the role *cowboy* of user *joe*
+
+    <?PHP
+    require_once "lib/couch.php";
+    require_once "lib/couchClient.php";
+    require_once "lib/couchAdmin.php";
+    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new couchAdmin($client);
+    
+    try {
+        $adm->removeRoleFromUser("joe","cowboy");
+    } catch ( Exception $e ) {
+        die("unable to remove a role of a user: ".$e->getMessage());
+    }
+    echo "Joe don't belongs to the cowboy role anymore";
+
+
+
 Assigning users to databases
 ============================
 
@@ -431,6 +479,146 @@ Example - removing joe from the admins of the database mydb
     } catch ( Exception $e ) {
         die("unable to remove user: ".$e->getMessage());
     }
+
+
+
+Assigning roles to databases
+============================
+
+Just like users, roles can be assigned as admins or readers in a CouchDB database.
+[The CouchDB wiki gives all details regarding rights management.](http://wiki.apache.org/couchdb/Security_Features_Overview)
+
+
+Adding a role to the "readers"
+------------------------------
+
+The method **addDatabaseReaderrole ($role)** adds a role in the readers list of the database.
+
+Example - adding cowboy to the readers of the database mydb
+
+    <?PHP
+    require_once "lib/couch.php";
+    require_once "lib/couchClient.php";
+    require_once "lib/couchAdmin.php";
+    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new couchAdmin($client);
+    
+    try {
+        $adm->addDatabaseReaderRole("cowboy");
+    } catch ( Exception $e ) {
+        die("unable to add role: ".$e->getMessage());
+    }
+
+
+Adding a role to the "admins"
+------------------------------
+
+The method **addDatabaseAdminRole ($role)** adds a role in the admins list of the database.
+
+Example - adding *cowboy* role to the *admins* of the database mydb
+
+    <?PHP
+    require_once "lib/couch.php";
+    require_once "lib/couchClient.php";
+    require_once "lib/couchAdmin.php";
+    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new couchAdmin($client);
+    
+    try {
+        $adm->addDatabaseAdminrole("cowboy");
+    } catch ( Exception $e ) {
+        die("unable to add role: ".$e->getMessage());
+    }
+
+
+Getting the list of "readers" of the database
+---------------------------------------------
+
+The method **getDatabaseReaderRoles ()** returns the list of roles belonging to the *readers* of the database.
+
+Example - getting all roles beeing *readers* of the database mydb
+
+    <?PHP
+    require_once "lib/couch.php";
+    require_once "lib/couchClient.php";
+    require_once "lib/couchAdmin.php";
+    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new couchAdmin($client);
+    
+    try {
+        $roles = $adm->getDatabaseReaderRoles();
+    } catch ( Exception $e ) {
+        die("unable to list roles: ".$e->getMessage());
+    }
+    print_r($roles);
+    // will echo something like: Array ( "cowboy" , "indians" )
+
+
+Getting the list of "admins" of the database
+---------------------------------------------
+
+The method **getDatabaseAdminRoles ()** returns the list of roles belonging to the *admins* of the database.
+
+Example - getting all roles beeing *admins* of the database mydb
+
+    <?PHP
+    require_once "lib/couch.php";
+    require_once "lib/couchClient.php";
+    require_once "lib/couchAdmin.php";
+    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new couchAdmin($client);
+    
+    try {
+        $roles = $adm->getDatabaseAdminRoles();
+    } catch ( Exception $e ) {
+        die("unable to list roles: ".$e->getMessage());
+    }
+    print_r($roles);
+    // will echo something like: Array ( "martians" )
+
+
+Removing a role from the "readers"
+------------------------------
+
+The method **removeDatabaseReaderRole ($role)** removes a role from the readers list of the database.
+
+Example - removing *cowboy* from the *readers* of the database mydb
+
+    <?PHP
+    require_once "lib/couch.php";
+    require_once "lib/couchClient.php";
+    require_once "lib/couchAdmin.php";
+    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new couchAdmin($client);
+    
+    try {
+        $adm->removeDatabaseReaderRole("cowboy");
+    } catch ( Exception $e ) {
+        die("unable to remove role: ".$e->getMessage());
+    }
+
+
+Removing a role from the "admins"
+------------------------------
+
+The method **removeDatabaseAdminRole ($role)** removes a role from the admins list of the database.
+
+Example - removing *martians* from the admins of the database mydb
+
+    <?PHP
+    require_once "lib/couch.php";
+    require_once "lib/couchClient.php";
+    require_once "lib/couchAdmin.php";
+    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new couchAdmin($client);
+    
+    try {
+        $adm->removeDatabaseAdminRole("martians");
+    } catch ( Exception $e ) {
+        die("unable to remove role: ".$e->getMessage());
+    }
+
+
 
 
 Accessing the database security object
