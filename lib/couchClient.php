@@ -148,6 +148,8 @@ class couchClient extends couch {
 			$this->query_parameters[ $this->query_defs[$name]['name'] ] = (string)reset($args);
 		} elseif ( $this->query_defs[$name]['filter'] == 'jsonEncodeBoolean' ) {
 			$this->query_parameters[ $this->query_defs[$name]['name'] ] = json_encode((boolean)reset($args));
+		} else {
+			$this->query_parameters[ $this->query_defs[$name]['name'] ] = reset($args);
 		}
 // 		print_r($this->query_parameters);
 		return $this;
@@ -416,7 +418,7 @@ class couchClient extends couch {
 	* store many CouchDB documents
 	*
 	* @link http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API
-	* @param object $docs array of documents to store
+	* @param array $docs array of documents to store
 	* @param boolean $all_or_nothing set the bulk update type to "all or nothing"
 	* @return object CouchDB bulk document storage response
 	*/
@@ -446,7 +448,7 @@ class couchClient extends couch {
 	* delete many CouchDB documents in a single HTTP request
 	*
 	* @link http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API
-	* @param object $docs array of documents to delete
+	* @param array $docs array of documents to delete
 	* @param boolean $all_or_nothing set the bulk update type to "all or nothing"
 	* @return object CouchDB bulk document storage response
 	*/
