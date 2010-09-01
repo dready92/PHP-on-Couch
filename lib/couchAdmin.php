@@ -104,24 +104,30 @@ class couchAdmin {
 	* @param string $login administrator login
 	* @return stdClass CouchDB server response
 	*/
-// 	public function deleteAdmin ( $login ) {
-// 		$login = urlencode($login);
-// 		if ( strlen($login) < 1 ) {
-// 			throw new InvalidArgumentException("Login can't be empty");
-// 		}
-// 		$url = '/_config/admins/'.urlencode($login);
-// 		$raw = $this->client->query(
-// 			"DELETE",
-// 			$url
-// 		);
-// 		$resp = couch::parseRawResponse($raw);
-// 		if ( $resp['status_code'] != 200 ) {
-// 			throw new couchException($raw);
-// 		}
-// 		$client = new couchClient( $this->client->dsn() , "_users");
-// 		$doc = $client->getDoc("org.couchdb.user:".$name);
-// 		return $client->deleteDoc($doc);
-// 	}
+	public function deleteAdmin ( $login ) {
+		$login = urlencode($login);
+		if ( strlen($login) < 1 ) {
+			throw new InvalidArgumentException("Login can't be empty");
+		}
+
+		try {
+			$client = new couchClient( $this->client->dsn() , "_users");
+			$doc = $client->getDoc("org.couchdb.user:".$login);
+			$client->deleteDoc($doc);
+		} catch (Exception $e) {
+		}
+
+		$url = '/_config/admins/'.urlencode($login);
+		$raw = $this->client->query(
+			"DELETE",
+			$url
+		);
+		$resp = couch::parseRawResponse($raw);
+		if ( $resp['status_code'] != 200 ) {
+			throw new couchException($raw);
+		}
+		return $resp["body"];
+	}
 	
 	/**
 	* create a user
@@ -151,32 +157,21 @@ class couchAdmin {
 	}
 
 
-// 	public function deleteUser ( $login ) {
-// 		if ( strlen($login) < 1 ) {
-// 			throw new InvalidArgumentException("Login can't be empty");
-// 		}
-// 		$client = new couchClient( $this->client->dsn() , "_users");
-// 		$doc = $client->getDoc("org.couchdb.user:".$login);
-// 		// ugly hack bc REST DELETE query don't work on Couch 1.0.0
-// 		$doc->_deleted = true;
-// 		print_r($doc);
-// 		$url = '/_users/'.urlencode($doc->_id);
-// 		try {
-// 			$raw = $client->query(
-// 				"PUT",
-// 				$url,
-// 				array(),
-// 				json_encode($doc)
-// 			);
-// 		} catch ( Exception $e ) {
-// 			throw $e;
-// 		}
-// 		$resp = couch::parseRawResponse($raw);
-// 		if ( $resp['status_code'] != 200 ) {
-// 			throw new couchException($raw);
-// 		}
-// 		return $resp["body"];
-// 	}
+	/**
+	* Permanently removes a CouchDB User
+	*
+	*
+	* @param string $login user login
+	* @return stdClass CouchDB server response
+	*/
+	public function deleteUser ( $login ) {
+		if ( strlen($login) < 1 ) {
+			throw new InvalidArgumentException("Login can't be empty");
+		}
+		$client = new couchClient( $this->client->dsn() , "_users");
+		$doc = $client->getDoc("org.couchdb.user:".$login);
+		return $client->deleteDoc($doc);
+	}
 
 	/**
 	* returns the document of a user

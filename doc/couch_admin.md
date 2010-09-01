@@ -295,6 +295,76 @@ Example - including user documents and not showing the design documents
     **/
 
 
+Removing users
+==============
+
+Warning : this only works with CouchDB starting at version 1.0.1
+
+Removing a server administrator
+-------------------------------
+
+The method **deleteAdmin($login)** permanently removes the admin $login.
+
+Example : creating and immediately removing a server administrator
+
+    <?PHP
+    require_once "lib/couch.php";
+    require_once "lib/couchClient.php";
+    require_once "lib/couchAdmin.php";
+    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new couchAdmin($client);
+    
+    $adminLogin = "butterfly";
+    $adminPass = "wing";
+    try {
+        $ok = $adm->createAdmin($adminLogin, $adminPass);
+    } catch (Exception $e) {
+        die("unable to create admin user: ".$e->getMessage());
+    }
+    // here "butterfly" admin exists and can login to couchDB to manage the server
+
+    // now we remove it
+    try {
+        $ok = $adm->deleteAdmin($adminLogin);
+    } catch (Exception $e) {
+        die("unable to delete admin user: ".$e->getMessage());
+    }
+    // here "butterfly" admin does not exist anymore
+
+Note : the response of deleteAdmin() method is a string : it's the hash of the password this admin had before been removed. Example : -hashed-0c796d26c439bec7445663c2c2a18933858a8fbb,f3ada55b560c7ca77e5a5cdf61d40e1a
+
+Removing a user
+---------------
+
+The method **deleteUser($login)** permanently removes the user $login.
+
+Example : removing a server user
+
+    <?PHP
+    require_once "lib/couch.php";
+    require_once "lib/couchClient.php";
+    require_once "lib/couchAdmin.php";
+    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new couchAdmin($client);
+    
+    try {
+        $ok = $adm->deleteUser("joe");
+    } catch (Exception $e) {
+        die("unable to delete user: ".$e->getMessage());
+    }
+    print_r($ok);
+
+    /** will print something like :
+    stdClass Object
+    (
+        [ok] => 1
+        [id] => org.couchdb.user:joe
+        [rev] => 6-415784680cff486e2d0144ed39da2431
+    )
+    */
+
+
+
 Assigning roles to users
 ========================
 
