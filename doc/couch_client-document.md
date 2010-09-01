@@ -13,23 +13,6 @@ Example :
         echo "Document ".$row->id."<BR>\n";
     }
 
-Getting documents by update sequence
-====================================
-
-The method **getAllDocsBySeq()** retrieval of actions on the database server : whenever a document is stored or deleted, CouchDB updates a sequence number and record the action. Note that this method is deprecated in CouchDB 0.11 in favor of _changes
-
-Example :
-
-    print_r($client->getAllDocsBySeq());
-    /*
-    stdClass ( "total_rows" => 4, "offset" => 0, "rows" => array (
-        stdClass ( "id" => "doc1", "key" => "1", "value"=> stdClass ("rev" =>"1-4124667444")),
-        stdClass ("id" => "doc2", "key" => "2", "value" => stdClass ("rev"=>"1-1815587255")),
-        stdClass("id" => "doc3", "key" => "3", "value" => stdClass ( "rev" => "1-1750227892")),
-        stdClass("id" => "doc4", "key" => "4", "value" => stdClass ( "rev" =>"2-524044848", "deleted" => true))
-    ))
-    */
-
 Getting a document by ID
 ========================
 
