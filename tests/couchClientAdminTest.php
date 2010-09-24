@@ -295,4 +295,14 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 		$adm->createAdmin("secondAdmin","password");
 	}
 
+	public function testUsersDatabaseName () {
+		$adm = new couchAdmin($this->aclient,array("users_database"=>"test"));
+		$this->assertEquals("test",$adm->getUsersDatabase());
+		$adm = new couchAdmin($this->aclient);
+		$this->assertEquals("_users",$adm->getUsersDatabase());
+		$adm->setUsersDatabase("test");
+		$this->assertEquals("test",$adm->getUsersDatabase());
+	}
+
+
 }

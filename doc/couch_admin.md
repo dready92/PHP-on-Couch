@@ -751,3 +751,36 @@ Example - setting the security object of the database mydb
         die("unable to set security object: ".$e->getMessage());
     }
 
+Setting the name of the CouchDB users database
+==============================================
+
+CouchDB got a special database used to store users. By default this database is called **_users**, but this can be changed.
+
+
+Setting the users database name on couchAdmin creation
+------------------------------------------------------
+
+To create a couchAdmin instance and specify the name of the users database, use the constructor second parameter $options, setting the option **users_database**:
+
+Example - setting the couchdb users database name on couchAdmin object creation
+
+    <?PHP
+    require_once "lib/couch.php";
+    require_once "lib/couchClient.php";
+    require_once "lib/couchAdmin.php";
+    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new couchAdmin($client, array ("users_database"=> "theUsers") );
+    
+Changing the users database name of an existing couchAdmin instance
+-------------------------------------------------------------------
+
+The **setUsersDatabase($name)** method allows to specify an alternate name for the users database on an already created couchAdmin instance.
+
+Getting the users database name currently set in an existing couchAdmin instance
+--------------------------------------------------------------------------------
+
+The **getUsersDatabase($name)** method return the name that is used actually to connect to the users database.
+
+
+
+

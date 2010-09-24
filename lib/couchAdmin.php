@@ -21,15 +21,38 @@ class couchAdmin {
 	/**
 	* @var the name of the CouchDB server "users" database
 	*/
-	private $userdb = "_users";
+	private $usersdb = "_users";
 
 	/**
 	*constructor
 	*
 	* @param couchClient $client the couchClient instance
+	* @param array $options array. For now the only option is "users_database" to override the defaults "_users"
 	*/
-	public function __construct ( couchClient $client ) {
+	public function __construct ( couchClient $client, $options = array() ) {
 		$this->client = $client;
+		if ( is_array($options) && isset($options["users_database"]) ) {
+			$this->usersdb = $options["users_database"];
+		}
+	}
+
+	/**
+	*Set the name of the users database (_users by default)
+	*
+	*@param string $name CouchDB users database name (_users is the default)
+	*/
+	public function setUsersDatabase ($name) {
+		$this->usersdb = $name;
+	}
+
+	/**
+	*get the name of the users database this class will use
+	*
+	*
+	*@return string users database name
+	*/
+	public function getUsersDatabase () {
+		return $this->usersdb;
 	}
 
 	private function build_url ($parts) {
@@ -88,7 +111,7 @@ class couchAdmin {
 		$dsn = $this->client->dsn_part();
 		$dsn["user"] = $login;
 		$dsn["pass"] = $password;
-		$client = new couchClient( $this->build_url($dsn), $this->userdb, $this->client->options() );
+		$client = new couchClient( $this->build_url($dsn), $this->usersdb, $this->client->options() );
 		$user = new stdClass();
 		$user->name=$login;
 		$user->type = "user";
@@ -111,7 +134,7 @@ class couchAdmin {
 		}
 
 		try {
-			$client = new couchClient( $this->client->dsn() , "_users");
+			$client = new couchClient( $this->client->dsn() , $this->usersdb);
 			$doc = $client->getDoc("org.couchdb.user:".$login);
 			$client->deleteDoc($doc);
 		} catch (Exception $e) {
@@ -152,7 +175,7 @@ class couchAdmin {
 		$user->type = "user";
 		$user->roles = $roles;
 		$user->_id = "org.couchdb.user:".$login;
-		$client = new couchClient( $this->client->dsn() , $this->userdb, $this->client->options());
+		$client = new couchClient( $this->client->dsn() , $this->usersdb, $this->client->options());
 		return $client->storeDoc($user);
 	}
 
@@ -168,7 +191,7 @@ class couchAdmin {
 		if ( strlen($login) < 1 ) {
 			throw new InvalidArgumentException("Login can't be empty");
 		}
-		$client = new couchClient( $this->client->dsn() , "_users");
+		$client = new couchClient( $this->client->dsn() , $this->usersdb);
 		$doc = $client->getDoc("org.couchdb.user:".$login);
 		return $client->deleteDoc($doc);
 	}
@@ -183,7 +206,7 @@ class couchAdmin {
 		if ( strlen($login) < 1 ) {
 			throw new InvalidArgumentException("Login can't be empty");
 		}
-		$client = new couchClient( $this->client->dsn() , $this->userdb, $this->client->options());
+		$client = new couchClient( $this->client->dsn() , $this->usersdb, $this->client->options());
 		return $client->getDoc("org.couchdb.user:".$login);
 	}
 
@@ -194,7 +217,7 @@ class couchAdmin {
 	* @return array users array : each row is a stdObject with "id", "rev" and optionally "doc" properties
 	*/
 	public function getAllUsers($include_docs = false) {
-		$client = new couchClient( $this->client->dsn() , $this->userdb, $this->client->options());
+		$client = new couchClient( $this->client->dsn() , $this->usersdb, $this->client->options());
 		if ( $include_docs ) {
 			$client->include_docs(true);
 		}
@@ -217,7 +240,7 @@ class couchAdmin {
 		if ( !in_array($role,$user->roles) ) {
 			$user->roles[] = $role;
 			$client = clone($this->client);
-			$client->useDatabase($this->userdb);
+			$client->useDatabase($this->usersdb);
 			$client->storeDoc($user);
 		}
 		return true;
@@ -239,7 +262,7 @@ class couchAdmin {
 		if ( in_array($role,$user->roles) ) {
 			$user->roles = $this->rmFromArray($role, $user->roles);
 			$client = clone($this->client);
-			$client->useDatabase($this->userdb);
+			$client->useDatabase($this->usersdb);
 			$client->storeDoc($user);
 		}
 		return true;
