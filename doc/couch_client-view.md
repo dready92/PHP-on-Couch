@@ -1,4 +1,4 @@
-This section describes how to use PHP on Couch to retrieve views results from a CouchDB server.
+lThis section describes how to use PHP on Couch to retrieve views results from a CouchDB server.
 
 Creating views
 ==============
@@ -10,7 +10,7 @@ Example
     $view_fn="function(doc) { emit(doc.timestamp,null); }";
     $design_doc->_id = '_design/all';
     $design_doc->language = 'javascript';
-    $design_doc->views = array ( 'by_date',$view_fn);
+    $design_doc->views = array ( 'by_date'=> array ('map' => $view_fn ) );
     $client->storeDoc($design_doc);
 
 Basics of view retrieval
