@@ -796,7 +796,7 @@ class couchClient extends couch {
 	* @return object CouchDB view infos response
 	*/
 	public function getViewInfos ( $id ) {
-		if ( !$id OR !$name )    throw new InvalidArgumentException("You should specify view id and name");
+		if ( !$id )    throw new InvalidArgumentException("You should specify view id");
 		$url = '/'.urlencode($this->dbname).'/_design/'.urlencode($id).'/_info';
 		return $this->_queryAndTest ("GET", $url, array(200));
 	}
@@ -826,7 +826,6 @@ class couchClient extends couch {
 	*/
 	public function compactAllViews () {
 		$response = $this->startkey('_design/')->endkey('_designa')->getAllDocs();
-// 		print_r($response);
 		if ( property_exists($response,'rows') && is_array($response->rows) ) {
 			foreach ( $response->rows as $view_row ) {
 				$this->compactViews($view_row->key);
