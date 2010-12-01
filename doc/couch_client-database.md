@@ -1,5 +1,28 @@
 This section give details on actions on the CouchDB server through PHP on Couch.
 
+Creating a CouchDB connection
+=============================
+
+To use PHP on Couch client, you have to create a couchClient instance, setting the URL to your couchDB server, and the database name.
+
+Example : connect to the couchDB server at http://my.server.com on port 5984 and on database mydb :
+
+    $client = new couchClient("http://my.server.com:5984/","mydb");
+
+If you want to authenticate to the server using a username & password, just set it in the URL.
+
+Example : connect to the couchDB server at http://my.server.com on port 5984 using the username "couchAdmin", the password "secret" and on database mydb :
+
+    $client = new couchClient("http://couchAdmin:secret@my.server.com:5984/","mydb");
+
+You also can tell couchClient to use cookie based authentification, by passing an additional flag "cookie_auth" set to TRUE in the options array, as the third parameter of the couchClient constructor.
+
+Example : as the previous one, but using cookie based authentification
+
+    $client = new couchClient("http://couchAdmin:secret@my.server.com:5984/","mydb", array("cookie_auth"=>TRUE) );
+
+
+
 
 Get server DSN
 ==============

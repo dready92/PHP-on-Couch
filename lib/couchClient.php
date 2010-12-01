@@ -101,9 +101,36 @@ class couchClient extends couch {
 	* @param array $options Additionnal configuration options
 	*/
 	public function __construct($dsn, $dbname, $options = array() ) {
+		// in the case of a cookie based authentification we have to remove user and password infos from the DSN
+		if ( array_key_exists("cookie_auth",$options) && $options["cookie_auth"] == "true" ) {
+			$parts = parse_url($dsn);
+			if ( !array_key_exists("user",$parts) || !array_key_exists("pass",$parts) ) {
+				throw new Exception("You should provide a user and a password to use cookie based authentification");
+			}
+			$user = $parts["user"];
+			$pass = $parts["pass"];
+			$dsn = $parts["scheme"]."://".$parts["host"];
+			$dsn.= array_key_exists("port",$parts) ? ":".$parts["port"] : "" ;
+			$dsn.= array_key_exists("path",$parts) ? $parts["path"] : "" ;
+		}
 		$this->useDatabase($dbname);
 		parent::__construct($dsn,$options);
-		
+		if ( array_key_exists("cookie_auth", $options) && $options["cookie_auth"] == "true" ) {
+			$raw_data = $this->query("POST","/_session",null,http_build_query(array("name"=>$user,"password"=>$pass)), "application/x-www-form-urlencoded");
+			list($headers, $body) = explode("\r\n\r\n", $raw_data,2);
+			$headers_array=explode("\n",$headers);
+			foreach ( $headers_array as $line ) {
+				if ( strpos($line,"Set-Cookie: ") === 0 ) {
+					$line = substr($line,12);
+					$line = explode("; ",$line,2);
+					$this->sessioncookie = reset($line);
+					break;
+				}
+			}
+			if ( ! $this->sessioncookie ) {
+				throw new Exception("Cookie authentification failed");
+			}
+		}
 	}
 
 	/**
@@ -857,8 +884,6 @@ class couchClient extends couch {
 		$count=(int)$count;
 		if ( $count < 1 ) throw new InvalidArgumentException("Uuid count should be greater than 0");
 
-// 		that changed on 0.11 ?
-// 		$url = '/'.urlencode($this->dbname).'/_uuids?count='+$count;
 		$url = '/_uuids';
 
 		$back = $this->_queryAndTest ('GET', $url, array(200), array("count"=>$count) );
@@ -867,7 +892,6 @@ class couchClient extends couch {
 		}
 		return false;
 	}
-
 }
 
 /**

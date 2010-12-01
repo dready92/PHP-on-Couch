@@ -54,6 +54,11 @@ class couch {
 	protected $curl = FALSE;
 
 	/**
+	* @var string the session cookie
+	*/
+	protected $sessioncookie = null;
+
+	/**
 	* class constructor
 	*
 	* @param string $dsn CouchDB Data Source Name
@@ -144,13 +149,14 @@ class couch {
 	* @param string $method HTTP method to use (GET, POST, ...)
 	* @param string $url URL to fetch
 	* @param array $parameters additionnal parameters to send with the request
+	* @param string $content_type the content type of the sent data (defaults to application/json)
 	* @param string|array|object $data request body
 	*
 	* @return string|false server response on success, false on error
 	*/
-	public function query ( $method, $url, $parameters = array() , $data = NULL ) {
-		if ( $this->curl )	return $this->_curl_query($method,$url,$parameters, $data);
-		else				return $this->_socket_query($method,$url,$parameters, $data);
+	public function query ( $method, $url, $parameters = array() , $data = NULL, $content_type = NULL ) {
+		if ( $this->curl )	return $this->_curl_query($method,$url,$parameters, $data, $content_type);
+		else				return $this->_socket_query($method,$url,$parameters, $data, $content_type);
 	}
 
 	/**
@@ -254,18 +260,19 @@ class couch {
 	* @param string $method HTTP method to use (GET, POST, ...)
 	* @param string $url URL to fetch
 	* @param array $parameters additionnal parameters to send with the request
+	* @param string $content_type the content type of the sent data (defaults to application/json)
 	* @param string|array|object $data request body
 	*
 	* @return string|false server response on success, false on error
 	*/
-	public function _socket_query ( $method, $url, $parameters = array() , $data = NULL ) {
+	public function _socket_query ( $method, $url, $parameters = array() , $data = NULL, $content_type = NULL ) {
 		if ( !in_array($method, $this->HTTP_METHODS )    )
 			throw new Exception("Bad HTTP method: $method");
 
 		if ( is_array($parameters) AND count($parameters) )
 			$url = $url.'?'.http_build_query($parameters);
 
-		$request = $this->_socket_buildRequest($method,$url,$data);
+		$request = $this->_socket_buildRequest($method,$url,$data, $content_type);
 		if ( !$this->_connect() )	return FALSE;
 // 		echo "DEBUG: Request ------------------ \n$request\n";
 		$raw_response = $this->_execute($request);
@@ -297,6 +304,8 @@ class couch {
 		if ( $this->dsn_part('user') && $this->dsn_part('pass') ) {
 		  $req .= 'Authorization: Basic '.base64_encode($this->dsn_part('user').':'.
 		        	$this->dsn_part('pass'))."\r\n";
+		} elseif ( $this->sessioncookie ) {
+			$req .= "Cookie: ".$this->sessioncookie."\r\n";
 		}
 		$req.="Accept: application/json,text/html,text/plain,*/*\r\n";
 
@@ -309,13 +318,18 @@ class couch {
 	* @param string $method HTTP method to use
 	* @param string $url the request URL
 	* @param string|object|array $data the request body. If it's an array or an object, $data is json_encode()d
+	* @param string $content_type the content type of the sent data (defaults to application/json)
 	* @return string HTTP request
 	*/
-	protected function _socket_buildRequest($method,$url,$data) {
+	protected function _socket_buildRequest($method,$url,$data, $content_type) {
 		if ( is_object($data) OR is_array($data) )
 			$data = json_encode($data);
 		$req = $this->_socket_startRequestHeaders($method,$url);
-		$req .= 'Content-Type: application/json'."\r\n";
+		if ( $content_type ) {
+			$req .= 'Content-Type: '.$content_type."\r\n";
+		} else {
+			$req .= 'Content-Type: application/json'."\r\n";
+		}
 		if ( $method == 'COPY') {
 			$req .= 'Destination: '.$data."\r\n\r\n";
 		} elseif ($data) {
@@ -443,17 +457,23 @@ class couch {
 	* @param string $method HTTP method to use
 	* @param string $url the request URL
 	* @param string|object|array $data the request body. If it's an array or an object, $data is json_encode()d
+	* @param string $content_type the content type of the sent data (defaults to application/json)
 	* @return resource CURL request resource
 	*/
-	protected function _curl_buildRequest($method,$url,$data) {
+	protected function _curl_buildRequest($method,$url,$data,$content_type) {
 		$http = curl_init($url);
 		$http_headers = array('Accept: application/json,text/html,text/plain,*/*') ;
 		if ( is_object($data) OR is_array($data) ) {
 			$data = json_encode($data);
 		}
-
-		$http_headers[] = 'Content-Type: application/json';
-
+		if ( $content_type ) {
+			$http_headers[] = 'Content-Type: '.$content_type;
+		} else {
+			$http_headers[] = 'Content-Type: application/json';
+		}
+		if ( $this->sessioncookie ) {
+			$http_headers[] = "Cookie: ".$this->sessioncookie;
+		}
 		curl_setopt($http, CURLOPT_CUSTOMREQUEST, $method);
 
 		if ( $method == 'COPY') {
@@ -474,10 +494,11 @@ class couch {
 	* @param string $url URL to fetch
 	* @param array $parameters additionnal parameters to send with the request
 	* @param string|array|object $data request body
+	* @param string $content_type the content type of the sent data (defaults to application/json)
 	*
 	* @return string|false server response on success, false on error
 	*/
-	public function _curl_query ( $method, $url, $parameters = array() , $data = NULL ) {
+	public function _curl_query ( $method, $url, $parameters = array() , $data = NULL, $content_type = NULL ) {
 //  		echo "_curl_query : $method $url ".print_r($parameters,true)." , ".print_r($data,true);
 		if ( !in_array($method, $this->HTTP_METHODS )    )
 			throw new Exception("Bad HTTP method: $method");
@@ -486,7 +507,7 @@ class couch {
 		if ( is_array($parameters) AND count($parameters) )
 			$url = $url.'?'.http_build_query($parameters);
 // 		echo $url;
-		$http = $this->_curl_buildRequest($method,$url,$data);
+		$http = $this->_curl_buildRequest($method,$url,$data, $content_type);
 		$this->_curl_addCustomOptions ($http);
 		curl_setopt($http,CURLOPT_HEADER, true);
 		curl_setopt($http,CURLOPT_RETURNTRANSFER, true);
@@ -518,7 +539,14 @@ class couch {
 		if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
 		$url = $this->dsn.$url;
 		$http = curl_init($url);
-		$http_headers = array('Accept: application/json,text/html,text/plain,*/*','Content-Type: '.$content_type,'Expect: ') ;
+		$http_headers = array(
+			'Accept: application/json,text/html,text/plain,*/*',
+			'Content-Type: '.$content_type,
+			'Expect: '
+		);
+		if ( $this->sessioncookie ) {
+			$http_headers[] = "Cookie: ".$this->sessioncookie;
+		}
 		curl_setopt($http, CURLOPT_PUT, 1);
 		curl_setopt($http, CURLOPT_HTTPHEADER,$http_headers);
 		curl_setopt($http, CURLOPT_UPLOAD, true);
@@ -550,7 +578,15 @@ class couch {
 		if ( !strlen($content_type) ) throw new InvalidArgumentException("Attachment Content Type can't be empty");
 		$url = $this->dsn.$url;
 		$http = curl_init($url);
-		$http_headers = array('Accept: application/json,text/html,text/plain,*/*','Content-Type: '.$content_type,'Expect: ','Content-Length: '.strlen($data)) ;
+		$http_headers = array(
+			'Accept: application/json,text/html,text/plain,*/*',
+			'Content-Type: '.$content_type,
+			'Expect: ',
+			'Content-Length: '.strlen($data)
+		) ;
+		if ( $this->sessioncookie ) {
+			$http_headers[] = "Cookie: ".$this->sessioncookie;
+		}
 		curl_setopt($http, CURLOPT_CUSTOMREQUEST, 'PUT');
 		curl_setopt($http, CURLOPT_HTTPHEADER,$http_headers);
 		curl_setopt($http, CURLOPT_HEADER, true);
