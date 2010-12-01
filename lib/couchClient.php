@@ -123,7 +123,7 @@ class couchClient extends couch {
 				if ( strpos($line,"Set-Cookie: ") === 0 ) {
 					$line = substr($line,12);
 					$line = explode("; ",$line,2);
-					$this->sessioncookie = reset($line);
+					$this->setSessionCookie(reset($line));
 					break;
 				}
 			}

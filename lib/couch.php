@@ -42,6 +42,7 @@ class couch {
 	* @var array allowed HTTP methods for REST dialog
 	*/
 	protected $HTTP_METHODS = array('GET','POST','PUT','DELETE','COPY');
+
 	/**
 	* @var resource HTTP server socket
 	* @see _connect()
@@ -91,6 +92,15 @@ class couch {
 	*/
 	public function options() {
 		return $this->options;
+	}
+
+	/**
+	* set the session cookie to send in the headers 
+	* @param string $cookie the session cookie ( example : AuthSession=Y291Y2g6NENGNDgzNz )
+	*/
+	public function setSessionCookie ( $cookie ) {
+		$this->sessioncookie = $cookie;
+		return $this;
 	}
 
 

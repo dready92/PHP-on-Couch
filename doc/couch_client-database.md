@@ -21,6 +21,12 @@ Example : as the previous one, but using cookie based authentification
 
     $client = new couchClient("http://couchAdmin:secret@my.server.com:5984/","mydb", array("cookie_auth"=>TRUE) );
 
+You can also set manually the session cookie.
+
+Example : manually setting the session cookie :
+
+    $client = new couchClient("http://my.server.com:5984/","mydb");
+    $client->setSessionCookie("AuthSession=Y291Y2g6NENGNDgzNzY6Gk0NjM-UKxhpX_IyiH-C-9yXY44");
 
 
 
