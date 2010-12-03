@@ -949,7 +949,8 @@ class couchException extends Exception {
 	* @return string|object|null CouchDB server response
 	*/
 	function getBody() {
-		return $this->couch_response['body'];
+		if ( isset($this->couch_response['body']) )
+			return $this->couch_response['body'];
 	}
 }
 
