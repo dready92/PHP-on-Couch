@@ -153,7 +153,7 @@ class couchClient extends couch {
 		if ( in_array($response['status_code'], $allowed_status_codes) ) {
 			return $response['body'];
 		}
-		throw new couchException($raw);
+		throw couchException::factory($response, $method, $url, $parameters);
 		return FALSE;
 	}
 
@@ -903,21 +903,41 @@ class couchClient extends couch {
 *
 */
 class couchException extends Exception {
+	// CouchDB response codes we handle specialized exceptions
+	protected static $code_subtypes = array(404=>'couchNotFoundException', 403=>'couchForbiddenException', 401=>'couchUnauthorizedException', 417=>'couchExpectationException');
+	// more precise response problem
+    protected static $status_subtypes = array('Conflict'=>'couchConflictException');
     // couchDB response once parsed
 	protected $couch_response = array();
 
 	/**
 	*class constructor
 	*
-	* @param string $raw_response HTTP response from the CouchDB server
+	* @param string|array $response HTTP response from the CouchDB server
+	* @param string $method  the HTTP method
+	* @param string $url the target URL
+	* @param mixed $parameters the query parameters
 	*/
-	function __construct($raw_response) {
-		$this->couch_response = couch::parseRawResponse($raw_response);
-		if ( is_object($this->couch_response['body']) and isset($this->couch_response['body']->reason) )
+	function __construct($response, $method = null, $url = null, $parameters = null) {
+		$this->couch_response = is_string($response) ? couch::parseRawResponse($response) : $response;
+		if (is_object($this->couch_response['body']) and isset($this->couch_response['body']->reason))
 			$message = $this->couch_response['status_message'] . ' - ' . $this->couch_response['body']->reason;
 		else
 			$message = $this->couch_response['status_message'];
-		parent::__construct($message , $this->couch_response['status_code']);
+		if ( $method )	$message.= " ($method $url ".json_encode($parameters).')';
+		parent::__construct($message, isset($this->couch_response['status_code']) ? $this->couch_response['status_code'] : null);
+    }
+
+
+	public static function factory($response, $method, $url, $parameters) {
+		if (is_string($response)) $response = couch::parseRawResponse($response);
+		if (!$response) return new couchNoResponseException();
+		if (isset($response['status_code']) and isset(self::$code_subtypes[$response['status_code']]))
+			return new self::$code_subtypes[$response['status_code']]($response, $method, $url, $parameters);
+		elseif (isset($response['status_message']) and isset(self::$status_subtypes[$response['status_message']]))
+			return new self::$status_subtypes[$response['status_message']]($response, $method, $url, $parameters);
+		else
+			return new self($response, $method, $url, $parameters);
 	}
 
 	/**
@@ -933,3 +953,13 @@ class couchException extends Exception {
 	}
 }
 
+class couchNoResponseException extends couchException {
+	function __construct() {
+		parent::__construct(array('status_message'=>'No response from server - '));
+	}
+}
+class couchNotFoundException extends couchException {}
+class couchForbiddenException extends couchException {}
+class couchUnauthorizedException extends couchException {}
+class couchExpectationException extends couchException {}
+class couchConflictException extends couchException {}
