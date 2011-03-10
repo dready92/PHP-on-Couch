@@ -44,6 +44,9 @@ Each object in **rows** contains the properties :
 Query parameters
 ================
 
+Using chainable methods
+-----------------------
+
 PHP on Couch implements chainable methods to add query parameters. The method names are mapped on their CouchDB counterparts :
 
 * key
@@ -72,6 +75,15 @@ Which is the same as :
     $client->limit(100);
     $client->include_docs(TRUE);
     $response = $client->getView('all','by_date');
+
+Setting query parameters using an array
+---------------------------------------
+
+You also can set query parameters with a PHP array, using the **setQueryParameters** method :
+
+    $opts = array ( "include_docs" => TRUE, "limit" => 10, "descending" => true );
+    $response = $client->setQueryParameters(opts)->getView("all","by_date");
+
 
 Choose JSON decoding option
 ===========================

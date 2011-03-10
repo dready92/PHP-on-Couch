@@ -183,6 +183,21 @@ class couchClient extends couch {
 	}
 
 	/**
+        * Set all CouchDB query options at once.
+        * Any invalid options are ignored.
+        *
+        * @link http://wiki.apache.org/couchdb/HTTP_view_API
+        * @param mixed $value any json encodable thing
+        * @return couchClient $this
+        */
+	public function setQueryParameters(array $options) {
+          foreach($options as $option=>$v) if (array_key_exists($option,$this->query_defs))
+              $this->$option($v);
+              return $this;
+	}
+
+
+	/**
 	* set the name of the couchDB database to work on
 	*
 	* @param string $dbname name of the database
