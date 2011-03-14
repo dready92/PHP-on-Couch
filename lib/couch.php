@@ -310,6 +310,7 @@ class couch {
 	* @return string start of HTTP request
 	*/
 	protected function _socket_startRequestHeaders($method,$url) {
+      if ( $this->dsn_part('path') ) $url = $this->dsn_part('path').$url;
 		$req = "$method $url HTTP/1.0\r\nHost: ".$this->dsn_part('host')."\r\n";
 		if ( $this->dsn_part('user') && $this->dsn_part('pass') ) {
 		  $req .= 'Authorization: Basic '.base64_encode($this->dsn_part('user').':'.
