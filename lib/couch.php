@@ -225,16 +225,19 @@ class couch {
 			throw new InvalidArgumentException("callable argument have to success to is_callable PHP function");
 		if ( is_array($parameters) AND count($parameters) )
 			$url = $url.'?'.http_build_query($parameters);
-
-		$request = $this->_socket_buildRequest($method,$url,$data);
+        //Send the request to the socket
+		$request = $this->_socket_buildRequest($method,$url,$data,null);
 		if ( !$this->_connect() )	return FALSE;
 		fwrite($this->socket, $request);
-		$response = '';
+
+        //Read the headers and check that the response is valid
+        $response = '';
 		$code=0;
 		$headers = false;
 		while (!feof($this->socket)&& !$headers) {
 			$response.=fgets($this->socket);
-			if (preg_match("/\r\n\r\n$/",$response) ) {
+            if ($response == "HTTP/1.1 100 Continue\r\n\r\n") { $response = ''; continue; } //Ignore 'continue' headers, they will be followed by the real header.
+			elseif (preg_match("/\r\n\r\n$/",$response) ) {
 				$headers = true;
 			}
 		}
@@ -242,9 +245,16 @@ class couch {
 		$split=explode(" ",trim(reset($headers)));
 		$code = $split[1];
 		unset($split);
+        //If an invalid response is sent, read the rest of the response and throw an appropriate couchException
+        if (!in_array($code,array(200,201))) {
+            stream_set_blocking($this->socket,false);
+            $response .= stream_get_contents($this->socket);
+            fclose($this->socket);
+            throw couchException::factory($response, $method, $url, $parameters);
+        }
 
+        //For as long as the socket is open, read lines and pass them to the callback
 		$c = clone $this;
-		
 		while ($this->socket && !feof($this->socket)) {
 			$e = NULL;
 			$e2 = NULL;
@@ -263,6 +273,7 @@ class couch {
 		}
 		return $code;
 	}
+
 
 	/**
 	*send a query to the CouchDB server
