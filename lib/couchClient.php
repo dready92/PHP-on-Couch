@@ -907,6 +907,18 @@ class couchClient extends couch {
 		}
 		return false;
 	}
+	
+	/**
+	* Synchronize database to disc
+	*
+	* @return object CouchDB document storage response
+	*/
+	public function ensureFullCommit() {
+		$method = 'POST';
+		$url = '/' . urlencode($this->dbname) . '/_ensure_full_commit';
+		return $this->_queryAndTest($method, $url, array(200, 201));
+	}
+	
 }
 
 /**

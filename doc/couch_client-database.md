@@ -252,6 +252,22 @@ Example - Continuous changes with a callback function
     $client->feed('continuous','index_doc')->getChanges();
     // will return when index_doc returns false or on socket error
 
+Force hard drive commit
+=======================
+
+The method **ensureFullCommit()** tells couchDB to commit any recent changes to the database file on disk.
+
+Example :
+
+    $response = $client->ensureFullCommit();
+    print_r($response); 
+    /* should print something like : 
+     stdClass Object
+    	(
+    		[ok] => 1,
+    		[instance_start_time] => "1288186189373361"
+    	)
+    */
 
 
 Database maintenance tasks
