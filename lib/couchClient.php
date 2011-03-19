@@ -409,9 +409,10 @@ class couchClient extends couch {
 	* fetch a CouchDB document
 	*
 	* @param string $id document id
+	* @param boolean $get_revisions true or false if to fetch the revision data
 	* @return object CouchDB document
 	*/
-	public function getDoc ($id) {
+	public function getDoc ($id, $get_revisions = false) {
 		if ( !strlen($id) )
 			throw new InvalidArgumentException ("Document ID is empty");
 
@@ -420,6 +421,9 @@ class couchClient extends couch {
 		else
 			$url = '/'.urlencode($this->dbname).'/'.urlencode($id);
 
+		if ( $get_revisions ) 
+			$url .= '?revs=true';
+			
 		$doc_query = $this->query_parameters;
 		$this->query_parameters = array();
 
