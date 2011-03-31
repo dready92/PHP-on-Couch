@@ -145,9 +145,10 @@ class couchClient extends couch {
 	* @param $array $allowed_status_code the list of HTTP response status codes that prove a successful request
 	* @param array $parameters additionnal parameters to send with the request
 	* @param string|object|array $data the request body. If it's an array or an object, $data is json_encode()d
+	* @param string $content_type set the content-type of the request
 	*/
-	protected function _queryAndTest ( $method, $url,$allowed_status_codes, $parameters = array(),$data = NULL ) {
-		$raw = $this->query($method,$url,$parameters,$data);
+	protected function _queryAndTest ( $method, $url,$allowed_status_codes, $parameters = array(),$data = NULL, $content_type = NULL ) {
+		$raw = $this->query($method,$url,$parameters,$data,$content_type);
 		$response = $this->parseRawResponse($raw, $this->results_as_array);
 		$this->results_as_array = false;
 		if ( in_array($response['status_code'], $allowed_status_codes) ) {
@@ -520,6 +521,7 @@ class couchClient extends couch {
 
 	/**
 	* update a couchDB document through an Update Handler 
+	* wrapper to $this->updateDocFullAPI
 	*
 	* @link http://wiki.apache.org/couchdb/Document_Update_Handlers
 	* @param string $ddoc_id name of the design doc containing the update handler definition (without _design)
@@ -530,10 +532,57 @@ class couchClient extends couch {
 	public function updateDoc ( $ddoc_id, $handler_name, $params, $doc_id = null ) {
 		if ( !is_array($params) && !is_object($params) ) throw new InvalidArgumentException ("params parameter should be an array or an object");
 		if ( is_object($params) )	$params = (array)$params;
-		$method = 'PUT';
-		$url  = '/'.urlencode($this->dbname).'/_design/'.urlencode($ddoc_id).'/_update/'.$handler_name.'/';
-		if ( $doc_id )	$url .= urlencode($doc_id);
-		return $this->_queryAndTest ($method, $url, array(200,201),$params);
+
+		$options = array();
+		if ( $doc_id ) $options["doc_id"] = $doc_id;
+		if ( $params ) $options["params"] = $params;
+
+		return $this->updateDocFullAPI($ddoc_id, $handler_name, $options);
+	}
+
+
+        /**
+        * update a couchDB document through an Update Handler 
+        *
+        * @link http://wiki.apache.org/couchdb/Document_Update_Handlers
+        * @param string $ddoc_id name of the design doc containing the update handler definition (without _design)
+        * @param string $handler_name name of the update handler
+	* @param array $options list of optionnal data to send to the couch update handler.
+	*		- "params" : array|object of variables being sent in the URL ( /?foo=bar )
+	*		- "data"   : string|array|object data being sent in the body of the request. 
+	*				If data is an array or an object it's parsed through PHP http_build_query function
+	*				and the content-type of the request is set to "application/x-www-form-urlencoded"
+	*		- "Content-Type" : the http header "Content-Type" to send to the couch server
+        * @param array|object $params parameters to send to the update handler
+        * @param string $doc_id id of the document to update (can be null)
+        */
+	public function updateDocFullAPI ( $ddoc_id, $handler_name, $options = array() ) {
+		$params = array();
+		$data = null;
+		$contentType = null;
+                $method = 'PUT';
+                $url  = '/'.urlencode($this->dbname).'/_design/'.urlencode($ddoc_id).'/_update/'.$handler_name.'/';
+		if ( array_key_exists("doc_id",$options) && is_string($options["doc_id"]) ) {
+                	$url .= urlencode($options["doc_id"]);
+		}
+		if ( array_key_exists("params",$options) && (is_array($options["params"]) || is_object($options["params"])) ) {
+			$params = $options["params"];
+		}
+		if ( array_key_exists("Content-Type",$options) && is_string($options["Content-Type"]) ) {
+			$contentType = $options["Content-Type"];
+		}
+
+		if ( array_key_exists("data",$options) ) {
+			if ( is_string($options["data"]) ) {
+				$data = $options["data"];
+				if ( !$contentType ) $contentType = "application/x-www-form-urlencoded";
+			} elseif ( is_array($options["data"]) || is_object($options["data"]) ) {
+				$data = http_build_query($options["data"]);
+				$contentType = "application/x-www-form-urlencoded";
+			}
+		}
+
+                return $this->_queryAndTest ($method, $url, array(200,201),$params,$data,$contentType);
 	}
 
 	/**

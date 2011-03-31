@@ -220,6 +220,10 @@ Updating a document
 ===================
 
 Using CouchDB [Update handlers](http://wiki.apache.org/couchdb/Document_Update_Handlers), you can easily update any document part without having to send back the whole document.
+
+Basic API
+---------
+
 The method **updateDoc( $ddoc_id, $handler_name, $params, $doc_id = null )** will try to update document according to the code defined in the update handler *$handler_name* of th design document *_design/$ddoc_id*.
 
 Example : incrementing a document counter
@@ -239,6 +243,24 @@ Let's say we have a design document _design/myapp containing :
 To bump the counter of the document "some_doc" , use :
 
     $client->updateDoc("myapp","bump-counter",array(),"some_doc");
+
+
+Full API
+--------
+
+The method **updateDocFullAPI($ddoc_id, $handler_name, $options)** will try to update document according to the code defined in the update handler *$handler_name* of th design document *_design/$ddoc_id*.
+
+$options is an array of optionnal query modifiers :
+"params" : array|object of variable to pass in the URL ( /?foo=bar )
+"data"   : string|array|object data to set in the body of the request. If data is an array or an object it will be urlencoded using PHP http_build_query function and the request Content-Type header will be set to "application/x-www-form-urlencoded".
+"Content-Type": string the Content-Type HTTP header to send to the couch server
+
+
+Example :
+---------
+
+    $client->updateDocFullAPI("myapp","bump-counter",array( "data" => array("Something"=>"is set") ) );
+
 
 
 Deleting a document
