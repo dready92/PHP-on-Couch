@@ -221,7 +221,7 @@ class couchAdmin {
 		if ( $include_docs ) {
 			$client->include_docs(true);
 		}
-		return $client->startkey("org.couchdb.user:")->endkey("org.couchdb.user;")->getAllDocs()->rows;
+		return $client->startkey("org.couchdb.user:")->endkey("org.couchdb.user?")->getAllDocs()->rows;
 	}
 
 	/**
