@@ -1,7 +1,7 @@
 Introduction
 ============
 
-[PHP On Couch](http://github.com/dready92/PHP-on-Couch/) try to provide an easy way to work with your [CouchDB](http://couchdb.apache.org) [documents](http://wiki.apache.org/couchdb/HTTP_Document_API) with [PHP](http://php.net). Some code first :
+[PHP On Couch](http://github.com/dready92/PHP-on-Couch/) tries to provide an easy way to work with your [CouchDB](http://couchdb.apache.org) [documents](http://wiki.apache.org/couchdb/HTTP_Document_API) with [PHP](http://php.net). Some code first :
 
     <?PHP
     require_once 'couch.php';
@@ -37,7 +37,7 @@ Introduction
 Components
 ==========
 
-This library got four main classes, and a custom [Exception](http://php.net/manual/en/language.exceptions.php) class.
+This library has four main classes and a custom [Exception](http://php.net/manual/en/language.exceptions.php) class.
 
 couch class
 -----------
@@ -51,7 +51,7 @@ This class maps all the actions the application can do on the CouchDB server. Do
 
 ### [database stuff](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-database.md)
 
-list databases, create and delete a database, retrieve database informations, test whether a databse exists, get uuids, get databases changes
+list databases, create and delete a database, retrieve database informations, test whether a database exists, get uuids, get databases changes
 
 ### [document stuff](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-document.md)
 
