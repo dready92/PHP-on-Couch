@@ -1,0 +1,19 @@
+{
+    "name": "dready92/php-on-couch",
+    "type": "library",
+    "description": "CouchDB NoSQL database access in PHP",
+    "keywords": ["couchdb","couch", "db", "apache", "nosql","driver"],
+    "homepage": "https://github.com/dready92/PHP-on-Couch",
+    "license": "GPLv3",
+    "authors": [
+        {
+            "name": "Michael Bailly",
+            "email": "mickael.bailly@free.fr",
+            "homepage": "https://github.com/dready92/",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=5.2.0"
+    }
+}
