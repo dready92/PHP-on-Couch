@@ -64,6 +64,7 @@ PHP on Couch implements chainable methods to add query parameters. The method na
 * reduce
 * include_docs
 * inclusive_end
+* attachments
 
 Example querying a view with a startkey, a limit and include_docs
 
