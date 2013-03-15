@@ -68,7 +68,8 @@ class couchClient extends couch {
 		"group_level"		=> array ("name" => "group_level", "filter"=>"int"),
 		"reduce" 			=> array ("name" => "reduce", "filter"=>"jsonEncodeBoolean"),
 		"include_docs" 		=> array ("name" => "include_docs", "filter"=>"jsonEncodeBoolean"),
-		"inclusive_end"		=> array ("name" => "inclusive_end", "filter"=>"jsonEncodeBoolean")
+		"inclusive_end"		=> array ("name" => "inclusive_end", "filter"=>"jsonEncodeBoolean"),
+		"attachments" 		=> array ("name" => "attachments", "filter"=>"jsonEncodeBoolean"),
 	);
 
 
