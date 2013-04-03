@@ -13,6 +13,9 @@
             "role": "Developer"
         }
     ],
+    "autoload": {
+        "classmap": ["lib/"]
+    },
     "require": {
         "php": ">=5.2.0"
     }
