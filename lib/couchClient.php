@@ -182,7 +182,6 @@ class couchClient extends couch {
 		} else {
 			$this->query_parameters[ $this->query_defs[$name]['name'] ] = reset($args);
 		}
-// 		print_r($this->query_parameters);
 		return $this;
 	}
 
@@ -399,7 +398,7 @@ class couchClient extends couch {
 	* fetch multiple revisions at once
 	*
 	* @link http://wiki.apache.org/couchdb/HTTP_Document_API
-	* @param array|all $value array of revisions to fetch, or special keyword all
+	* @param array|string $value array of revisions to fetch, or special keyword all
 	* @return couchClient $this
 	*/
 	public function open_revs ($value) {
@@ -693,7 +692,6 @@ class couchClient extends couch {
 		if ( !is_object($doc) )	throw new InvalidArgumentException ("Document should be an object");
 		if ( empty($doc->_id)  OR empty($doc->_rev) )    {
 			throw new Exception("Document should contain _id and _rev");
-			return FALSE;
 		}
 		$url = '/'.urlencode($this->dbname).'/'.urlencode($doc->_id).'?rev='.urlencode($doc->_rev);
 		return $this->_queryAndTest ('DELETE', $url, array(200,202));
@@ -1047,7 +1045,7 @@ class couchException extends Exception {
 	*
 	* @return string|object|null CouchDB server response
 	*/
-	function getBody() {
+	public function getBody() {
 		if ( isset($this->couch_response['body']) )
 			return $this->couch_response['body'];
 	}
