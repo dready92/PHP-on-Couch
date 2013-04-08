@@ -20,9 +20,9 @@ Copyright (C) 2009  Mickael Bailly
 * couch class
 *
 * basics to implement JSON / REST / HTTP CouchDB protocol
-* 
+*
 */
-class couch {
+class PhpOnCouch_AbstractClient {
 	/**
 	* @var string database source name
 	*/
@@ -94,7 +94,7 @@ class couch {
 	}
 
 	/**
-	* set the session cookie to send in the headers 
+	* set the session cookie to send in the headers
 	* @param string $cookie the session cookie ( example : AuthSession=Y291Y2g6NENGNDgzNz )
 	*/
 	public function setSessionCookie ( $cookie ) {
@@ -121,7 +121,7 @@ class couch {
 	}
 
 	/**
-	* parse a CouchDB server response and sends back an array 
+	* parse a CouchDB server response and sends back an array
 	* the array contains keys :
 	* status_code : the HTTP status code returned by the server
 	* status_message : the HTTP message related to the status code
@@ -220,7 +220,7 @@ class couch {
 	public function continuousQuery($callable,$method,$url,$parameters = array(),$data = null) {
 		if ( !in_array($method, $this->HTTP_METHODS )    )
 			throw new Exception("Bad HTTP method: $method");
-		if ( !is_callable($callable) ) 
+		if ( !is_callable($callable) )
 			throw new InvalidArgumentException("callable argument have to success to is_callable PHP function");
 		if ( is_array($parameters) AND count($parameters) )
 			$url = $url.'?'.http_build_query($parameters);
@@ -400,7 +400,7 @@ class couch {
 	* @param string $url CouchDB URL to store the file to
 	* @param string $data data to send as the attachment content
 	* @param string $content_type attachment content_type
-	*	
+	*
 	* @return string server response
 	*/
   public function _socket_storeAsFile($url,$data,$content_type) {

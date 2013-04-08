@@ -26,7 +26,7 @@ Copyright (C) 2009  Mickael Bailly
 *
 *
 */
-class couchClient extends couch {
+class couchClient extends PhpOnCouch_AbstractClient {
 
 	/**
 	* @var string database name
