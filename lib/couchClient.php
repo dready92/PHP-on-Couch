@@ -970,7 +970,3 @@ class couchClient extends couch {
 	}
 	
 }
-
-
-
-
