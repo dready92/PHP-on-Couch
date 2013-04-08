@@ -26,7 +26,7 @@
 *
 *
 */
-class couchAdmin {
+class PhpOnCouch_Admin {
 	/**
 	* @var reference to our CouchDB client
 	*/
