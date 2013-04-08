@@ -24,7 +24,7 @@
 *
 *
 */
-class couchReplicator {
+class PhpOnCouch_Replicator {
 	/**
 	* @var reference to our CouchDB client
 	*/
@@ -47,7 +47,7 @@ class couchReplicator {
 	/**
 	* chainable method : tell couchdb to create target database if it doesn't exist
 	*
-	* @return couchReplicator $this
+	* @return PhpOnCouch_Replicator $this
 	*/
 	public function create_target () {
 		$this->opts['create_target'] = true;
@@ -57,7 +57,7 @@ class couchReplicator {
 	/**
 	* chainable method : setup a continuous replication stream
 	*
-	* @return couchReplicator $this
+	* @return PhpOnCouch_Replicator $this
 	*/
 	public function continuous () {
 		$this->opts['continuous'] = true;
@@ -69,7 +69,7 @@ class couchReplicator {
 	*
 	* TODO: check if that works (apparently that doesn't)
 	*
-	* @return couchReplicator $this
+	* @return PhpOnCouch_Replicator $this
 	*/
 	public function cancel () {
 		$this->opts['cancel'] = true;
@@ -80,7 +80,7 @@ class couchReplicator {
 	* chainable method : restrict replication to given document ids
 	*
 	* @param array $ids list of document ids to replicate
-	* @return couchReplicator $this
+	* @return PhpOnCouch_Replicator $this
 	*/
 	public function doc_ids ( array $ids ) {
 		$this->opts['doc_ids'] = $ids;
@@ -93,7 +93,7 @@ class couchReplicator {
 	* filter design doc should belong to the source database
 	*
 	* @param string $name replication filter name ( ex mydesign/myfilter )
-	* @return couchReplicator $this
+	* @return PhpOnCouch_Replicator $this
 	*/
 	public function filter ( $name ) {
 		$this->opts['filter'] = $name;
@@ -104,7 +104,7 @@ class couchReplicator {
 	* chainable method : set query params (for example for a filtered replication)
 	*
 	* @param array|object $ids list of document ids to replicate
-	* @return couchReplicator $this
+	* @return PhpOnCouch_Replicator $this
 	*/
 	public function query_params ( $params ) {
 		$this->opts['query_params'] = $params;

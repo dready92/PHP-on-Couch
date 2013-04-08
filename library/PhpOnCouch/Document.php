@@ -300,10 +300,10 @@ class PhpOnCouch_Document {
 		if ( !isset($this->_id) ) {
 			throw new InvalidArgumentException("Can't replicate a document without id");
 		}
-		if ( !class_exists("couchReplicator") ) {
+		if ( !class_exists("PhpOnCouch_Replicator") ) {
 			return false;
 		}
-		$r = new couchReplicator($this->__couch_data->client);
+		$r = new PhpOnCouch_Replicator($this->__couch_data->client);
 		if ( $create_target ) {
 			$r->create_target();
 		}
@@ -328,10 +328,10 @@ class PhpOnCouch_Document {
 	*/
 	public function replicateFrom($id, $url, $create_target = false) {
 		echo "replicateFrom : $id, $url\n";
-		if ( !class_exists("couchReplicator") ) {
+		if ( !class_exists("PhpOnCouch_Replicator") ) {
 			return false;
 		}
-		$r = new couchReplicator($this->__couch_data->client);
+		$r = new PhpOnCouch_Replicator($this->__couch_data->client);
 		if ( $create_target ) {
 			$r->create_target();
 		}
