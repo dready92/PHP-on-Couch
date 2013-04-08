@@ -26,10 +26,10 @@ class couchDocument {
 	/**
 	*class constructor
 	*
-	* @param couchClient $client couchClient connection object
+	* @param PhpOnCouch_Client $client PhpOnCouch_Client connection object
 	*
 	*/
-	function __construct(couchClient $client) {
+	function __construct(PhpOnCouch_Client $client) {
 		$this->__couch_data = new stdClass();
 		$this->__couch_data->client = $client;
 		$this->__couch_data->fields = new stdClass();
@@ -93,11 +93,11 @@ class couchDocument {
 	* load a document in a couchDocument object and return it
 	*
 	* @static
-	* @param couchClient $client couchClient instance
+	* @param PhpOnCouch_Client $client PhpOnCouch_Client instance
 	* @param string $id id of the document to load
 	* @return couchDocument couch document loaded with data of document $id
 	*/
-	public static function getInstance(couchClient $client,$id) {
+	public static function getInstance(PhpOnCouch_Client $client,$id) {
 		$back = new couchDocument($client);
 		return $back->load($id);
 	}
@@ -176,7 +176,7 @@ class couchDocument {
 		if ( !strlen($key) )  throw new InvalidArgumentException("property name can't be empty");
 		if ( $key == '_rev' )	throw new InvalidArgumentException("Can't set _rev field");
 		if ( $key == '_id' AND $this->get('_id') )	throw new InvalidArgumentException("Can't set _id field because it's already set");
-		if ( substr($key,0,1) == '_' AND !in_array($key,couchClient::$allowed_underscored_properties) )
+		if ( substr($key,0,1) == '_' AND !in_array($key,PhpOnCouch_Client::$allowed_underscored_properties) )
 			throw new InvalidArgumentException("Property $key can't begin with an underscore");
     //echo "setting $key to ".print_r($value,TRUE)."<BR>\n";
 		$this->__couch_data->fields->$key = $value;
@@ -189,7 +189,7 @@ class couchDocument {
 	*
 	*/
 	public function record() {
-		foreach ( couchClient::$underscored_properties_to_remove_on_storage as $key ) {
+		foreach ( PhpOnCouch_Client::$underscored_properties_to_remove_on_storage as $key ) {
 			if ( property_exists($this->__couch_data->fields,$key) ) {
 				unset( $this->__couch_data->fields->$key );
 			}
@@ -393,7 +393,7 @@ class couchDocument {
 	}
 
 	/**
-	* just a proxy method to couchClient->getShow()
+	* just a proxy method to PhpOnCouch_Client->getShow()
 	*
 	* @param string $id name of the design document containing the show function
 	* @param string $name name of the show function
@@ -405,7 +405,7 @@ class couchDocument {
 	}
 	
 	/**
-	* just a proxy method to couchClient->updateDoc
+	* just a proxy method to PhpOnCouch_Client->updateDoc
 	*
 	* @param string $id name of the design document containing the update function
 	* @param string $name name of the update function

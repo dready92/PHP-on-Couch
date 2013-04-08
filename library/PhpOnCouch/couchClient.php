@@ -26,7 +26,7 @@ Copyright (C) 2009  Mickael Bailly
 *
 *
 */
-class couchClient extends PhpOnCouch_AbstractClient {
+class PhpOnCouch_Client extends PhpOnCouch_AbstractClient {
 
 	/**
 	* @var string database name
@@ -41,7 +41,7 @@ class couchClient extends PhpOnCouch_AbstractClient {
 	/**
 	* @var array CouchDB query options definitions
 	*
-	* key is the couchClient method (mapped with __call)
+	* key is the PhpOnCouch_Client method (mapped with __call)
 	* value is a hash containing :
 	*	- name : the query option name (couchdb side)
 	*	- filter : the type of filter to apply to the value (ex to force a cast to an integer ...)
@@ -190,7 +190,7 @@ class couchClient extends PhpOnCouch_AbstractClient {
         *
         * @link http://wiki.apache.org/couchdb/HTTP_view_API
         * @param mixed $value any json encodable thing
-        * @return couchClient $this
+        * @return PhpOnCouch_Client $this
         */
 	public function setQueryParameters(array $options) {
           foreach($options as $option=>$v) if (array_key_exists($option,$this->query_defs))
@@ -203,7 +203,7 @@ class couchClient extends PhpOnCouch_AbstractClient {
 	* set the name of the couchDB database to work on
 	*
 	* @param string $dbname name of the database
-	* @return couchClient $this
+	* @return PhpOnCouch_Client $this
 	*/
 	public function useDatabase( $dbname ) {
 		if ( !strlen($dbname) )	throw new InvalidArgumentException("Database name can't be empty");
@@ -338,7 +338,7 @@ class couchClient extends PhpOnCouch_AbstractClient {
 	* @link http://books.couchdb.org/relax/reference/change-notifications
 	* @param string $value feed type
 	* @param callable $continuous_callback in case of a continuous feed, the callback to be executed on new event reception
-	* @return couchClient $this
+	* @return PhpOnCouch_Client $this
 	*/
 	public function feed($value,$continuous_callback = null) {
 		if ( $value == 'longpoll' ) {
@@ -359,7 +359,7 @@ class couchClient extends PhpOnCouch_AbstractClient {
 	*
 	* @link http://books.couchdb.org/relax/reference/change-notifications
 	* @param string $value designdocname/filtername
-	* @return couchClient $this
+	* @return PhpOnCouch_Client $this
 	*/
 	public function filter($value,$additional_query_options = array() ) {
 		if ( strlen(trim($value)) ) {
@@ -396,7 +396,7 @@ class couchClient extends PhpOnCouch_AbstractClient {
 	*
 	* @link http://wiki.apache.org/couchdb/HTTP_Document_API
 	* @param array|all $value array of revisions to fetch, or special keyword all
-	* @return couchClient $this
+	* @return PhpOnCouch_Client $this
 	*/
 	public function open_revs ($value) {
 		if ( is_string($value) && $value == 'all' ) {
@@ -443,10 +443,10 @@ class couchClient extends PhpOnCouch_AbstractClient {
 	public function storeDoc ( $doc ) {
 		if ( !is_object($doc) )	throw new InvalidArgumentException ("Document should be an object");
 		foreach ( array_keys(get_object_vars($doc)) as $key ) {
-			if ( in_array($key,couchClient::$underscored_properties_to_remove_on_storage) ) {
+			if ( in_array($key,self::$underscored_properties_to_remove_on_storage) ) {
 				unset($doc->$key);
 			}
-			elseif ( substr($key,0,1) == '_' AND !in_array($key,couchClient::$allowed_underscored_properties) )
+			elseif ( substr($key,0,1) == '_' AND !in_array($key,self::$allowed_underscored_properties) )
 				throw new InvalidArgumentException("Property $key can't begin with an underscore");
 		}
 		$method = 'POST';
@@ -693,7 +693,7 @@ class couchClient extends PhpOnCouch_AbstractClient {
 	* when view result is parsed, view documents are translated to objects and sent back
 	*
 	* @view  results_as_couchDocuments()
-	* @return couchClient $this
+	* @return PhpOnCouch_Client $this
 	*
 	*/
 	public function asCouchDocuments() {
@@ -707,7 +707,7 @@ class couchClient extends PhpOnCouch_AbstractClient {
     *
     * cannot be used in conjunction with asCouchDocuments()
     *
-    * @return couchClient $this
+    * @return PhpOnCouch_Client $this
     */
     public function asArray() {
         $this->results_as_array = true;

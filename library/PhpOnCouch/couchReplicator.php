@@ -38,9 +38,9 @@ class couchReplicator {
 	/**
 	*constructor
 	*
-	* @param couchClient $client the couchClient instance
+	* @param PhpOnCouch_Client $client the PhpOnCouch_Client instance
 	*/
-	function __construct ( couchClient $client ) {
+	function __construct ( PhpOnCouch_Client $client ) {
 		$this->client = $client;
 	}
 
