@@ -155,7 +155,7 @@ class PhpOnCouch_Client extends PhpOnCouch_AbstractClient {
 		if ( in_array($response['status_code'], $allowed_status_codes) ) {
 			return $response['body'];
 		}
-		throw couchException::factory($response, $method, $url, $parameters);
+		throw PhpOnCouch_Exception_Exception::factory($response, $method, $url, $parameters);
 		return FALSE;
 	}
 

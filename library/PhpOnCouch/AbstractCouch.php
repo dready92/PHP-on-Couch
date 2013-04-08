@@ -244,12 +244,12 @@ class PhpOnCouch_AbstractClient {
 		$split=explode(" ",trim(reset($headers)));
 		$code = $split[1];
 		unset($split);
-        //If an invalid response is sent, read the rest of the response and throw an appropriate couchException
+        //If an invalid response is sent, read the rest of the response and throw an appropriate PhpOnCouch_Exception_Exception
         if (!in_array($code,array(200,201))) {
             stream_set_blocking($this->socket,false);
             $response .= stream_get_contents($this->socket);
             fclose($this->socket);
-            throw couchException::factory($response, $method, $url, $parameters);
+            throw PhpOnCouch_Exception_Exception::factory($response, $method, $url, $parameters);
         }
 
         //For as long as the socket is open, read lines and pass them to the callback

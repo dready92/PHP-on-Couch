@@ -8,11 +8,14 @@
  * and adds a method getBody() to fetch the body sent by the server (if any)
  *
  */
-class couchException extends Exception {
+class PhpOnCouch_Exception_Exception extends Exception {
     // CouchDB response codes we handle specialized exceptions
-    protected static $code_subtypes = array(404=>'couchNotFoundException', 403=>'couchForbiddenException', 401=>'couchUnauthorizedException', 417=>'couchExpectationException');
+    protected static $code_subtypes = array(404=>'PhpOnCouch_Exception_NotFoundException',
+                                            403=>'PhpOnCouch_Exception_ForbiddenException',
+                                            401=>'PhpOnCouch_Exception_UnauthorizedException',
+                                            417=>'PhpOnCouch_Exception_ExpectationException');
     // more precise response problem
-    protected static $status_subtypes = array('Conflict'=>'couchConflictException');
+    protected static $status_subtypes = array('Conflict'=>'PhpOnCouch_Exception_ConflictException');
     // couchDB response once parsed
     protected $couch_response = array();
 
@@ -37,7 +40,7 @@ class couchException extends Exception {
 
     public static function factory($response, $method, $url, $parameters) {
         if (is_string($response)) $response = couch::parseRawResponse($response);
-        if (!$response) return new couchNoResponseException();
+        if (!$response) return new PhpOnCouch_Exception_NoResponseException();
         if (isset($response['status_code']) and isset(self::$code_subtypes[$response['status_code']]))
             return new self::$code_subtypes[$response['status_code']]($response, $method, $url, $parameters);
         elseif (isset($response['status_message']) and isset(self::$status_subtypes[$response['status_message']]))

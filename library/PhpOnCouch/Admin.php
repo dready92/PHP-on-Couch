@@ -120,7 +120,7 @@ class PhpOnCouch_Admin {
 		}
 		$resp = couch::parseRawResponse($raw);
 		if ( $resp['status_code'] != 200 ) {
-			throw new couchException($raw);
+			throw new PhpOnCouch_Exception_Exception($raw);
 		}
 
 		$dsn = $this->client->dsn_part();
@@ -162,7 +162,7 @@ class PhpOnCouch_Admin {
 		);
 		$resp = couch::parseRawResponse($raw);
 		if ( $resp['status_code'] != 200 ) {
-			throw new couchException($raw);
+			throw new PhpOnCouch_Exception_Exception($raw);
 		}
 		return $resp["body"];
 	}
@@ -298,7 +298,7 @@ class PhpOnCouch_Admin {
 		);
 		$resp = couch::parseRawResponse($raw);
 		if ( $resp['status_code'] != 200 ) {
-			throw new couchException($raw);
+			throw new PhpOnCouch_Exception_Exception($raw);
 		}
 		if ( ! property_exists($resp['body'], "admins") ) {
 			$resp["body"]->admins = new stdClass();
@@ -333,7 +333,7 @@ class PhpOnCouch_Admin {
 		if ( $resp['status_code'] == 200 ) {
 			return $resp['body'];
 		}
-		throw new couchException($raw);
+		throw new PhpOnCouch_Exception_Exception($raw);
 	}
 
 	/**
