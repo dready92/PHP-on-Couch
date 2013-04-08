@@ -16,7 +16,7 @@ Copyright (C) 2009  Mickael Bailly
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-class couchDocument {
+class PhpOnCouch_Document {
 
 	/**
 	* @var stdClass object internal data
@@ -40,7 +40,7 @@ class couchDocument {
 	* load a CouchDB document from the CouchDB server
 	*
 	* @param string $id CouchDB document ID
-	* @return couchDocument $this
+	* @return PhpOnCouch_Document $this
 	*/
 	public function load ( $id ) {
 		if ( !strlen($id) ) throw new InvalidArgumentException("No id given");
@@ -60,7 +60,7 @@ class couchDocument {
 	* </code>
 	*
 	* @param boolean $commit turn on or off the autocommit feature
-	* @return couchDocument $this
+	* @return PhpOnCouch_Document $this
 	*/
 	public function setAutocommit($commit) {
 		$this->__couch_data->autocommit = (boolean)$commit;
@@ -82,7 +82,7 @@ class couchDocument {
 	* note that this method clones the object given in argument
 	*
 	* @param object $doc CouchDB document (should have $doc->_id  , $doc->_rev, ...)
-	* @return couchDocument $this
+	* @return PhpOnCouch_Document $this
 	*/
   public function loadFromObject($doc) {
 		$this->__couch_data->fields = clone $doc;
@@ -90,15 +90,15 @@ class couchDocument {
   }
 
 	/**
-	* load a document in a couchDocument object and return it
+	* load a document in a PhpOnCouch_Document object and return it
 	*
 	* @static
 	* @param PhpOnCouch_Client $client PhpOnCouch_Client instance
 	* @param string $id id of the document to load
-	* @return couchDocument couch document loaded with data of document $id
+	* @return PhpOnCouch_Document couch document loaded with data of document $id
 	*/
 	public static function getInstance(PhpOnCouch_Client $client,$id) {
-		$back = new couchDocument($client);
+		$back = new PhpOnCouch_Document($client);
 		return $back->load($id);
 	}
 

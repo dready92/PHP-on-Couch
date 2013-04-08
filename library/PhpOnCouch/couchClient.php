@@ -74,7 +74,7 @@ class PhpOnCouch_Client extends PhpOnCouch_AbstractClient {
 
 
 	/**
-	* @var bool option to return couchdb view results as couchDocuments objects
+	* @var bool option to return couchdb view results as PhpOnCouch_Documents objects
 	*/
 	protected $results_as_cd = false;
 
@@ -430,7 +430,7 @@ class PhpOnCouch_Client extends PhpOnCouch_AbstractClient {
 			return $back;
 		}
 		$this->results_as_cd = false;
-		$c = new  couchDocument($this);
+		$c = new  PhpOnCouch_Document($this);
 		return $c->loadFromObject($back);
 	}
 
@@ -473,7 +473,7 @@ class PhpOnCouch_Client extends PhpOnCouch_AbstractClient {
 		*/
 		$request = array('docs'=>array());
 		foreach ( $docs as $doc ) {
-			if ( $doc instanceof couchDocument ) {
+			if ( $doc instanceof PhpOnCouch_Document ) {
 				$request['docs'][] = $doc->getFields();
 			} else {
 				$request['docs'][] = $doc;
@@ -504,7 +504,7 @@ class PhpOnCouch_Client extends PhpOnCouch_AbstractClient {
 		$request = array('docs'=>array());
 		foreach ( $docs as $doc ) {
 			$destDoc = null;
-			if ( $doc instanceof couchDocument )	$destDoc = $doc->getFields();
+			if ( $doc instanceof PhpOnCouch_Document )	$destDoc = $doc->getFields();
 			else 									$destDoc = $doc;
 
 			if ( is_array($destDoc) )	$destDoc['_deleted'] = true;
@@ -684,7 +684,7 @@ class PhpOnCouch_Client extends PhpOnCouch_AbstractClient {
 	}
 
 	/**
-	* returns couchDB results as couchDocuments objects
+	* returns couchDB results as PhpOnCouch_Documents objects
 	*
 	* implies include_docs(true)
 	*
@@ -759,30 +759,30 @@ class PhpOnCouch_Client extends PhpOnCouch_AbstractClient {
 		);
 	}
 	/**
-	* returns couchDB view results as couchDocuments objects
+	* returns couchDB view results as PhpOnCouch_Documents objects
 	*
 	* - for string view keys, the object is found on "view key" index
 	*			ex : view returns
 	*			<code>[ "client" : null , "client2" : null ]</code>
 	* 		is translated to :
-	*			array ( 'client' => array(couchDocument) , 'client2' => array(couchDocument) )
+	*			array ( 'client' => array(PhpOnCouch_Document) , 'client2' => array(PhpOnCouch_Document) )
 	*
 	* - for array view keys, the object key in the result array is the last key of the view
 	*			ex : view returns
 	*			<code>[ [ "#44556643", "client" ] : null , [ "#65745767566","client2" : null ]</code>
 	* 		is translated to :
-	*			array ( 'client' => array(couchDocument) , 'client2' => array(couchDocument) )
+	*			array ( 'client' => array(PhpOnCouch_Document) , 'client2' => array(PhpOnCouch_Document) )
 	*
 	*	@param stdClass couchDb view resultset
-	* @return array array of couchDocument objects
+	* @return array array of PhpOnCouch_Document objects
 	*/
 	public function resultsToCouchDocuments ( $results ) {
 		if ( !$results->rows or !is_array($results->rows) )	return FALSE;
 		$back = array();
 		foreach ( $results->rows as $row ) {	// should have $row->key & $row->doc
 			if ( !$row->key or !$row->doc ) 	return false;
-			// create couchDocument
-			$cd = new couchDocument($this);
+			// create PhpOnCouch_Document
+			$cd = new PhpOnCouch_Document($this);
 			$cd->loadFromObject($row->doc);
 			
 			// set key name
