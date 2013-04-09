@@ -1,4 +1,20 @@
-<?php
+<?PHP
+/**
+ * Copyright (C) 2009  Mickael Bailly
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 /**
  * customized Exception class for CouchDB errors
@@ -9,14 +25,23 @@
  *
  */
 class PhpOnCouch_Exception_Exception extends Exception {
-    // CouchDB response codes we handle specialized exceptions
+    /**
+     * CouchDB response codes we handle specialized exceptions
+     * @var array
+     */
     protected static $code_subtypes = array(404=>'PhpOnCouch_Exception_NotFoundException',
                                             403=>'PhpOnCouch_Exception_ForbiddenException',
                                             401=>'PhpOnCouch_Exception_UnauthorizedException',
                                             417=>'PhpOnCouch_Exception_ExpectationException');
-    // more precise response problem
+    /**
+     * more precise response problem
+     * @var array
+     */
     protected static $status_subtypes = array('Conflict'=>'PhpOnCouch_Exception_ConflictException');
-    // couchDB response once parsed
+    /**
+     * couchDB response once parsed
+     * @var array
+     */
     protected $couch_response = array();
 
     /**
@@ -26,7 +51,7 @@ class PhpOnCouch_Exception_Exception extends Exception {
      * @param string $method  the HTTP method
      * @param string $url the target URL
      * @param mixed $parameters the query parameters
-    */
+     */
     function __construct($response, $method = null, $url = null, $parameters = null) {
         $this->couch_response = is_string($response) ? couch::parseRawResponse($response) : $response;
         if (is_object($this->couch_response['body']) and isset($this->couch_response['body']->reason))
@@ -37,7 +62,15 @@ class PhpOnCouch_Exception_Exception extends Exception {
         parent::__construct($message, isset($this->couch_response['status_code']) ? $this->couch_response['status_code'] : null);
     }
 
-
+    /**
+     * factory for response specific exceptions
+     *
+     * @param string $response
+     * @param string $method
+     * @param string $url
+     * @param string $parameters
+     * @return PhpOnCouch_Exception_NoResponseException|PhpOnCouch_Exception_Exception
+     */
     public static function factory($response, $method, $url, $parameters) {
         if (is_string($response)) $response = couch::parseRawResponse($response);
         if (!$response) return new PhpOnCouch_Exception_NoResponseException();
