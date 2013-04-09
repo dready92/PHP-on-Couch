@@ -3,22 +3,24 @@
 // error_reporting(E_STRICT);
 error_reporting(E_ALL);
 
-require_once 'PHPUnit/Framework.php';
-
-require_once "lib/couch.php";
-require_once "lib/couchClient.php";
-require_once "lib/couchDocument.php";
-require_once "lib/couchReplicator.php";
-
-
-class couchClientTest extends PHPUnit_Framework_TestCase
+class PhpOnCouchTest_ClientTest extends PHPUnit_Framework_TestCase
 {
+    private $couch_server = null;
+    private $client       = null;
 
-	private $couch_server = "http://localhost:5984/";
+    public function __construct()
+    {
+        $this->couch_server = "http://";
+        if ( COUCH_TEST_SERVER_USERNAME != null ) {
+            $this->couch_server .= COUCH_TEST_SERVER_USERNAME;
+            if ( COUCH_TEST_SERVER_PASSWORD != null ) $this->$couch_server .= ':' . COUCH_TEST_SERVER_HOSTNAME;
+        }
+        $this->couch_server .= COUCH_TEST_SERVER_HOST . '/';
+    }
 
     public function setUp()
     {
-        $this->client = new couchClient($this->couch_server,"couchclienttest");
+        $this->client = new PhpOnCouch_Client($this->couch_server,COUCH_TEST_SERVER_DATABASE_CLIENT_TEST);
 		try {
 			$this->client->deleteDatabase();
 		} catch ( Exception $e) {}
@@ -38,7 +40,7 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 			"4azerty" => false
 		);
 		foreach ( $matches as $key => $val ) {
-			$this->assertEquals ( $val, couchClient::isValidDatabaseName($key) );
+			$this->assertEquals ( $val, PhpOnCouch_Client::isValidDatabaseName($key) );
 		}
 
 	}
@@ -47,7 +49,7 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 		$exist = $this->client->databaseExists();
 		$this->assertTrue($exist,"testing against an existing database");
 
-		$client = new couchClient($this->couch_server,"foofoofooidontexist");
+		$client = new PhpOnCouch_Client($this->couch_server,COUCH_TEST_SERVER_DATABASE_NOTEXISTS);
 		$this->assertFalse($client->databaseExists(),"testing against a non-existing database");
 
 	}
@@ -57,7 +59,7 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 // 		print_r($infos);
 		$this->assertType("object", $infos);
 		$tsts = array(
-			'db_name' => "couchclienttest",
+			'db_name' => COUCH_TEST_SERVER_DATABASE_CLIENT_TEST,
 			"doc_count" => 0,
 			"doc_del_count" => 0,
 			"update_seq" => 0,
@@ -84,15 +86,15 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 	}
 
 	public function testGetDatabaseUri () {
-		$this->assertEquals ( $this->couch_server."couchclienttest", $this->client->getDatabaseUri() );
+		$this->assertEquals ( $this->couch_server.COUCH_TEST_SERVER_DATABASE_CLIENT_TEST, $this->client->getDatabaseUri() );
 	}
 
 	public function testGetDatabaseName () {
-		$this->assertEquals ( "couchclienttest", $this->client->getDatabaseName() );
+		$this->assertEquals ( COUCH_TEST_SERVER_DATABASE_CLIENT_TEST, $this->client->getDatabaseName() );
 	}
 
 	public function testGetServerUri () {
-		$this->assertEquals ( $this->couch_server."couchclienttest", $this->client->getDatabaseUri() );
+		$this->assertEquals ( $this->couch_server.COUCH_TEST_SERVER_DATABASE_CLIENT_TEST, $this->client->getDatabaseUri() );
 	}
 
 	/**
@@ -175,7 +177,7 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 	}
 
 	public function testcompactAllViews () {
-		$cd = new couchDocument($this->client);
+		$cd = new PhpOnCouch_Document($this->client);
 		$cd->set ( array (
 			'_id' => '_design/test',
 			'language'=>'javascript'
@@ -184,7 +186,7 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 	}
 
 	public function testCouchDocumentAttachment () {
-		$cd = new couchDocument($this->client);
+		$cd = new PhpOnCouch_Document($this->client);
 		$cd->set ( array (
 			'_id' => 'somedoc'
 		) );
@@ -197,7 +199,7 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 		$this->assertObjectHasAttribute("_attachments",$fields);
 		$this->assertObjectHasAttribute("file.txt",$fields->_attachments);
 
-		$cd = new couchDocument($this->client);
+		$cd = new PhpOnCouch_Document($this->client);
 		$cd->set ( array (
 			'_id' => 'somedoc2'
 		) );
@@ -221,7 +223,7 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 	}
 
 	public function testRevs () {
-		$cd = new couchDocument($this->client);
+		$cd = new PhpOnCouch_Document($this->client);
 		$cd->set ( array (
 			'_id' => 'somedoc'
 		) );
