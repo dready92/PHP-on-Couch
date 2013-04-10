@@ -16,17 +16,15 @@ $couch_db = "example";
 
 
 /**
-* include the library
+* include the library with autoload
 */
 
-require_once "../lib/couch.php";
-require_once "../lib/couchClient.php";
-require_once "../lib/couchDocument.php";
+require_once "../autoload_init.php";
 
 /**
 * create the client
 */
-$client = new couchClient($couch_dsn,$couch_db);
+$client = new PhpOnCouch_Client($couch_dsn,$couch_db);
 
 
 

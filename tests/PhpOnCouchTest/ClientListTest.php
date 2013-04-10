@@ -3,22 +3,25 @@
 // error_reporting(E_STRICT);
 error_reporting(E_ALL);
 
-require_once 'PHPUnit/Framework.php';
-
-require_once "lib/couch.php";
-require_once "lib/couchClient.php";
-require_once "lib/couchDocument.php";
-require_once "lib/couchReplicator.php";
-
-
-class couchClientListTest extends PHPUnit_Framework_TestCase
+class PhpOnCouchTest_ClientListTest extends PHPUnit_Framework_TestCase
 {
 
-	private $couch_server = "http://localhost:5984/";
+	private $couch_server = null;
+	private $client = null;
+
+	public function __construct()
+	{
+	    $this->couch_server = "http://";
+	    if ( COUCH_TEST_SERVER_USERNAME != null ) {
+	        $this->couch_server .= COUCH_TEST_SERVER_USERNAME;
+	        if ( COUCH_TEST_SERVER_PASSWORD != null ) $this->$couch_server .= ':' . COUCH_TEST_SERVER_HOSTNAME;
+	    }
+	    $this->couch_server .= COUCH_TEST_SERVER_HOST . '/';
+	}
 
     public function setUp()
     {
-        $this->client = new couchClient($this->couch_server,"couchclienttest");
+        $this->client = new PhpOnCouch_Client($this->couch_server,COUCH_TEST_SERVER_DATABASE_CLIENT_TEST);
 		try {
 			$this->client->deleteDatabase();
 		} catch ( Exception $e) {}
@@ -32,7 +35,7 @@ class couchClientListTest extends PHPUnit_Framework_TestCase
 
 
 	public function testList () {
-		$doc = new couchDocument($this->client);
+		$doc = new PhpOnCouch_Document($this->client);
 		$doc->_id="_design/test";
 		$views = array (
 			"simple" => array (
@@ -56,7 +59,7 @@ class couchClientListTest extends PHPUnit_Framework_TestCase
 		$doc->views = $views;
 		$doc->lists = $lists;
 
-		$doc = new couchDocument($this->client);
+		$doc = new PhpOnCouch_Document($this->client);
 		$doc->_id = '_design/test2';
 		$lists = array (
 			"list2" => "function (head, req) {
