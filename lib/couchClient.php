@@ -61,7 +61,7 @@ class couchClient extends couch {
 		"startkey_docid"	=> array ("name" => "startkey_docid", "filter"=> "string"),
 		"endkey_docid"		=> array ("name" => "endkey_docid", "filter"=> "string"),
 		"limit"				=> array ("name" => "limit", "filter"=> "int"),
-		"stale" 			=> array ("name" => "stale", "filter"=>"staticValue", "staticValue"=> "ok"),
+		"stale" 			=> array ("name" => "stale", "filter"=>"enum", "enum"=> array("ok","update_after")),
 		"descending" 		=> array ("name" => "descending", "filter"=>"jsonEncodeBoolean"),
 		"skip"				=> array ("name" => "skip", "filter"=> "int"),
 		"group" 			=> array ("name" => "group", "filter"=>"jsonEncodeBoolean"),
@@ -177,7 +177,16 @@ class couchClient extends couch {
 			$this->query_parameters[ $this->query_defs[$name]['name'] ] = (string)reset($args);
 		} elseif ( $this->query_defs[$name]['filter'] == 'jsonEncodeBoolean' ) {
 			$this->query_parameters[ $this->query_defs[$name]['name'] ] = json_encode((boolean)reset($args));
-		} else {
+		} elseif ( $this->query_defs[$name]['filter'] == 'enum' ) {
+            $value = (string)reset($args);
+            //handle backward compatibility for stale option
+            if ( $name == 'stale' && !$value ) {
+              $value = 'ok';
+            }
+            if ( in_array($value, $this->query_defs[$name]['enum']) ) {
+              $this->query_parameters[ $this->query_defs[$name]['name'] ] = $value;
+            }
+        } else {
 			$this->query_parameters[ $this->query_defs[$name]['name'] ] = reset($args);
 		}
 // 		print_r($this->query_parameters);
