@@ -103,7 +103,7 @@ class couchReplicator {
 	/**
 	* chainable method : set query params (for example for a filtered replication)
 	*
-	* @param array|object $ids list of document ids to replicate
+	* @param array|object $params list of document ids to replicate
 	* @return couchReplicator $this
 	*/
 	public function query_params ( $params ) {

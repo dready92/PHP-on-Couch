@@ -41,6 +41,7 @@ class couchDocument {
 	*
 	* @param string $id CouchDB document ID
 	* @return couchDocument $this
+	* @throws InvalidArgumentException
 	*/
 	public function load ( $id ) {
 		if ( !strlen($id) ) throw new InvalidArgumentException("No id given");
@@ -145,6 +146,7 @@ class couchDocument {
 	*
 	* @param string $key field name
 	* @return mixed field value (or null)
+	* @throws InvalidArgumentException
 	*/
 	public function get ( $key ) {
     //echo "get for $key\n";
@@ -170,6 +172,7 @@ class couchDocument {
 	* @param string $key field name
 	* @param mixed $value field value
 	* @return boolean TRUE
+	* @throws InvalidArgumentException
 	*/
 	protected function setOne ($key, $value ) {
 		$key = (string)$key;
@@ -216,15 +219,17 @@ class couchDocument {
 	*
 	* @param string|array $key
 	* @param mixed $value
+	* @return boolean TRUE
+	* @throws InvalidArgumentException
 	*
 	*/
 	public function set ( $key , $value = NULL ) {
-    
+
 		if ( func_num_args() == 1 ) {
 			if ( !is_array($key) AND !is_object($key) )	throw new InvalidArgumentException("When second argument is null, first argument should ba an array or an object");
 			foreach ( $key as $one_key => $one_value ) {
 				$this->setOne($one_key,$one_value);
-			} 
+			}
 		} else {
 			$this->setOne($key,$value);
 		}
@@ -243,6 +248,7 @@ class couchDocument {
 	*
 	* @param string $key name of the property to set
 	* @param mixed $value property value
+	* @return boolean TRUE
 	*/
 	public function __set( $key , $value ) {
 		return $this->set($key,$value);
@@ -255,6 +261,7 @@ class couchDocument {
 	* @link http://php.net/__isset
 	*
 	* @param string $key name of the property to test
+	* @return boolean
 	*/
 	public function __isset($key) {
 		return property_exists($this->__couch_data->fields,$key);
@@ -265,6 +272,7 @@ class couchDocument {
 	*
 	* @param string $key the key to remove
 	* @return boolean whether the removal process ran successfully
+	* @throws InvalidArgumentException
 	*/
 	public function remove($key) {
 		$key = (string)$key;
@@ -294,6 +302,7 @@ class couchDocument {
 	* @param string $url the database to replicate to ( eg. "http://localhost:5984/foo" or "foo" )
 	* @param boolean $create_target if set to true, target database will be created if needed
 	* @return boolean tell if document replication succeded
+	* @throws InvalidArgumentException
 	*/
 	public function replicateTo($url, $create_target = false) {
 		echo "replicateTo : ".$this->_id.", $url\n";
@@ -342,7 +351,7 @@ class couchDocument {
 
 	/**
 	* Attach a file to a document
-	* 
+	*
 	*
 	* @param string $file the attachment file (local storage)
 	* @param string $content_type the attachment content-type (defaults to 'application/octet-stream')
@@ -357,7 +366,7 @@ class couchDocument {
 
 	/**
 	* Attach data as a document attachment
-	* 
+	*
 	*
 	* @param string $data the attachment contents
 	* @param string $filename the attachment filename.
@@ -403,7 +412,7 @@ class couchDocument {
 	public function show ( $id,$name,$additionnal_params = array() ) {
 		return $this->__couch_data->client->getShow($id,$name,$this->_id,$additionnal_params);
 	}
-	
+
 	/**
 	* just a proxy method to couchClient->updateDoc
 	*

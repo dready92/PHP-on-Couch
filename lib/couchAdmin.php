@@ -97,6 +97,7 @@ class couchAdmin {
 	* @param string $password administrator password
 	* @param array $roles add additionnal roles to the new admin
 	* @return stdClass CouchDB server response
+	* @throws InvalidArgumentException|Exception|couchException
 	*/
 	public function createAdmin ( $login, $password, $roles = array() ) {
 		$login = urlencode($login);
@@ -141,6 +142,7 @@ class couchAdmin {
 	*
 	* @param string $login administrator login
 	* @return stdClass CouchDB server response
+	* @throws InvalidArgumentException|couchException
 	*/
 	public function deleteAdmin ( $login ) {
 		$login = urlencode($login);
@@ -166,7 +168,7 @@ class couchAdmin {
 		}
 		return $resp["body"];
 	}
-	
+
 	/**
 	* create a user
 	*
@@ -174,6 +176,7 @@ class couchAdmin {
 	* @param string $password user password
 	* @param array $roles add additionnal roles to the new user
 	* @return stdClass CouchDB user creation response (the same as a document storage response)
+	* @throws InvalidArgumentException
 	*/
 	public function createUser ($login, $password, $roles = array() ) {
 		$password = (string)$password;
@@ -201,6 +204,7 @@ class couchAdmin {
 	*
 	* @param string $login user login
 	* @return stdClass CouchDB server response
+	* @throws InvalidArgumentException
 	*/
 	public function deleteUser ( $login ) {
 		if ( strlen($login) < 1 ) {
@@ -216,6 +220,7 @@ class couchAdmin {
 	*
 	* @param string $login login of the user to fetch
 	* @return stdClass CouchDB document
+	* @throws InvalidArgumentException
 	*/
 	public function getUser ($login) {
 		if ( strlen($login) < 1 ) {
@@ -245,6 +250,7 @@ class couchAdmin {
 	* @param string|stdClass $user the user login (as a string) or the user document ( fetched by getUser() method )
 	* @param string $role the role to add in the list of roles the user belongs to
 	* @return boolean true if the user $user now belongs to the role $role
+	* @throws InvalidArgumentException
 	*/
 	public function addRoleToUser ($user,$role) {
 		if ( is_string($user) ) {
@@ -267,6 +273,7 @@ class couchAdmin {
 	* @param string|stdClass $user the user login (as a string) or the user document ( fetched by getUser() method )
 	* @param string $role the role to remove from the list of roles the user belongs to
 	* @return boolean true if the user $user don't belong to the role $role anymore
+	* @throws InvalidArgumentException
 	*/
 	public function removeRoleFromUser ($user,$role) {
 		if ( is_string($user) ) {
@@ -289,6 +296,7 @@ class couchAdmin {
 	*
 	* @link http://wiki.apache.org/couchdb/Security_Features_Overview
 	* @return stdClass security object of the database
+	* @throws couchException
 	*/
 	public function getSecurity ( ) {
 		$dbname = $this->client->getDatabaseName();
@@ -317,6 +325,7 @@ class couchAdmin {
 	* @link http://wiki.apache.org/couchdb/Security_Features_Overview
 	* @param stdClass $security the security object to apply to the database
 	* @return stdClass CouchDB server response ( { "ok": true } )
+	* @throws InvalidArgumentException|couchException
 	*/
 	public function setSecurity ( $security ) {
 		if ( !is_object($security) ) {
@@ -341,6 +350,7 @@ class couchAdmin {
 	*
 	* @param string $login user login
 	* @return boolean true if the user has successfuly been added
+	* @throws InvalidArgumentException
 	*/
 	public function addDatabaseReaderUser($login) {
 		if ( strlen($login) < 1 ) {
@@ -363,6 +373,7 @@ class couchAdmin {
 	*
 	* @param string $login user login
 	* @return boolean true if the user has successfuly been added
+	* @throws InvalidArgumentException
 	*/
 	public function addDatabaseAdminUser($login) {
 		if ( strlen($login) < 1 ) {
@@ -405,6 +416,7 @@ class couchAdmin {
 	*
 	* @param string $login user login
 	* @return boolean true if the user has successfuly been removed
+	* @throws InvalidArgumentException
 	*/
 	public function removeDatabaseReaderUser($login) {
 		if ( strlen($login) < 1 ) {
@@ -427,6 +439,7 @@ class couchAdmin {
 	*
 	* @param string $login user login
 	* @return boolean true if the user has successfuly been removed
+	* @throws InvalidArgumentException
 	*/
 	public function removeDatabaseAdminUser($login) {
 		if ( strlen($login) < 1 ) {
@@ -451,6 +464,7 @@ class couchAdmin {
 	*
 	* @param string $role role name
 	* @return boolean true if the role has successfuly been added
+	* @throws InvalidArgumentException
 	*/
 	public function addDatabaseReaderRole($role) {
 		if ( strlen($role) < 1 ) {
@@ -473,6 +487,7 @@ class couchAdmin {
 	*
 	* @param string $role role name
 	* @return boolean true if the role has successfuly been added
+	* @throws InvalidArgumentException
 	*/
 	public function addDatabaseAdminRole($role) {
 		if ( strlen($role) < 1 ) {
@@ -515,6 +530,7 @@ class couchAdmin {
 	*
 	* @param string $role role name
 	* @return boolean true if the role has successfuly been removed
+	* @throws InvalidArgumentException
 	*/
 	public function removeDatabaseReaderRole($role) {
 		if ( strlen($role) < 1 ) {
@@ -537,6 +553,7 @@ class couchAdmin {
 	*
 	* @param string $role role name
 	* @return boolean true if the role has successfuly been removed
+	* @throws InvalidArgumentException|couchException
 	*/
 	public function removeDatabaseAdminRole($role) {
 		if ( strlen($role) < 1 ) {

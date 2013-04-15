@@ -21,7 +21,7 @@ Copyright (C) 2009  Mickael Bailly
 /**
 * CouchDB client class
 *
-* This class implements all required methods to use with a 
+* This class implements all required methods to use with a
 * CouchDB server
 *
 *
@@ -95,12 +95,13 @@ class couchClient extends couch {
 	public static $underscored_properties_to_remove_on_storage = array('_conflicts','_revisions','_revs_info');
 
 	/**
-	* class constructor
-	*
-	* @param string $dsn CouchDB server data source name (eg. http://localhost:5984)
-	* @param string $dbname CouchDB database name
-	* @param array $options Additionnal configuration options
-	*/
+	 * class constructor
+	 *
+	 * @param string $dsn CouchDB server data source name (eg. http://localhost:5984)
+	 * @param string $dbname CouchDB database name
+	 * @param array $options Additionnal configuration options
+	 * @throws Exception
+	 */
 	public function __construct($dsn, $dbname, $options = array() ) {
 		// in the case of a cookie based authentification we have to remove user and password infos from the DSN
 		if ( array_key_exists("cookie_auth",$options) && $options["cookie_auth"] == "true" ) {
@@ -135,20 +136,22 @@ class couchClient extends couch {
 	}
 
 	/**
-	* helper method to execute the following algorithm :
-	*
-	* query the couchdb server
-	* test the status_code
-	* return the response body on success, throw an exception on failure
-	*
-	* @param string $method HTTP method (GET, POST, ...)
-	* @param string $url URL to fetch
-	* @param $array $allowed_status_code the list of HTTP response status codes that prove a successful request
-	* @param array $parameters additionnal parameters to send with the request
-	* @param string|object|array $data the request body. If it's an array or an object, $data is json_encode()d
-	* @param string $content_type set the content-type of the request
-	*/
-	protected function _queryAndTest ( $method, $url,$allowed_status_codes, $parameters = array(),$data = NULL, $content_type = NULL ) {
+	 * helper method to execute the following algorithm :
+	 *
+	 * query the couchdb server
+	 * test the status_code
+	 * return the response body on success, throw an exception on failure
+	 *
+	 * @param string $method HTTP method (GET, POST, ...)
+	 * @param string $url URL to fetch
+	 * @param array $allowed_status_codes the list of HTTP response status codes that prove a successful request
+	 * @param array $parameters additionnal parameters to send with the request
+	 * @param string|object|array $data the request body. If it's an array or an object, $data is json_encode()d
+	 * @param string $content_type set the content-type of the request
+	 * @throws couchException
+	 * @return array
+	 */
+	protected function _queryAndTest ( $method, $url, $allowed_status_codes, $parameters = array(),$data = NULL, $content_type = NULL ) {
 		$raw = $this->query($method,$url,$parameters,$data,$content_type);
 		$response = $this->parseRawResponse($raw, $this->results_as_array);
 		$this->results_as_array = false;
@@ -156,7 +159,6 @@ class couchClient extends couch {
 			return $response['body'];
 		}
 		throw couchException::factory($response, $method, $url, $parameters);
-		return FALSE;
 	}
 
 	function __call($name, $args) {
@@ -189,22 +191,21 @@ class couchClient extends couch {
         } else {
 			$this->query_parameters[ $this->query_defs[$name]['name'] ] = reset($args);
 		}
-// 		print_r($this->query_parameters);
 		return $this;
 	}
 
 	/**
-        * Set all CouchDB query options at once.
-        * Any invalid options are ignored.
-        *
-        * @link http://wiki.apache.org/couchdb/HTTP_view_API
-        * @param mixed $value any json encodable thing
-        * @return couchClient $this
-        */
+	* Set all CouchDB query options at once.
+	* Any invalid options are ignored.
+	*
+	* @link http://wiki.apache.org/couchdb/HTTP_view_API
+	* @param array $options any json encodable thing
+	* @return couchClient $this
+	*/
 	public function setQueryParameters(array $options) {
-          foreach($options as $option=>$v) if (array_key_exists($option,$this->query_defs))
-              $this->$option($v);
-              return $this;
+	foreach($options as $option=>$v) if (array_key_exists($option,$this->query_defs))
+		$this->$option($v);
+	return $this;
 	}
 
 
@@ -213,6 +214,7 @@ class couchClient extends couch {
 	*
 	* @param string $dbname name of the database
 	* @return couchClient $this
+	* @throws InvalidArgumentException
 	*/
 	public function useDatabase( $dbname ) {
 		if ( !strlen($dbname) )	throw new InvalidArgumentException("Database name can't be empty");
@@ -306,6 +308,7 @@ class couchClient extends couch {
 	* test if the database already exists
 	*
 	* @return boolean wether or not the database exist
+	* @throws Exception
 	*/
 	public function databaseExists () {
 		try {
@@ -360,7 +363,7 @@ class couchClient extends couch {
 		}
 		return $this;
 	}
-	
+
 
 	/**
 	*CouchDb changes option
@@ -368,9 +371,10 @@ class couchClient extends couch {
 	*
 	* @link http://books.couchdb.org/relax/reference/change-notifications
 	* @param string $value designdocname/filtername
+	* @param  array $additional_query_options additional query options
 	* @return couchClient $this
 	*/
-	public function filter($value,$additional_query_options = array() ) {
+	public function filter($value, $additional_query_options = array() ) {
 		if ( strlen(trim($value)) ) {
 			$this->query_parameters['filter']=trim($value);
 			$this->query_parameters = array_merge($additional_query_options,$this->query_parameters);
@@ -385,7 +389,6 @@ class couchClient extends couch {
 	*/
 	public function getChanges() {
 		if ( !empty($this->query_parameters['feed']) && $this->query_parameters['feed'] == 'continuous' ) {
-// 			return $this->_continuousChanges();
 			$url = '/'.urlencode($this->dbname).'/_changes';
 			$opts = $this->query_parameters;
 			$this->query_parameters = array();
@@ -404,7 +407,7 @@ class couchClient extends couch {
 	* fetch multiple revisions at once
 	*
 	* @link http://wiki.apache.org/couchdb/HTTP_Document_API
-	* @param array|all $value array of revisions to fetch, or special keyword all
+	* @param array|string $value array of revisions to fetch, or special keyword all
 	* @return couchClient $this
 	*/
 	public function open_revs ($value) {
@@ -421,6 +424,7 @@ class couchClient extends couch {
 	*
 	* @param string $id document id
 	* @return object CouchDB document
+	* @throws InvalidArgumentException
 	*/
 	public function getDoc ($id) {
 		if ( !strlen($id) )
@@ -448,6 +452,7 @@ class couchClient extends couch {
 	*
 	* @param object $doc document to store
 	* @return object CouchDB document storage response
+	* @throws InvalidArgumentException
 	*/
 	public function storeDoc ( $doc ) {
 		if ( !is_object($doc) )	throw new InvalidArgumentException ("Document should be an object");
@@ -474,6 +479,7 @@ class couchClient extends couch {
 	* @param array $docs array of documents to store
 	* @param boolean $all_or_nothing set the bulk update type to "all or nothing"
 	* @return object CouchDB bulk document storage response
+	* @throws InvalidArgumentException
 	*/
 	public function storeDocs ( $docs, $all_or_nothing = false ) {
 		if ( !is_array($docs) )	throw new InvalidArgumentException ("docs parameter should be an array");
@@ -504,6 +510,7 @@ class couchClient extends couch {
 	* @param array $docs array of documents to delete
 	* @param boolean $all_or_nothing set the bulk update type to "all or nothing"
 	* @return object CouchDB bulk document storage response
+	* @throws InvalidArgumentException
 	*/
 	public function deleteDocs ( $docs, $all_or_nothing = false ) {
 		if ( !is_array($docs) )	throw new InvalidArgumentException ("docs parameter should be an array");
@@ -530,7 +537,7 @@ class couchClient extends couch {
 
 
 	/**
-	* update a couchDB document through an Update Handler 
+	* update a couchDB document through an Update Handler
 	* wrapper to $this->updateDocFullAPI
 	*
 	* @link http://wiki.apache.org/couchdb/Document_Update_Handlers
@@ -538,6 +545,8 @@ class couchClient extends couch {
 	* @param string $handler_name name of the update handler
 	* @param array|object $params parameters to send to the update handler
 	* @param string $doc_id id of the document to update (can be null)
+	* @return array|bool @see updateDocFullAPI($ddoc_id, $handler_name, $options = array())
+	* @throws InvalidArgumentException
 	*/
 	public function updateDoc ( $ddoc_id, $handler_name, $params, $doc_id = null ) {
 		if ( !is_array($params) && !is_object($params) ) throw new InvalidArgumentException ("params parameter should be an array or an object");
@@ -551,21 +560,21 @@ class couchClient extends couch {
 	}
 
 
-        /**
-        * update a couchDB document through an Update Handler 
-        *
-        * @link http://wiki.apache.org/couchdb/Document_Update_Handlers
-        * @param string $ddoc_id name of the design doc containing the update handler definition (without _design)
-        * @param string $handler_name name of the update handler
+	/**
+	* update a couchDB document through an Update Handler
+	*
+	* @link http://wiki.apache.org/couchdb/Document_Update_Handlers
+	* @param string $ddoc_id name of the design doc containing the update handler definition (without _design)
+	* @param string $handler_name name of the update handler
 	* @param array $options list of optionnal data to send to the couch update handler.
+	 *		- "doc_id" : array|object $params parameters to send to the update handler
 	*		- "params" : array|object of variables being sent in the URL ( /?foo=bar )
-	*		- "data"   : string|array|object data being sent in the body of the request. 
+	*		- "data"   : string|array|object data being sent in the body of the request.
 	*				If data is an array or an object it's parsed through PHP http_build_query function
 	*				and the content-type of the request is set to "application/x-www-form-urlencoded"
 	*		- "Content-Type" : the http header "Content-Type" to send to the couch server
-        * @param array|object $params parameters to send to the update handler
-        * @param string $doc_id id of the document to update (can be null)
-        */
+	* @return bool|array @see _queryAndTest($method, $url, $allowed_status_codes, $parameters = array(),$data = NULL, $content_type = NULL)
+	*/
 	public function updateDocFullAPI ( $ddoc_id, $handler_name, $options = array() ) {
 		$params = array();
 		$data = null;
@@ -601,6 +610,7 @@ class couchClient extends couch {
 	* @param string $id id of the document to copy
 	* @param string $new_id id of the new document
 	* @return object CouchDB document storage response
+	* @throws InvalidArgumentException
 	*/
 	public function copyDoc($id,$new_id) {
 		if ( !strlen($id) )
@@ -624,6 +634,7 @@ class couchClient extends couch {
 	* @param string $filename attachment name
 	* @param string $content_type attachment content type
 	* @return object CouchDB attachment storage response
+	* @throws InvalidArgumentException
 	*/
 	public function storeAsAttachment ($doc,$data,$filename,$content_type = 'application/octet-stream') {
 		if ( !is_object($doc) )	throw new InvalidArgumentException ("Document should be an object");
@@ -646,6 +657,7 @@ class couchClient extends couch {
 	* @param string $filename attachment name
 	* @param string $content_type attachment content type
 	* @return object CouchDB attachment storage response
+	* @throws InvalidArgumentException
 	*/
 	public function storeAttachment ($doc,$file,$content_type = 'application/octet-stream',$filename = null) {
 		if ( !is_object($doc) )	throw new InvalidArgumentException ("Document should be an object");
@@ -665,6 +677,7 @@ class couchClient extends couch {
 	* @param object $doc CouchDB document
 	* @param string $attachment_name name of the attachment to delete
 	* @return object CouchDB attachment removal response
+	* @throws InvalidArgumentException
 	*/
 	public function deleteAttachment ($doc,$attachment_name ) {
 		if ( !is_object($doc) )	throw new InvalidArgumentException ("Document should be an object");
@@ -681,12 +694,13 @@ class couchClient extends couch {
 	*
 	* @param object $doc document to remove
 	* @return object CouchDB document removal response
+	* @throws InvalidArgumentException
+	* @throws Exception
 	*/
 	public function deleteDoc ( $doc ) {
 		if ( !is_object($doc) )	throw new InvalidArgumentException ("Document should be an object");
 		if ( empty($doc->_id)  OR empty($doc->_rev) )    {
 			throw new Exception("Document should contain _id and _rev");
-			return FALSE;
 		}
 		$url = '/'.urlencode($this->dbname).'/'.urlencode($doc->_id).'?rev='.urlencode($doc->_rev);
 		return $this->_queryAndTest ('DELETE', $url, array(200,202));
@@ -750,6 +764,7 @@ class couchClient extends couch {
 	* @param string $id design document name (without _design)
 	* @param string $name view name
 	* @return object CouchDB view query response
+	* @throws InvalidArgumentException
 	*/
 	public function getView ( $id, $name ) {
 		if ( !$id OR !$name )    throw new InvalidArgumentException("You should specify view id and name");
@@ -793,16 +808,16 @@ class couchClient extends couch {
 			// create couchDocument
 			$cd = new couchDocument($this);
 			$cd->loadFromObject($row->doc);
-			
+
 			// set key name
 			if ( is_string($row->key) ) $key = $row->key;
 			elseif ( is_array($row->key) ) {
-				if ( !is_array(end($row->key)) && !is_object(end($row->key)) ) 
+				if ( !is_array(end($row->key)) && !is_object(end($row->key)) )
 					$key = end($row->key);
 				else
 					continue;
 			}
-			
+
 			// set value in result array
 			if ( isset($back[$key]) ) {
 				if ( is_array($back[$key]) ) 	$back[$key][] = $cd;
@@ -823,6 +838,7 @@ class couchClient extends couch {
 	* @param string $view_name view name
 	* @param array $additionnal_parameters some other parameters to send in the query
 	* @return object CouchDB list query response
+	* @throws InvalidArgumentException
 	*/
 	public function getList ( $id, $name, $view_name, $additionnal_parameters = array() ) {
 		if ( !$id OR !$name )    throw new InvalidArgumentException("You should specify list id and name");
@@ -844,7 +860,7 @@ class couchClient extends couch {
 	* the design doc where the view function is defined
 	*
 	* So if you got a design doc "_design/example1" with a defined view "view1", and
-	* a design doc "_design/example2" with a defined list "list1", you can query the view view1 
+	* a design doc "_design/example2" with a defined list "list1", you can query the view view1
 	* and then pass it through the list list1 by using :
 	*
 	* getForeignList("example2","list1","example1","view1");
@@ -856,6 +872,7 @@ class couchClient extends couch {
 	* @param string $view_name view name
 	* @param array $additionnal_parameters some other parameters to send in the query
 	* @return object CouchDB list query response
+	* @throws InvalidArgumentException
 	*/
 	public function getForeignList ( $id, $name, $view_id, $view_name, $additionnal_parameters = array() ) {
 		if ( !$id OR !$name )    throw new InvalidArgumentException("You should specify list id and name");
@@ -881,6 +898,7 @@ class couchClient extends couch {
 	* @param string $doc_id id of the couchDB document (can be null !)
 	* @param array $additionnal_parameters some other parameters to send in the query
 	* @return object CouchDB list query response
+	* @throws InvalidArgumentException
 	*/
 	public function getShow ( $id, $name, $doc_id = null, $additionnal_parameters = array() ) {
 		if ( !$id OR !$name )    throw new InvalidArgumentException("You should specify list id and name");
@@ -895,6 +913,7 @@ class couchClient extends couch {
 	* @link http://wiki.apache.org/couchdb/HTTP_view_API
 	* @param string $id design document name (without _design)
 	* @return object CouchDB view infos response
+	* @throws InvalidArgumentException
 	*/
 	public function getViewInfos ( $id ) {
 		if ( !$id )    throw new InvalidArgumentException("You should specify view id");
@@ -953,6 +972,7 @@ class couchClient extends couch {
 	*
 	* @param integer $count the number of uuids to return
 	* @return array|false an array of uuids on success, false on failure.
+	* @throws InvalidArgumentException
 	*/
 	public function getUuids($count = 1) {
 		$count=(int)$count;
@@ -966,7 +986,7 @@ class couchClient extends couch {
 		}
 		return false;
 	}
-	
+
 	/**
 	* Synchronize database to disc
 	*
@@ -977,7 +997,7 @@ class couchClient extends couch {
 		$url = '/' . urlencode($this->dbname) . '/_ensure_full_commit';
 		return $this->_queryAndTest($method, $url, array(200, 201));
 	}
-	
+
 }
 
 /**
@@ -1034,7 +1054,7 @@ class couchException extends Exception {
 	*
 	* @return string|object|null CouchDB server response
 	*/
-	function getBody() {
+	public function getBody() {
 		if ( isset($this->couch_response['body']) )
 			return $this->couch_response['body'];
 	}

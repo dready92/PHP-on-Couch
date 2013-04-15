@@ -20,7 +20,7 @@ Copyright (C) 2009  Mickael Bailly
 * couch class
 *
 * basics to implement JSON / REST / HTTP CouchDB protocol
-* 
+*
 */
 class couch {
 	/**
@@ -94,8 +94,10 @@ class couch {
 	}
 
 	/**
-	* set the session cookie to send in the headers 
+	* set the session cookie to send in the headers
 	* @param string $cookie the session cookie ( example : AuthSession=Y291Y2g6NENGNDgzNz )
+	*
+	* @return \couch
 	*/
 	public function setSessionCookie ( $cookie ) {
 		$this->sessioncookie = $cookie;
@@ -121,7 +123,7 @@ class couch {
 	}
 
 	/**
-	* parse a CouchDB server response and sends back an array 
+	* parse a CouchDB server response and sends back an array
 	* the array contains keys :
 	* status_code : the HTTP status code returned by the server
 	* status_message : the HTTP message related to the status code
@@ -132,6 +134,7 @@ class couch {
 	* @param string $raw_data data sent back by the server
 	* @param boolean $json_as_array is true, the json response will be decoded as an array. Is false, it's decoded as an object
 	* @return array CouchDB response
+	* @throws InvalidArgumentException
 	*/
 	public static function parseRawResponse($raw_data, $json_as_array = FALSE) {
 		if ( !strlen($raw_data) ) throw new InvalidArgumentException("no data to parse");
@@ -140,7 +143,6 @@ class couch {
 		}
 		$response = array('body'=>null);
 		list($headers, $body) = explode("\r\n\r\n", $raw_data,2);
-// 		echo "Headers : $headers , Body : $body\n";
 		$headers_array=explode("\n",$headers);
 		$status_line = reset($headers_array);
 		$status_array = explode(' ',$status_line,3);
@@ -216,11 +218,13 @@ class couch {
 	* @param string|array|object $data request body
 	*
 	* @return string|false server response on success, false on error
+	*
+	* @throws Exception|InvalidArgumentException|couchException|couchNoResponseException
 	*/
 	public function continuousQuery($callable,$method,$url,$parameters = array(),$data = null) {
 		if ( !in_array($method, $this->HTTP_METHODS )    )
 			throw new Exception("Bad HTTP method: $method");
-		if ( !is_callable($callable) ) 
+		if ( !is_callable($callable) )
 			throw new InvalidArgumentException("callable argument have to success to is_callable PHP function");
 		if ( is_array($parameters) AND count($parameters) )
 			$url = $url.'?'.http_build_query($parameters);
@@ -229,9 +233,8 @@ class couch {
 		if ( !$this->_connect() )	return FALSE;
 		fwrite($this->socket, $request);
 
-        //Read the headers and check that the response is valid
-        $response = '';
-		$code=0;
+		//Read the headers and check that the response is valid
+		$response = '';
 		$headers = false;
 		while (!feof($this->socket)&& !$headers) {
 			$response.=fgets($this->socket);
@@ -284,6 +287,8 @@ class couch {
 	* @param string|array|object $data request body
 	*
 	* @return string|false server response on success, false on error
+	*
+	* @throws Exception
 	*/
 	public function _socket_query ( $method, $url, $parameters = array() , $data = NULL, $content_type = NULL ) {
 		if ( !in_array($method, $this->HTTP_METHODS )    )
@@ -371,6 +376,8 @@ class couch {
 	* @param string $content_type attachment content_type
 	*
 	* @return string server response
+	*
+	* @throws InvalidArgumentException
 	*/
 	protected function _socket_storeFile($url,$file,$content_type) {
 
@@ -400,8 +407,10 @@ class couch {
 	* @param string $url CouchDB URL to store the file to
 	* @param string $data data to send as the attachment content
 	* @param string $content_type attachment content_type
-	*	
+	*
 	* @return string server response
+	*
+	* @throws InvalidArgumentException
 	*/
   public function _socket_storeAsFile($url,$data,$content_type) {
 		if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
@@ -426,13 +435,14 @@ class couch {
 	*This function can throw an Exception if it fails
 	*
 	* @return boolean wheter the connection is successful
+	*
+	* @throws Exception
 	*/
 	protected function _connect() {
 		$ssl = $this->dsn_part('scheme') == 'https' ? 'ssl://' : '';
 		$this->socket = @fsockopen($ssl.$this->dsn_part('host'), $this->dsn_part('port'), $err_num, $err_string);
 		if(!$this->socket) {
 			throw new Exception('Could not open connection to '.$this->dsn_part('host').':'.$this->dsn_part('port').': '.$err_string.' ('.$err_num.')');
-			return FALSE;
 		}
 		return TRUE;
 	}
@@ -518,16 +528,16 @@ class couch {
 	* @param string $content_type the content type of the sent data (defaults to application/json)
 	*
 	* @return string|false server response on success, false on error
+	*
+	* @throws Exception
 	*/
 	public function _curl_query ( $method, $url, $parameters = array() , $data = NULL, $content_type = NULL ) {
-//  		echo "_curl_query : $method $url ".print_r($parameters,true)." , ".print_r($data,true);
 		if ( !in_array($method, $this->HTTP_METHODS )    )
 			throw new Exception("Bad HTTP method: $method");
 
 		$url = $this->dsn.$url;
 		if ( is_array($parameters) AND count($parameters) )
 			$url = $url.'?'.http_build_query($parameters);
-// 		echo $url;
 		$http = $this->_curl_buildRequest($method,$url,$data, $content_type);
 		$this->_curl_addCustomOptions ($http);
 		curl_setopt($http,CURLOPT_HEADER, true);
@@ -536,12 +546,8 @@ class couch {
 
 		$response = curl_exec($http);
 		curl_close($http);
-// 		echo $response;
 
 		return $response;
-    //log_message('debug',"COUCH : Executed query $method $url");
-    //log_message('debug',"COUCH : ".$raw_response);
-
 	}
 
 	/**
@@ -553,6 +559,8 @@ class couch {
 	* @param string $content_type attachment content_type
 	*
 	* @return string server response
+	*
+	* @throws InvalidArgumentException
 	*/
 	public function _curl_storeFile ( $url, $file, $content_type ) {
 		if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
@@ -593,6 +601,8 @@ class couch {
 	* @param string $content_type attachment content_type
 	*
 	* @return string server response
+	*
+	* @throws InvalidArgumentException
 	*/
 	public function _curl_storeAsFile($url,$data,$content_type) {
 		if ( !strlen($url) )	throw new InvalidArgumentException("Attachment URL can't be empty");
