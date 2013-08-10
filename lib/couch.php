@@ -92,6 +92,15 @@ class couch {
 	public function options() {
 		return $this->options;
 	}
+	
+	/**
+	* get the session cookie
+	* 
+	* @return string cookie
+	*/
+	public function getSessionCookie () {
+		return $this->sessioncookie;
+	}
 
 	/**
 	* set the session cookie to send in the headers
