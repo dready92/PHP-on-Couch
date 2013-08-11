@@ -542,7 +542,7 @@ class couch {
 		$this->_curl_addCustomOptions ($http);
 		curl_setopt($http,CURLOPT_HEADER, true);
 		curl_setopt($http,CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($http,CURLOPT_FOLLOWLOCATION, true);
+		if (ini_get('open_basedir') == '' && ini_get('safe_mode' == 'Off')) curl_setopt($http,CURLOPT_FOLLOWLOCATION, true);
 
 		$response = curl_exec($http);
 		curl_close($http);
@@ -581,7 +581,7 @@ class couch {
 		curl_setopt($http, CURLOPT_UPLOAD, true);
 		curl_setopt($http, CURLOPT_HEADER, true);
 		curl_setopt($http, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($http, CURLOPT_FOLLOWLOCATION, true);
+		if (ini_get('open_basedir') == '' && ini_get('safe_mode' == 'Off')) curl_setopt($http, CURLOPT_FOLLOWLOCATION, true);
 		$fstream=fopen($file,'r');
 		curl_setopt($http, CURLOPT_INFILE, $fstream);
 		curl_setopt($http, CURLOPT_INFILESIZE, filesize($file));
@@ -622,7 +622,7 @@ class couch {
 		curl_setopt($http, CURLOPT_HTTPHEADER,$http_headers);
 		curl_setopt($http, CURLOPT_HEADER, true);
 		curl_setopt($http, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($http, CURLOPT_FOLLOWLOCATION, true);
+		if (ini_get('open_basedir') == '' && ini_get('safe_mode' == 'Off')) curl_setopt($http, CURLOPT_FOLLOWLOCATION, true);
 		curl_setopt($http, CURLOPT_POSTFIELDS, $data);
 		$this->_curl_addCustomOptions ($http);
 		$response = curl_exec($http);
