@@ -9,25 +9,21 @@
 */
 
 ### ANON DSN
-$couch_dsn = "http://localhost:5984/";
+ $couch_dsn = "http://localhost:5984/";
 ### AUTHENTICATED DSN
 ### $couch_dsn = "http://user:password@localhost:5984/"
-$couch_db = "example";
-
+ $couch_db = "example";
 
 /**
 * include the library
 */
 
-require_once "../lib/couch.php";
-require_once "../lib/couchClient.php";
-require_once "../lib/couchDocument.php";
+require_once "../vendor/autoload.php";
 
 /**
 * create the client
 */
-$client = new couchClient($couch_dsn,$couch_db);
-
+$client = new PHPOnCouch\Client($couch_dsn,$couch_db);
 
 
 /**
@@ -53,17 +49,12 @@ if ( in_array($couch_db,$databases) ) {
 	exit(1);
 }
 
-
-
-
-
-
 /**
 * Let's create the database
 *
 * We don't pass a database name parameter, $client uses the database name we passed in argument when creating it
 *
-* In case of failure, if exception ($e) is a couchException, the failure is "application-side" : couchDB returned 
+* In case of failure, if exception ($e) is a couchException, the failure is "application-side" : couchDB returned
 * an HTTP failure code (for example if the database already exist).
 *
 */
@@ -89,19 +80,19 @@ echo "Database successfully created. CouchDB sent the response :".print_r($resul
 
 echo "Just to see exceptions, we try to create the database (that already exist...)\n";
 try {
-        $result = $client->createDatabase();
+    $result = $client->createDatabase();
 } catch (Exception $e) {
-        if ( $e instanceof couchException ) {
-                echo "We issued the request, but couch server returned an error.\n";
-                echo "We can have HTTP Status code returned by couchDB using \$e->getCode() : ". $e->getCode()."\n";
-                echo "We can have error message returned by couchDB using \$e->getMessage() : ". $e->getMessage()."\n";
-                echo "Finally, we can have CouchDB's complete response body using \$e->getBody() : ". print_r($e->getBody(),true)."\n";
-        } else {
-                echo "It seems that something wrong happened. You can have more details using :\n";
-                echo "the exception class with get_class(\$e) : ".get_class($e)."\n";
-                echo "the exception error code with \$e->getCode() : ".$e->getCode()."\n";
-                echo "the exception error message with \$e->getMessage() : ".$e->getMessage()."\n";
-        }
+    if ( $e instanceof couchException ) {
+        echo "We issued the request, but couch server returned an error.\n";
+        echo "We can have HTTP Status code returned by couchDB using \$e->getCode() : ". $e->getCode()."\n";
+        echo "We can have error message returned by couchDB using \$e->getMessage() : ". $e->getMessage()."\n";
+        echo "Finally, we can have CouchDB's complete response body using \$e->getBody() : ". print_r($e->getBody(),true)."\n";
+    } else {
+        echo "It seems that something wrong happened. You can have more details using :\n";
+        echo "the exception class with get_class(\$e) : ".get_class($e)."\n";
+        echo "the exception error code with \$e->getCode() : ".$e->getCode()."\n";
+        echo "the exception error message with \$e->getMessage() : ".$e->getMessage()."\n";
+    }
 }
 
 
@@ -125,16 +116,13 @@ echo "Displaying database disk usage using \$db_infos->disk_size: ".$db_infos->d
 
 /**
 * Finally delete database
-*
-*
-*
 */
 echo "Deleting database\n";
 try {
-        $result = $client->deleteDatabase();
+    $result = $client->deleteDatabase();
 } catch ( Exception $e) {
-        echo "Something weird happened: ".$e->getMessage()." (errcode=".$e->getCode().")\n";
-        exit(1);
+    echo "Something weird happened: ".$e->getMessage()." (errcode=".$e->getCode().")\n";
+    exit(1);
 }
 echo "Database deleted. CouchDB response: ".print_r($result,true)."\n";
 
