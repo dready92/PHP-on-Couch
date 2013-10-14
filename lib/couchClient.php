@@ -642,7 +642,7 @@ class couchClient extends couch {
 		if ( !$doc->_id )       throw new InvalidArgumentException ("Document should have an ID");
 		if ( !is_file($file) )  throw new InvalidArgumentException ("File $file does not exist");
 		$url  = '/'.urlencode($this->dbname).'/'.urlencode($doc->_id).'/';
-		$url .= empty($filename) ? basename($file) : $filename ;
+		$url .= empty($filename) ? urlencode(basename($file)) : urlencode($filename) ;
 		if ( $doc->_rev ) $url.='?rev='.$doc->_rev;
 		$raw = $this->storeFile($url,$file,$content_type);
 		$response = $this->parseRawResponse($raw, $this->results_as_array);
