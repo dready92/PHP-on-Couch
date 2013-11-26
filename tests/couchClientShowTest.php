@@ -3,14 +3,6 @@
 // error_reporting(E_STRICT);
 error_reporting(E_ALL);
 
-require_once 'PHPUnit/Framework.php';
-
-require_once "lib/couch.php";
-require_once "lib/couchClient.php";
-require_once "lib/couchDocument.php";
-require_once "lib/couchReplicator.php";
-
-
 class couchClientShowTest extends PHPUnit_Framework_TestCase
 {
 
@@ -18,11 +10,17 @@ class couchClientShowTest extends PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->client = new couchClient($this->couch_server,"couchclienttest");
-		try {
-			$this->client->deleteDatabase();
-		} catch ( Exception $e) {}
-		$this->client->createDatabase();
+        $config = require './tests/_files/config.php';
+        $client_test1 = $config['databases']['client_test1'];
+        $admin_config = $config['databases']['client_admin'];
+
+        $this->client = new couchClient($client_test1['uri'],$client_test1['dbname']);
+        $this->aclient = new couchClient($admin_config['uri'],$admin_config['dbname']);
+        try {
+            $this->aclient->deleteDatabase();
+        } catch (Exception $e) {
+        }
+        $this->aclient->createDatabase();
     }
 
 	public function tearDown()
@@ -32,7 +30,7 @@ class couchClientShowTest extends PHPUnit_Framework_TestCase
 
 
 	public function testShow () {
-		$doc = new couchDocument($this->client);
+		$doc = new couchDocument($this->aclient);
 		$doc->_id="_design/test";
 		$show = array (
 			"simple" => "function (doc, ctx) {
@@ -76,7 +74,7 @@ class couchClientShowTest extends PHPUnit_Framework_TestCase
 		$test = $this->client->getShow("test","simple",null,array("param1"=>"value1"));
 		$this->assertEquals ( $test, "no document 1" );
 		$test = $this->client->getShow("test","json",null);
-		$this->assertType("object", $test);
+		$this->assertInternalType("object", $test);
 		$this->assertObjectHasAttribute("doc",$test);
 		$this->assertObjectHasAttribute("query_length",$test);
 	}
