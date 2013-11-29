@@ -14,9 +14,13 @@
         }
     ],
     "autoload": {
-        "classmap": ["lib/"]
+        "classmap": ["lib/","tests/"]
     },
     "require": {
         "php": ">=5.2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "~3.7",
+        "satooshi/php-coveralls": "dev-master"
     }
 }

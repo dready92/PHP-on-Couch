@@ -3,26 +3,26 @@
 // error_reporting(E_STRICT);
 error_reporting(E_ALL);
 
-require_once 'PHPUnit/Framework.php';
-
-require_once "lib/couch.php";
-require_once "lib/couchClient.php";
-require_once "lib/couchDocument.php";
-require_once "lib/couchReplicator.php";
-
 
 class couchClientTest extends PHPUnit_Framework_TestCase
 {
 
 	private $couch_server = "http://localhost:5984/";
+	private $config;
 
     public function setUp()
     {
-        $this->client = new couchClient($this->couch_server,"couchclienttest");
-		try {
-			$this->client->deleteDatabase();
-		} catch ( Exception $e) {}
-		$this->client->createDatabase();
+        $this->config = require './tests/_files/config.php';
+        $client_test1 = $this->config ['databases']['client_test1'];
+        $admin_config = $this->config ['databases']['client_admin'];
+
+        $this->client = new couchClient($client_test1['uri'],$client_test1['dbname']);
+        $this->aclient = new couchClient($admin_config['uri'],$admin_config['dbname']);
+        try {
+            $this->aclient->deleteDatabase();
+        } catch (Exception $e) {
+        }
+        $this->aclient->createDatabase();
     }
 
 	public function tearDown()
@@ -53,11 +53,12 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 	}
 
 	public function testDatabaseInfos () {
+        $client_test1 = $this->config ['databases']['client_test1'];
 		$infos = $this->client->getDatabaseInfos();
 // 		print_r($infos);
-		$this->assertType("object", $infos);
+		$this->assertInternalType("object", $infos);
 		$tsts = array(
-			'db_name' => "couchclienttest",
+			'db_name' => $client_test1['dbname'],
 			"doc_count" => 0,
 			"doc_del_count" => 0,
 			"update_seq" => 0,
@@ -76,23 +77,26 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 	}
 
 	public function testDatabaseDelete () {
-		$back = $this->client->deleteDatabase();
-		$this->assertType("object", $back);
+		$back = $this->aclient->deleteDatabase();
+		$this->assertInternalType("object", $back);
 		$this->assertObjectHasAttribute("ok",$back);
 		$this->assertEquals(true,$back->ok);
 // 		print_r($back);
 	}
 
 	public function testGetDatabaseUri () {
-		$this->assertEquals ( $this->couch_server."couchclienttest", $this->client->getDatabaseUri() );
+        $client_test1 = $this->config ['databases']['client_test1'];
+		$this->assertEquals ( $client_test1['uri']. '/' .$client_test1['dbname'], $this->client->getDatabaseUri() );
 	}
 
 	public function testGetDatabaseName () {
-		$this->assertEquals ( "couchclienttest", $this->client->getDatabaseName() );
+        $client_test1 = $this->config ['databases']['client_test1'];
+		$this->assertEquals ( $client_test1['dbname'], $this->client->getDatabaseName() );
 	}
 
 	public function testGetServerUri () {
-		$this->assertEquals ( $this->couch_server."couchclienttest", $this->client->getDatabaseUri() );
+        $client_test1 = $this->config ['databases']['client_test1'];
+		$this->assertEquals ( $client_test1['uri'], $this->client->getServerUri() );
 	}
 
 	/**
@@ -122,7 +126,7 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 		$infos2 = $this->client->getDatabaseInfos();
 		$this->assertEquals ( $infos->doc_count+1, $infos2->doc_count );
 		$doc = $this->client->getDoc("great");
-		$this->assertType("object", $doc);
+		$this->assertInternalType("object", $doc);
 		$this->assertObjectHasAttribute("type",$doc);
 		$this->assertEquals("object",$doc->type);
 	}
@@ -154,18 +158,18 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals ( $infos->doc_count, 4 );
 
 		$doc = $this->client->conflicts()->getDoc("test");
-		$this->assertType("object", $doc);
+		$this->assertInternalType("object", $doc);
 		$this->assertObjectHasAttribute("_conflicts",$doc);
-		$this->assertType("array",$doc->_conflicts);
+		$this->assertInternalType("array",$doc->_conflicts);
 		$this->assertEquals( count( $doc->_conflicts ) , 2 );
 		$data[0]->_id = "test2";
 		$data[1]->_id = "test2";
 		$data[2]->_id = "test2";
 		$stored = $this->client->storeDocs($data,false);
-		$this->assertType("array",$stored);
+		$this->assertInternalType("array",$stored);
 		$this->assertEquals( count($stored) , 3 );
 		foreach ( $stored as $s ) {
-			$this->assertType("object",$s);
+			$this->assertInternalType("object",$s);
 			$this->assertObjectHasAttribute("error",$s);
 			$this->assertEquals($s->error, "conflict");
 		}
@@ -175,12 +179,12 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 	}
 
 	public function testcompactAllViews () {
-		$cd = new couchDocument($this->client);
+		$cd = new couchDocument($this->aclient);
 		$cd->set ( array (
 			'_id' => '_design/test',
 			'language'=>'javascript'
 		) );
-		$this->client->compactAllViews();
+		$this->aclient->compactAllViews();
 	}
 
 	public function testCouchDocumentAttachment () {
@@ -190,8 +194,8 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 		) );
 		$back = $cd->storeAsAttachment("This is the content","file.txt","text/plain");
 		$fields = $cd->getFields();
-		
-		$this->assertType("object", $back);
+
+		$this->assertInternalType("object", $back);
 		$this->assertObjectHasAttribute("ok",$back);
 		$this->assertEquals( $back->ok , true );
 		$this->assertObjectHasAttribute("_attachments",$fields);
@@ -203,8 +207,8 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 		) );
 		$back = $cd->storeAttachment("lib/couch.php","text/plain","file.txt");
 		$fields = $cd->getFields();
-		
-		$this->assertType("object", $back);
+
+		$this->assertInternalType("object", $back);
 		$this->assertObjectHasAttribute("ok",$back);
 		$this->assertEquals( $back->ok , true );
 		$this->assertObjectHasAttribute("_attachments",$fields);
@@ -212,7 +216,7 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 
 		$back = $cd->deleteAttachment("file.txt");
 		$fields = $cd->getFields();
-		$this->assertType("object", $back);
+		$this->assertInternalType("object", $back);
 		$this->assertObjectHasAttribute("ok",$back);
 		$this->assertEquals( $back->ok , true );
 		$test = property_exists($fields,'_attachments');
@@ -281,7 +285,7 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 		$infos2 = $this->client->getDatabaseInfos();
 		$this->assertEquals ( $infos->doc_count+1, $infos2->doc_count );
 		$doc = $this->client->asArray()->getDoc("great");
-		$this->assertType("array", $doc);
+		$this->assertInternalType("array", $doc);
 		$this->assertArrayHasKey("type",$doc);
 		$this->assertEquals("object",$doc['type']);
 	}
