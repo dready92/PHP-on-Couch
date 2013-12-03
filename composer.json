@@ -3,7 +3,7 @@
     "type": "library",
     "description": "CouchDB NoSQL database access in PHP",
     "keywords": ["couchdb","couch", "db", "apache", "nosql","driver"],
-    "homepage": "https://github.com/dready92/PHP-on-Couch",
+    "homepage": "https://github.com/PHP-on-Couch/PHP-on-Couch",
     "license": "LGPLv3",
     "authors": [
         {
