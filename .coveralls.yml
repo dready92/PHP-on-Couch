@@ -4,4 +4,4 @@ service_name: travis-ci
 src_dir: library
 
 # glob
-coverage_clover: build/logs/clover-*.xml
+coverage_clover: build/logs/clover.xml
