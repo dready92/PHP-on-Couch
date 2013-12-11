@@ -1,7 +1,8 @@
 Introduction
 ============
 
-[![Build Status](https://travis-ci.org/PHP-on-Couch/PHP-on-Couch.png?branch=travis)](https://travis-ci.org/PHP-on-Couch/PHP-on-Couch)
+[![Build Status](https://travis-ci.org/PHP-on-Couch/PHP-on-Couch.png?branch=master)](https://travis-ci.org/PHP-on-Couch/PHP-on-Couch)
+[![Coverage Status](https://coveralls.io/repos/PHP-on-Couch/PHP-on-Couch/badge.png?branch=master)](https://coveralls.io/r/PHP-on-Couch/PHP-on-Couch)
 
 
 [PHP On Couch](http://github.com/dready92/PHP-on-Couch/) tries to provide an easy way to work with your [CouchDB](http://couchdb.apache.org) [documents](http://wiki.apache.org/couchdb/HTTP_Document_API) with [PHP](http://php.net). Some code first :
