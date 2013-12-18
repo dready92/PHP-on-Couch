@@ -132,6 +132,7 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 	}
 
 	public function testBulkDocsStorage () {
+        $this->markTestIncomplete();
 		$data = array (
 			new stdclass(),
 			new stdclass(),
