@@ -8,6 +8,7 @@ Creating views
 Example
 
     $view_fn="function(doc) { emit(doc.timestamp,null); }";
+    $design_doc = new stdClass();
     $design_doc->_id = '_design/all';
     $design_doc->language = 'javascript';
     $design_doc->views = array ( 'by_date'=> array ('map' => $view_fn ) );
