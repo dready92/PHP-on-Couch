@@ -1,0 +1,25 @@
+language: php
+php:
+    - '5.6'
+    - '7.0'
+install:
+    - composer install
+    - composer dump-autoload
+
+before_script:
+ - php ./tests/_config/_setupEnvironment.php
+ - curl -s http://admin:adminPwd@localhost:5984/_users/_all_docs | grep -o 'org.couchdb.user:[[:alnum:]]\+' | sed -n -e 's/org.couchdb.user:\(.*\)/\1/p' | sort -u
+    
+script:
+    - ./vendor/bin/phpunit --coverage-clover ./tests/logs/clover.xml --configuration ./phpunit.xml  --testsuite Ordered
+
+    
+services:
+    - couchdb
+    
+after_success:
+- php ./vendor/bin/coveralls -v
+
+
+notifications:
+  email: false

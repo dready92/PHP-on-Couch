@@ -1,3 +1,16 @@
+[![Build Status](https://travis-ci.org/popojargo/PHP-on-Couch.svg?branch=master)](https://travis-ci.org/popojargo/PHP-on-Couch)
+[![Coverage Status](https://coveralls.io/repos/github/popojargo/PHP-on-Couch/badge.svg?branch=master)](https://coveralls.io/github/popojargo/PHP-on-Couch?branch=master)
+
+#Updates
+
+Due to the lack of support on the last repository, I forked it and I will make sure it's kept active.
+I'm currently fixing basic stuff and issues on the original repository.
+
+What's coming up :
+
+- Update to 2.0
+- Rework the tests
+
 Introduction
 ============
 
