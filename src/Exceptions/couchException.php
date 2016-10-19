@@ -22,12 +22,12 @@ namespace PHPOnCouch\Exceptions;
 use Exception,
 	InvalidArgumentException;
 
-require_once __DIR__ . DIRECTORY_SEPARATOR . 'couchExpectationException.php';
-require_once __DIR__ . DIRECTORY_SEPARATOR . 'couchForbiddenException.php';
-require_once __DIR__ . DIRECTORY_SEPARATOR . 'couchExpectationException.php';
-require_once __DIR__ . DIRECTORY_SEPARATOR . 'couchNoResponseException.php';
-require_once __DIR__ . DIRECTORY_SEPARATOR . 'couchNotFoundException.php';
-require_once __DIR__ . DIRECTORY_SEPARATOR . 'couchUnauthorizedException.php';
+//require_once __DIR__ . DIRECTORY_SEPARATOR . 'couchExpectationException.php';
+//require_once __DIR__ . DIRECTORY_SEPARATOR . 'couchForbiddenException.php';
+//require_once __DIR__ . DIRECTORY_SEPARATOR . 'couchExpectationException.php';
+//require_once __DIR__ . DIRECTORY_SEPARATOR . 'couchNoResponseException.php';
+//require_once __DIR__ . DIRECTORY_SEPARATOR . 'couchNotFoundException.php';
+//require_once __DIR__ . DIRECTORY_SEPARATOR . 'couchUnauthorizedException.php';
 
 /**
  * customized Exception class for CouchDB errors

@@ -5,3 +5,6 @@
 #Composer files
 composer.lock
 /vendor
+
+#Test config
+/tests/_config/_users.php

@@ -36,19 +36,21 @@ EOT
 	public function setUp()
 	{
 		$config = config::getInstance();
-		$url = $config->getUrl($this->host, $this->port, $config->getFirstNormalUser());
-		$this->client = new couchClient($url, "couchclienttest");
+		$url = $config->getUrl($this->host, $this->port,null);
+		$aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
+		$this->client = new couchClient($url, 'couchclienttest');
+		$this->aclient = new couchClient($aUrl, 'couchclienttest');
 		try {
-			$this->client->deleteDatabase();
+			$this->aclient->deleteDatabase();
 		} catch (Exception $e) {
 			
 		}
-		$this->client->createDatabase();
+		$this->aclient->createDatabase();
 
 		$ddoc = new stdClass();
 		$ddoc->_id = "_design/test";
 		$ddoc->updates = array("test" => $this->updateFn);
-		$this->client->storeDoc($ddoc);
+		$this->aclient->storeDoc($ddoc);
 		$doc = new stdClass();
 		$doc->_id = "foo";
 		$this->client->storeDoc($doc);
@@ -57,11 +59,12 @@ EOT
 	public function tearDown()
 	{
 		$this->client = null;
+		$this->aclient = null;
 	}
 
 	public function testUpdate()
 	{
-		$update = $this->client->updateDoc("test", "test", array());
+		$update = $this->aclient->updateDoc("test", "test", array());
 		$this->assertInternalType("object", $update);
 		$this->assertObjectHasAttribute("query", $update);
 		$this->assertInternalType("object", $update->query);
@@ -73,7 +76,7 @@ EOT
 
 	public function testUpdateQuery()
 	{
-		$update = $this->client->updateDoc("test", "test", array("var1" => "val1/?\"", "var2" => "val2"));
+		$update = $this->aclient->updateDoc("test", "test", array("var1" => "val1/?\"", "var2" => "val2"));
 		$this->assertInternalType("object", $update);
 		$this->assertObjectHasAttribute("query", $update);
 		$this->assertInternalType("object", $update->query);
@@ -91,7 +94,7 @@ EOT
 
 	public function testUpdateForm()
 	{
-		$update = $this->client->updateDocFullAPI("test", "test", array(
+		$update = $this->aclient->updateDocFullAPI("test", "test", array(
 			"data" => array("var1" => "val1/?\"", "var2" => "val2")
 		));
 		$this->assertInternalType("object", $update);
@@ -108,4 +111,3 @@ EOT
 
 }
 
-?>

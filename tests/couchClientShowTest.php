@@ -7,7 +7,7 @@ use PHPOnCouch\couchClient,
 	PHPOnCouch\couchDocument,
 	PHPOnCouch\couchAdmin;
 
-require_once join(DIRECTORY_SEPARATOR,[__DIR__,'_config','config.php']);
+require_once join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'config.php']);
 
 class couchClientShowTest extends PHPUnit_Framework_TestCase
 {
@@ -18,24 +18,27 @@ class couchClientShowTest extends PHPUnit_Framework_TestCase
 	public function setUp()
 	{
 		$config = config::getInstance();
-		$url = $config->getUrl($this->host, $this->port, $config->getFirstNormalUser());
-		$this->client = new couchClient($url, "couchclienttest");
+		$url = $config->getUrl($this->host, $this->port,null);
+		$aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
+		$this->client = new couchClient($url, 'couchclienttest');
+		$this->aclient = new couchClient($aUrl, 'couchclienttest');
 		try {
-			$this->client->deleteDatabase();
+			$this->aclient->deleteDatabase();
 		} catch (Exception $e) {
 			
 		}
-		$this->client->createDatabase();
+		$this->aclient->createDatabase();
 	}
 
 	public function tearDown()
 	{
 		$this->client = null;
+		$this->aclient = null;
 	}
 
 	public function testShow()
 	{
-		$doc = new couchDocument($this->client);
+		$doc = new couchDocument($this->aclient);
 		$doc->_id = "_design/test";
 		$show = array(
 			"simple" => "function (doc, ctx) {

@@ -6,9 +6,10 @@ error_reporting(E_ALL);
 use PHPOnCouch\couchClient,
 	PHPOnCouch\couchDocument,
 	PHPOnCouch\couchAdmin,
-	PHPOnCouch\Exceptions;
+	PHPOnCouch\Exceptions,
+	PHPOnCouch\Exceptions\couchException;
 
-require_once join(DIRECTORY_SEPARATOR,[__DIR__,'_config','config.php']);
+require_once join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'config.php']);
 
 class couchClientAdminTest extends PHPUnit_Framework_TestCase
 {
@@ -21,13 +22,13 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 	public function setUp()
 	{
 		$config = config::getInstance();
-		$url = $config->getUrl($this->host, $this->port, $config->getFirstNormalUser());
+		$url = $config->getUrl($this->host, $this->port, null);
 		$aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
 		$this->client = new couchClient($url, 'couchclienttest');
 		$this->aclient = new couchClient($aUrl, 'couchclienttest');
 		try {
 			$this->aclient->deleteDatabase();
-		} catch (\Exception $e) {
+		} catch (Exception $e) {
 			
 		}
 		$this->aclient->createDatabase();
@@ -56,7 +57,9 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 //		}
 //		$this->assertEquals(302, $code);
 //// 		print_r($code);
-		$this->setExpectedException('couchException', '', 412);
+		$this->expectException(couchException::class);
+		$this->expectExceptionCode('412');
+//		$this->setExpectedException('PHPOnCouch\Exceptions\couchException', '', 412);
 		$this->aclient->createDatabase();
 	}
 
@@ -170,6 +173,9 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals(reset($security->admins->names), "joe");
 	}
 
+	/**
+	 * @depends testDatabaseAdminUser
+	 */
 	public function testDatabaseReaderUser()
 	{
 		$adm = new couchAdmin($this->aclient);
@@ -186,6 +192,10 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals(reset($security->readers->names), "jack");
 	}
 
+	/**
+	 * @depends testDatabaseReaderUser()
+	 * @covers PHPOnCouch\couchAdmin::getDatabaseAdminUsers
+	 */
 	public function testGetDatabaseAdminUsers()
 	{
 		$adm = new couchAdmin($this->aclient);
@@ -194,7 +204,10 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals(1, count($users));
 		$this->assertEquals("joe", reset($users));
 	}
-
+	
+	/**
+	 *  @depends testGetDatabaseAdminUsers()
+	 */
 	public function testGetDatabaseReaderUsers()
 	{
 		$adm = new couchAdmin($this->aclient);
@@ -242,6 +255,10 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals(count($security->readers->roles), 0);
 	}
 
+	/**
+	 * @depends testDatabaseAdminRole
+	 * @covers PHPOnCouch\couchAdmin::getDatabaseAdminRoles()
+	 */
 	public function testGetDatabaseAdminRoles()
 	{
 		$adm = new couchAdmin($this->aclient);
@@ -251,6 +268,10 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 // 		$this->assertEquals("joe",reset($users));
 	}
 
+	/**
+	 * @depends testDatabaseReaderRole
+	 * @covers PHPOnCouch\couchAdmin::getDatabaseReaderRoles()
+	 */
 	public function testGetDatabaseReaderRoles()
 	{
 		$adm = new couchAdmin($this->aclient);

@@ -7,8 +7,7 @@ use PHPOnCouch\couchClient,
 	PHPOnCouch\couchDocument,
 	PHPOnCouch\couchAdmin;
 
-
-require_once join(DIRECTORY_SEPARATOR,[__DIR__,'_config','config.php']);
+require_once join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'config.php']);
 
 class couchClientTest extends PHPUnit_Framework_TestCase
 {
@@ -19,19 +18,23 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 	public function setUp()
 	{
 		$config = config::getInstance();
-		$url = $config->getUrl($this->host, $this->port, $config->getFirstNormalUser());
-		 $this->client = new couchClient($url, "couchclienttest");
+		$this->url = $config->getUrl($this->host, $this->port, null);
+		$this->aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
+		$this->couch_server = 'http://' . $this->host . ':' . $this->port . '/';
+		$this->client = new couchClient($this->url, 'couchclienttest');
+		$this->aclient = new couchClient($this->aUrl, 'couchclienttest');
 		try {
-			$this->client->deleteDatabase();
+			$this->aclient->deleteDatabase();
 		} catch (\Exception $e) {
 			
 		}
-		$this->client->createDatabase();
+		$this->aclient->createDatabase();
 	}
 
 	public function tearDown()
 	{
 		$this->client = null;
+		$this->aclient = null;
 	}
 
 	public function testDatabaseNameValidator()
@@ -82,7 +85,7 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 
 	public function testDatabaseDelete()
 	{
-		$back = $this->client->deleteDatabase();
+		$back = $this->aclient->deleteDatabase();
 		$this->assertInternalType("object", $back);
 		$this->assertObjectHasAttribute("ok", $back);
 		$this->assertEquals(true, $back->ok);
@@ -178,6 +181,8 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 		$this->assertInternalType("array", $stored);
 		$this->assertEquals(count($stored), 3);
 		foreach ($stored as $s) {
+			if ($s == reset($stored))
+				continue; //Skip first document because he's legit.
 			$this->assertInternalType("object", $s);
 			$this->assertObjectHasAttribute("error", $s);
 			$this->assertEquals($s->error, "conflict");
@@ -189,17 +194,17 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 
 	public function testcompactAllViews()
 	{
-		$cd = new couchDocument($this->client);
+		$cd = new couchDocument($this->aclient);
 		$cd->set(array(
 			'_id' => '_design/test',
 			'language' => 'javascript'
 		));
-		$this->client->compactAllViews();
+		$this->aclient->compactAllViews();
 	}
 
 	public function testCouchDocumentAttachment()
 	{
-		$cd = new couchDocument($this->client);
+		$cd = new couchDocument($this->aclient);
 		$cd->set(array(
 			'_id' => 'somedoc'
 		));
@@ -216,7 +221,7 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 		$cd->set(array(
 			'_id' => 'somedoc2'
 		));
-		$back = $cd->storeAttachment("src/couch.php", "text/plain", "file.txt");
+		$back = $cd->storeAttachment(join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']), "text/plain", "file.txt");
 		$fields = $cd->getFields();
 
 		$this->assertInternalType("object", $back);

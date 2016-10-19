@@ -20,23 +20,26 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 	{
 		$config = config::getInstance();
 		$url = $config->getUrl($this->host, $this->port, $config->getFirstNormalUser());
-		$this->client = new couchClient($url, "couchclienttest");
+		$aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
+		$this->client = new couchClient($url, 'couchclienttest');
+		$this->aclient = new couchClient($aUrl, 'couchclienttest');
 		try {
-			$this->client->deleteDatabase();
+			$this->aclient->deleteDatabase();
 		} catch (Exception $e) {
 			
 		}
-		$this->client->createDatabase();
+		$this->aclient->createDatabase();
 	}
 
 	public function tearDown()
 	{
 		$this->client = null;
+		$this->aclient = null;
 	}
 
 	protected function _makeView()
 	{
-		$doc = new couchDocument($this->client);
+		$doc = new couchDocument($this->aclient);
 		$doc->_id = "_design/test";
 		$views = array();
 		$map = "function (doc) {

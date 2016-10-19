@@ -1,18 +1,24 @@
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/4.5/phpunit.xsd" backupGlobals="true" backupStaticAttributes="false" bootstrap="./vendor/autoload.php" cacheTokens="false" colors="false" addUncoveredFilesFromWhitelist="true" convertErrorsToExceptions="true" convertNoticesToExceptions="true" convertWarningsToExceptions="true">
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/4.5/phpunit.xsd" bootstrap="./vendor/autoload.php">
     <testsuites>
         <testsuite name="Global">
-        <directory>./tests</directory>
+            <directory>./tests</directory>
         </testsuite>
         <testsuite name="Admin">
             <file>./tests/couchClientAdminTest.php</file>
         </testsuite>
         <testsuite name="Ordered">
-         <file>./tests/couchClientListTest.php</file>
-         <file>./tests/couchClientShowTest.php</file>
-         <file>./tests/couchClientTest.php</file>
-         <file>./tests/couchClientUpdateDocTest.php</file>
-         <file>./tests/couchClientViewTest</file>
-         <file>./tests/couchClientAdminTest.php</file>
+            <file>./tests/couchClientListTest.php</file>
+            <file>./tests/couchClientShowTest.php</file>
+            <file>./tests/couchClientTest.php</file>
+            <file>./tests/couchClientUpdateDocTest.php</file>
+            <file>./tests/couchClientViewTest</file>
+            <file>./tests/couchClientAdminTest.php</file>
         </testsuite>
     </testsuites>
+    <logging>
+        <log type="coverage-text" target="php://stdout" />
+    </logging>
+    <whitelist addUncoveredFilesFromWhitelist="true" processUncoveredFilesFromWhitelist="true">
+        <directory suffix=".php">./src/</directory>
+    </whitelist>
 </phpunit>

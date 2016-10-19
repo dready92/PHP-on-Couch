@@ -1,19 +1,21 @@
 <?php
 
-$config = require __DIR__ . DIRECTORY_SEPARATOR . '_users.php';
+require __DIR__ . DIRECTORY_SEPARATOR . 'config.php';
+$config = config::getInstance();
+$users = $config->getUsers();
 
 //Loop through config
 $admins = [];
-$host = 'localhost:5984/';
-foreach ($config as $val) {
+$host = 'localhost:5984';
+foreach ($users as $val) {
 	if ($val['isAdmin']) {
 		$admins[] = $val;
 		continue;
 	}
-	createUser($host, $val['username'], $config['password']);
+//	createUser($host, $val['username'], $val['password']);
 }
 
-$adminHost = 'localhost:5984/';
+$adminHost = 'localhost:5984';
 foreach ($admins as $val) {
 	createAdmin($adminHost, $val['username'], $val['password']);
 	//We change the adminHost since we won't have any more the admin party.

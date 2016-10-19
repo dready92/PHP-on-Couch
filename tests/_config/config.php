@@ -30,7 +30,14 @@ class config
 
 	private function __construct()
 	{
-		$this->users = require __DIR__ . DIRECTORY_SEPARATOR . '_users.php';
+		$this->users = [];
+		$path = __DIR__ . DIRECTORY_SEPARATOR . '_users.php';
+		$defaultPath = __DIR__ . DIRECTORY_SEPARATOR . 'defaultUsers.php';
+		if (file_exists($path)) {
+			$this->users = require $path;
+		} else {
+			$this->users = require $defaultPath;
+		}
 	}
 
 	public function getFirstNormalUser()
@@ -55,6 +62,11 @@ class config
 			return 'http://' . urlencode($user['username']) . ':' . urlencode($user['password']) . '@' . $host . ':' . $port . '/';
 		else
 			return "http://$host:$port/";
+	}
+
+	public function getUsers()
+	{
+		return $this->users;
 	}
 
 	public static function getInstance()
