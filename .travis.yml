@@ -10,11 +10,14 @@ before_script:
   - php ./tests/_config/_setupEnvironment.php
  
 script:
+    - docker run -d -p 5984:5984 klaemo/couchdb:1.6.1"
     - vendor/bin/phpunit --coverage-clover ./tests/logs/clover.xml --configuration ./phpunit.xml  --testsuite Ordered
-
+    - docker stop $(docker ps -a -q)
+    - docker run -d -p 5984:5984 klaemo/couchdb:2.0-dev --with-haproxy --with-admin-party-please -n 1
+    - vendor/bin/phpunit --coverage-clover ./tests/logs/clover.xml --configuration ./phpunit.xml  --testsuite Ordered
     
 services:
-    - couchdb
+    -docker
     
 after_success:
 - php vendor/bin/coveralls -v
