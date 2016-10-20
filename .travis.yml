@@ -1,27 +1,47 @@
 language: php
 php:
-    - '5.6'
-    - '7.0'
+    - 5.6
+    - 7.0
+    - hhvm
+
+services:
+    - docker
+#env:
+#    matrix:
+#    - DOCKERRUN="docker run -d -p 5984:5984 klaemo/couchdb:1.6.1"
+#    - DOCKERRUN="docker run -it klaemo/couchdb:2.0-dev --admin=foo:bar"
+
 install:
-    - composer install
-    - composer dump-autoload
+  - composer self-update
+  - composer install --prefer-source --no-interaction --dev
+  - composer dump-autoload
+
+sudo: 
+  required
+
+before_install:
+#    - git clone https://github.com/klaemo/docker-couchdb.git
+#    - cd docker-couchdb
+#    - mkdir couchdb && cd ./couchdb
+#    - $DOCKERRUN
+    - docker run -d -it -p 5984:5984 klaemo/couchdb:2.0-dev --with-admin-party-please --with-haproxy
+    - sleep 5
+#    - cd ../../
 
 before_script:
-  - php ./tests/_config/_setupEnvironment.php
- 
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+
 script:
-    - docker run -d -p 5984:5984 klaemo/couchdb:1.6.1"
+    - curl http://localhost:5984
+    - php ./tests/_config/_setupEnvironment.php
     - vendor/bin/phpunit --coverage-clover ./tests/logs/clover.xml --configuration ./phpunit.xml  --testsuite Ordered
-    - docker stop $(docker ps -a -q)
-    - docker run -d -p 5984:5984 klaemo/couchdb:2.0-dev --with-haproxy --with-admin-party-please -n 1
-    - vendor/bin/phpunit --coverage-clover ./tests/logs/clover.xml --configuration ./phpunit.xml  --testsuite Ordered
-    
-services:
-    -docker
+
     
 after_success:
 - php vendor/bin/coveralls -v
 
-
-notifications:
-  email: false
+matrix:
+  allow_failures:
+    - php: hhvm
+  fast_finish: true
