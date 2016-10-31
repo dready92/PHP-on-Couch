@@ -1,23 +1,23 @@
-This section give details on using the couchReplicator object.
+This section give details on using the CouchReplicator object.
 
 Replication of CouchDB databases
 ================================
 
 CouchDB supports replicating a database on other CouchDB databases. Think of replication as a copy-paste operation on databases.
 
-The couchReplicator object is a simple abstraction of the CouchDB replication model. Those replication features are available in CouchDB 0.11 . At the time of this coding, canceling a continuous replication doesn't seem to always work.
+The CouchReplicator object is a simple abstraction of the CouchDB replication model. Those replication features are available in CouchDB 0.11 . At the time of this coding, canceling a continuous replication doesn't seem to always work.
 
-To create a new couchReplicator object, you first have to include necessary files, and then instanciate the object, passing in argument a couchClient instance.
+To create a new CouchReplicator object, you first have to include necessary files, and then instanciate the object, passing in argument a CouchClient instance.
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchDocument.php";
-    require_once "lib/couchReplicator.php";
+     use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin,
+        PHPOnCouch\CouchReplicator;
     
-    $client = new couchClient ("http://localhost:5984/","mydb" );
+    $client = new CouchClient ("http://localhost:5984/","mydb" );
     // I create a replicator instance
-    $replicator = new couchReplicator($client);
+    $replicator = new CouchReplicator($client);
 
 
 Replication Basics
@@ -27,9 +27,9 @@ To replicate a database to another existing database, use the **to()** method.
 
 Example :
 
-    $client = new couchClient ("http://localhost:5984/","mydb" );
+    $client = new CouchClient ("http://localhost:5984/","mydb" );
     // I create a replicator instance
-    $replicator = new couchReplicator($client);
+    $replicator = new CouchReplicator($client);
     $response = $replicator->to("http://another.server.com:5984/mydb");
     // database http://localhost:5984/mydb will be replicated to http://another.server.com:5984/mydb
 
@@ -87,8 +87,8 @@ Example :
 
     // setup a continuous replication
     $replicator->continuous()->from("http://another.server.com:5984/mydb");
-    // create a couchClient instance on the source database
-    $client2 = new couchClient("http://another.server.com:5984/","mydb");
+    // create a CouchClient instance on the source database
+    $client2 = new CouchClient("http://another.server.com:5984/","mydb");
     // create and record a document on the source database
     $doc = new stdClass();
     $doc->_id = "some_doc_on_another_server";
@@ -118,10 +118,10 @@ Filtered replication
 
 To have a full control over which document should be replicated, setup a filter definition on the source database. Then use the **filter()** chainable method to filter replicated documents.
 
-    // create a couchClient instance pointing to the source database
-    $source_client = new couchClient("http://localhost:5984","mydb");
-    // create a couchClient instance pointing to the target database
-    $target_client = new couchClient("http://another.server.com:5984","mydb")
+    // create a CouchClient instance pointing to the source database
+    $source_client = new CouchClient("http://localhost:5984","mydb");
+    // create a CouchClient instance pointing to the target database
+    $target_client = new CouchClient("http://another.server.com:5984","mydb")
     
     // create a design doc
     $doc = new stdClass();
@@ -140,8 +140,8 @@ To have a full control over which document should be replicated, setup a filter 
     // store the design doc in the SOURCE database
     $target_client->storeDoc($doc);
     
-    //create a couchReplicator instance on the destination database
-    $replicator = new couchReplicator($target_client);
+    //create a CouchReplicator instance on the destination database
+    $replicator = new CouchReplicator($target_client);
     
     // replicate source database to target database, using the "no_design_doc" filter
     $replicator->filter('replication_rules/no_design_doc')->from($source_client->getDatabaseUri());
@@ -152,10 +152,10 @@ Using request parameters in replication filters
 Filters can have a query parameters. This allows more generic filter codes.
 Let's modify the filter code above to pass the string to compare the document id to via query parameters :
 
-    // create a couchClient instance pointing to the source database
-    $source_client = new couchClient("http://localhost:5984","mydb");
-    // create a couchClient instance pointing to the target database
-    $target_client = new couchClient("http://another.server.com:5984","mydb")
+    // create a CouchClient instance pointing to the source database
+    $source_client = new CouchClient("http://localhost:5984","mydb");
+    // create a CouchClient instance pointing to the target database
+    $target_client = new CouchClient("http://another.server.com:5984","mydb")
     
     // create a design doc
     $doc = new stdClass();
@@ -174,16 +174,16 @@ Let's modify the filter code above to pass the string to compare the document id
     // store the design doc in the SOURCE database
     $target_client->storeDoc($doc);
     
-    //create a couchReplicator instance on the destination database
-    $replicator = new couchReplicator($target_client);
+    //create a CouchReplicator instance on the destination database
+    $replicator = new CouchReplicator($target_client);
     
     // replicate source database to target database, using the "no_str_in_doc" filter, and setting needle to "_design"
     $params = array ("needle"=>"_design");
     $replicator->query_params($params)->filter('replication_rules/no_str_in_doc')->from($source_client->getDatabaseUri());
 
-Replication of individual couchDocuments
+Replication of individual CouchDocuments
 ========================================
 
-Please read the couchDocument documentation to learn how to simply replicate a document to or from a database to another
+Please read the CouchDocument documentation to learn how to simply replicate a document to or from a database to another
 
 
