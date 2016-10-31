@@ -16,8 +16,9 @@ sudo:
   required
 
 before_install:
-    - docker run -d -it -p 5984:5984 klaemo/couchdb:1.6.1
+    - docker run -d -it -p 5984:5984 klaemo/couchdb:latest
     - sleep 5
+    - curl -X PUT http://127.0.0.1:5984/_users  && curl -X PUT http://127.0.0.1:5984/_replicator && curl -X PUT http://127.0.0.1:5984/_global_changes
 
 before_script:
   - "export DISPLAY=:99.0"
@@ -25,7 +26,7 @@ before_script:
 
 script:
     - curl http://localhost:5984
-    - php ./tests/_config/_setupEnvironment.php
+    - php ./tests/_config/_setupEnvironment.php "nonode@nohost"
     - vendor/bin/phpunit --coverage-clover ./tests/logs/clover.xml --configuration ./phpunit.xml  --testsuite Ordered
 
     

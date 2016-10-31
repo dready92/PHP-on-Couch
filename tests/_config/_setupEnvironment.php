@@ -7,6 +7,7 @@ $users = $config->getUsers();
 //Loop through config
 $admins = [];
 $host = 'localhost:5984';
+$nodeName = (sizeof($argv) > 1 && isset($argv[1])) ? $argv[1] : null;
 foreach ($users as $val) {
 	if ($val['isAdmin']) {
 		$admins[] = $val;
@@ -17,7 +18,7 @@ foreach ($users as $val) {
 
 $adminHost = 'localhost:5984';
 foreach ($admins as $val) {
-	createAdmin($adminHost, $val['username'], $val['password']);
+	createAdmin($adminHost, $val['username'], $val['password'], $nodeName);
 	//We change the adminHost since we won't have any more the admin party.
 	if ($adminHost === $host)
 		$adminHost = urlencode($val['username']) . ':' . urlencode($val['password']) . '@' . $host;
@@ -29,9 +30,12 @@ foreach ($admins as $val) {
  * @param String $user	Username to add
  * @param String $password	Password of the new user
  */
-function createAdmin($host, $user, $password)
+function createAdmin($host, $user, $password, $nodeName)
 {
-	$url = $host . '/_config/admins/' . $user;
+	$node = null;
+	if (!empty($nodeName))
+		$node = "/_node/$nodeName";
+	$url = $host . ($node != null ? $node : '') . '/_config' . "/admins/$user";
 	$data = json_encode($password);
 	$method = 'PUT';
 	_request($url, $data, $method);
