@@ -48,7 +48,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 
 	public function testAdminIsSet()
 	{
-//		//$this->setExpectedException('couchException');
+//		//$this->setExpectedException('CouchException');
 //		$code = 0;
 //		try {
 //			$this->client->createDatabase("test");
@@ -59,7 +59,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 //// 		print_r($code);
 		$this->expectException(CouchException::class);
 		$this->expectExceptionCode('412');
-//		$this->setExpectedException('PHPOnCouch\Exceptions\couchException', '', 412);
+//		$this->setExpectedException('PHPOnCouch\Exceptions\CouchException', '', 412);
 		$this->aclient->createDatabase();
 	}
 

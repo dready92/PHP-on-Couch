@@ -157,6 +157,6 @@ class CouchReplicator {
 		if ( array_key_exists('continuous',$opts) && $opts['continuous'] == true && $resp['status_code'] == 202 ) {
 			return $resp['body'];
 		}
-		throw new couchException($raw);
+		throw new CouchException($raw);
 	}
 }

@@ -108,7 +108,7 @@ class CouchAdmin
 	 * @param string $password administrator password
 	 * @param array $roles add additionnal roles to the new admin
 	 * @return stdClass CouchDB server response
-	 * @throws InvalidArgumentException|Exception|couchException
+	 * @throws InvalidArgumentException|Exception|CouchException
 	 */
 	public function createAdmin($login, $password, $roles = array())
 	{
@@ -151,7 +151,7 @@ class CouchAdmin
 	 *
 	 * @param string $login administrator login
 	 * @return stdClass CouchDB server response
-	 * @throws InvalidArgumentException|couchException
+	 * @throws InvalidArgumentException|CouchException
 	 */
 	public function deleteAdmin($login)
 	{
@@ -339,7 +339,7 @@ class CouchAdmin
 	 * @link http://wiki.apache.org/couchdb/Security_Features_Overview
 	 * @param stdClass $security the security object to apply to the database
 	 * @return stdClass CouchDB server response ( { "ok": true } )
-	 * @throws InvalidArgumentException|couchException
+	 * @throws InvalidArgumentException|CouchException
 	 */
 	public function setSecurity($security)
 	{
@@ -576,7 +576,7 @@ class CouchAdmin
 	 *
 	 * @param string $role role name
 	 * @return boolean true if the role has successfuly been removed
-	 * @throws InvalidArgumentException|couchException
+	 * @throws InvalidArgumentException|CouchException
 	 */
 	public function removeDatabaseAdminRole($role)
 	{

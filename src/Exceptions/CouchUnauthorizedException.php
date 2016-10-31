@@ -20,7 +20,7 @@
 namespace PHPOnCouch\Exceptions;
 
 /**
- * Description of couchUnauthorizedException
+ * Description of CouchUnauthorizedException
  *
  * @author Alexis
  */

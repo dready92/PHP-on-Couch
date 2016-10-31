@@ -20,7 +20,7 @@
 namespace PHPOnCouch\Exceptions;
 
 /**
- * Description of couchConflictException
+ * Description of CouchConflictException
  *
  * @author Alexis
  */

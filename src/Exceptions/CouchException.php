@@ -22,13 +22,6 @@ namespace PHPOnCouch\Exceptions;
 use Exception,
 	InvalidArgumentException;
 
-//require_once __DIR__ . DIRECTORY_SEPARATOR . 'couchExpectationException.php';
-//require_once __DIR__ . DIRECTORY_SEPARATOR . 'couchForbiddenException.php';
-//require_once __DIR__ . DIRECTORY_SEPARATOR . 'couchExpectationException.php';
-//require_once __DIR__ . DIRECTORY_SEPARATOR . 'couchNoResponseException.php';
-//require_once __DIR__ . DIRECTORY_SEPARATOR . 'couchNotFoundException.php';
-//require_once __DIR__ . DIRECTORY_SEPARATOR . 'couchUnauthorizedException.php';
-
 /**
  * customized Exception class for CouchDB errors
  *
@@ -41,9 +34,9 @@ class CouchException extends Exception
 {
 
 	// CouchDB response codes we handle specialized exceptions
-	protected static $code_subtypes = array(404 => 'couchNotFoundException', 403 => 'couchForbiddenException', 401 => 'couchUnauthorizedException', 417 => 'couchExpectationException');
+	protected static $code_subtypes = array(404 => 'CouchNotFoundException', 403 => 'CouchForbiddenException', 401 => 'CouchUnauthorizedException', 417 => 'CouchExpectationException');
 	// more precise response problem
-	protected static $status_subtypes = array('Conflict' => 'couchConflictException');
+	protected static $status_subtypes = array('Conflict' => 'CouchConflictException');
 	// couchDB response once parsed
 	protected $couch_response = array();
 
@@ -138,7 +131,7 @@ class CouchException extends Exception
  * Description of couchExpectationException
  *
  */
-//class couchExpectationException extends couchException
+//class couchExpectationException extends CouchException
 //{
 //	//put your code here
 //}

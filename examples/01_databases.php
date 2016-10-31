@@ -63,7 +63,7 @@ if ( in_array($couch_db,$databases) ) {
 *
 * We don't pass a database name parameter, $client uses the database name we passed in argument when creating it
 *
-* In case of failure, if exception ($e) is a couchException, the failure is "application-side" : couchDB returned 
+* In case of failure, if exception ($e) is a CouchException, the failure is "application-side" : couchDB returned 
 * an HTTP failure code (for example if the database already exist).
 *
 */

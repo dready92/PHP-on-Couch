@@ -220,7 +220,7 @@ class Couch {
 	*
 	* @return string|false server response on success, false on error
 	*
-	* @throws Exception|InvalidArgumentException|couchException|couchNoResponseException
+	* @throws Exception|InvalidArgumentException|CouchException|CouchNoResponseException
 	*/
 	public function continuousQuery($callable,$method,$url,$parameters = array(),$data = null) {
 		if ( !in_array($method, $this->HTTP_METHODS )    )
@@ -248,12 +248,12 @@ class Couch {
 		$split=explode(" ",trim(reset($headers)));
 		$code = $split[1];
 		unset($split);
-        //If an invalid response is sent, read the rest of the response and throw an appropriate couchException
+        //If an invalid response is sent, read the rest of the response and throw an appropriate CouchException
         if (!in_array($code,array(200,201))) {
             stream_set_blocking($this->socket,false);
             $response .= stream_get_contents($this->socket);
             fclose($this->socket);
-            throw couchException::factory($response, $method, $url, $parameters);
+            throw CouchException::factory($response, $method, $url, $parameters);
         }
 
         //For as long as the socket is open, read lines and pass them to the callback
