@@ -1,18 +1,18 @@
 [![Build Status](https://travis-ci.org/popojargo/PHP-on-Couch.svg?branch=master)](https://travis-ci.org/popojargo/PHP-on-Couch)
 [![Coverage Status](https://coveralls.io/repos/github/popojargo/PHP-on-Couch/badge.svg?branch=master)](https://coveralls.io/github/popojargo/PHP-on-Couch?branch=master)
-#1.6.1
-To access PHP-on-Couch for CouchDB 2.0, please visit [this link](https://github.com/popojargo/PHP-on-Couch).
+#2.0.0
+To access PHP-on-Couch for CouchDB 1.6.1, please visit [this link](http://github.com/popojargo/PHP-on-Couch/blob/1.6.1).
 
 ##What's new
 
 Due to the lack of support on the last repository, I forked it and I will make sure it's kept active.
 
 
-With the new release of 2.0, the master branch will support only 1.6.1. The new version is 99% compatible but there are few incompatibilities between the version. If the same tests/functions are updated from one version to the other, I'll try to keep them synced.
+With the new release of 2.0, the master branch will support only this version.
 
 ##Changes
 
-Since I forked the origin branch, I updated the library a bit. We are now using Namespaces for the whole library. It's cleaner to use it with an autoloader.
+Since I forked the origin branch, I updated the library a bit. We are now using Namespaces for the whole library. It's cleaner to use it with an autoloader. Please take a look to the updated examples for more details.
 
 
 
@@ -81,15 +81,15 @@ CouchClient class
 
 This class maps all the actions the application can do on the CouchDB server. Documentation is split in three main topics :
 
-### [database stuff](http://github.com/popojargo/PHP-on-Couch/blob/1.6.1/doc/couch_client-database.md)
+### [database stuff](http://github.com/popojargo/PHP-on-Couch/blob/master/doc/couch_client-database.md)
 
 list databases, create and delete a database, retrieve database informations, test whether a database exists, get uuids, get databases changes
 
-### [document stuff](http://github.com/popojargo/PHP-on-Couch/blob/1.6.1/doc/couch_client-document.md)
+### [document stuff](http://github.com/popojargo/PHP-on-Couch/blob/master/doc/couch_client-document.md)
 
 fetching and storing documents, copy a document, store and delete document attachments, getting all documents
 
-### [view stuff](http://github.com/popojargo/PHP-on-Couch/blob/1.6.1/doc/couch_client-view.md)
+### [view stuff](http://github.com/popojargo/PHP-on-Couch/blob/master/doc/couch_client-view.md)
 
 calling a view with query options : key, startkey, endkey, limit, stale, ...
 
@@ -98,12 +98,12 @@ CouchDocument class
 
 Easing the manipulation of documents, the CouchDocument class uses PHP magic getters and setters.
 
-[CouchReplicator class](http://github.com/popojargo/PHP-on-Couch/blob/1.6.1/doc/couch_replicator.md)
+[CouchReplicator class](http://github.com/popojargo/PHP-on-Couch/blob/master/doc/couch_replicator.md)
 ---------------------
 
 A dedicated class to manage replications over different instances of CouchDB databases.
 
-[CouchAdmin class](http://github.com/popojargo/PHP-on-Couch/blob/1.6.1/doc/couch_admin.md)
+[CouchAdmin class](http://github.com/popojargo/PHP-on-Couch/blob/master/doc/couch_admin.md)
 ----------------
 
 A class to manage users and database/users associations
@@ -150,14 +150,14 @@ Don't hesitate to submit feedback, bugs and feature requests ! My contact addres
 Resources
 =========
 
-[Database API](http://github.com/popojargo/PHP-on-Couch/blob/1.6.1/doc/couch_client-database.md)
+[Database API](http://github.com/popojargo/PHP-on-Couch/blob/master/doc/couch_client-database.md)
 
-[Document API](http://github.com/popojargo/PHP-on-Couch/blob/1.6.1/doc/couch_client-document.md)
+[Document API](http://github.com/popojargo/PHP-on-Couch/blob/master/doc/couch_client-document.md)
 
-[View API](http://github.com/popojargo/PHP-on-Couch/blob/1.6.1/doc/couch_client-view.md)
+[View API](http://github.com/popojargo/PHP-on-Couch/blob/master/doc/couch_client-view.md)
 
-[couchDocument API](http://github.com/popojargo/PHP-on-Couch/blob/1.6.1/doc/couch_document.md)
+[couchDocument API](http://github.com/popojargo/PHP-on-Couch/blob/master/doc/couch_document.md)
 
-[couchReplicator API](http://github.com/popojargo/PHP-on-Couch/blob/1.6.1/doc/couch_replicator.md)
+[couchReplicator API](http://github.com/popojargo/PHP-on-Couch/blob/master/doc/couch_replicator.md)
 
-[couchAdmin API](http://github.com/popojargo/PHP-on-Couch/blob/1.6.1/doc/couch_admin.md)
+[couchAdmin API](http://github.com/popojargo/PHP-on-Couch/blob/master/doc/couch_admin.md)

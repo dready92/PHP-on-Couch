@@ -20,7 +20,7 @@
 namespace PHPOnCouch\Exceptions;
 
 /**
- * Description of couchNotFoundException
+ * Description of CouchNotFoundException
  *
  * @author Alexis
  */

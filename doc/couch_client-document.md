@@ -3,7 +3,7 @@ This section details the available methods to work with documents
 Getting all documents
 =====================
 
-The method **getAllDocs()** retrieve all documents from the database. In fact it only retrieve document IDs, unless you specify the server to include the documents using the [View query parameters syntax](http://github.com/popojargo/PHP-on-Couch/blob/1.6.1/doc/couch_client-view.md).
+The method **getAllDocs()** retrieve all documents from the database. In fact it only retrieve document IDs, unless you specify the server to include the documents using the [View query parameters syntax](http://github.com/popojargo/PHP-on-Couch/blob/master/doc/couch_client-view.md).
 
 Example :
     
