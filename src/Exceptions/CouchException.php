@@ -37,7 +37,7 @@ use Exception,
  * and adds a method getBody() to fetch the body sent by the server (if any)
  *
  */
-class couchException extends Exception
+class CouchException extends Exception
 {
 
 	// CouchDB response codes we handle specialized exceptions
@@ -72,7 +72,7 @@ class couchException extends Exception
 		if (is_string($response))
 			$response = self::parseRawResponse($response);
 		if (!$response)
-			return new couchNoResponseException();
+			return new CouchNoResponseException();
 		if (isset($response['status_code']) and isset(self::$code_subtypes[$response['status_code']])) {
 			$class = __NAMESPACE__ . '\\' . self::$code_subtypes[$response['status_code']];
 			return new $class($response, $method, $url, $parameters);

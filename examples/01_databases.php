@@ -71,7 +71,7 @@ echo "Creating database ".$client->getDatabaseUri().': $result = $client->create
 try {
 	$result = $client->createDatabase();
 } catch (Exception $e) {
-	if ( $e instanceof couchException ) {
+	if ( $e instanceof CouchException ) {
 		echo "We issued the request, but couch server returned an error.\n";
 		echo "We can have HTTP Status code returned by couchDB using \$e->getCode() : ". $e->getCode()."\n";
 		echo "We can have error message returned by couchDB using \$e->getMessage() : ". $e->getMessage()."\n";
@@ -91,7 +91,7 @@ echo "Just to see exceptions, we try to create the database (that already exist.
 try {
         $result = $client->createDatabase();
 } catch (Exception $e) {
-        if ( $e instanceof couchException ) {
+        if ( $e instanceof CouchException ) {
                 echo "We issued the request, but couch server returned an error.\n";
                 echo "We can have HTTP Status code returned by couchDB using \$e->getCode() : ". $e->getCode()."\n";
                 echo "We can have error message returned by couchDB using \$e->getMessage() : ". $e->getMessage()."\n";

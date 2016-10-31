@@ -17,7 +17,7 @@
 
 namespace PHPOnCouch;
 
-use PHPOnCouch\Exceptions\couchException,
+use PHPOnCouch\Exceptions\CouchException,
 	stdClass,
 	InvalidArgumentException,
 	Exception;
@@ -32,7 +32,7 @@ use PHPOnCouch\Exceptions\couchException,
  *
  *
  */
-class couchAdmin
+class CouchAdmin
 {
 
 	/**
@@ -48,10 +48,10 @@ class couchAdmin
 	/**
 	 * constructor
 	 *
-	 * @param couchClient $client the couchClient instance
+	 * @param CouchClient $client the couchClient instance
 	 * @param array $options array. For now the only option is "users_database" to override the defaults "_users"
 	 */
-	public function __construct(couchClient $client, $options = array())
+	public function __construct(CouchClient $client, $options = array())
 	{
 		$this->client = $client;
 		if (is_array($options) && isset($options["users_database"])) {
@@ -128,15 +128,15 @@ class couchAdmin
 		} catch (Exception $e) {
 			throw $e;
 		}
-		$resp = couch::parseRawResponse($raw);
+		$resp = Couch::parseRawResponse($raw);
 		if ($resp['status_code'] != 200) {
-			throw new couchException($raw);
+			throw new CouchException($raw);
 		}
 
 		$dsn = $this->client->dsn_part();
 		$dsn["user"] = $login;
 		$dsn["pass"] = $password;
-		$client = new couchClient($this->build_url($dsn), $this->usersdb, $this->client->options());
+		$client = new CouchClient($this->build_url($dsn), $this->usersdb, $this->client->options());
 		$user = new stdClass();
 		$user->name = $login;
 		$user->type = "user";
@@ -161,7 +161,7 @@ class couchAdmin
 		}
 
 		try {
-			$client = new couchClient($this->client->dsn(), $this->usersdb);
+			$client = new CouchClient($this->client->dsn(), $this->usersdb);
 			$doc = $client->getDoc("org.couchdb.user:" . $login);
 			$client->deleteDoc($doc);
 		} catch (Exception $e) {
@@ -172,9 +172,9 @@ class couchAdmin
 		$raw = $this->client->query(
 				"DELETE", $url
 		);
-		$resp = couch::parseRawResponse($raw);
+		$resp = Couch::parseRawResponse($raw);
 		if ($resp['status_code'] != 200) {
-			throw new couchException($raw);
+			throw new CouchException($raw);
 		}
 		return $resp["body"];
 	}
@@ -204,7 +204,7 @@ class couchAdmin
 		$user->type = "user";
 		$user->roles = $roles;
 		$user->_id = "org.couchdb.user:" . $login;
-		$client = new couchClient($this->client->dsn(), $this->usersdb, $this->client->options());
+		$client = new CouchClient($this->client->dsn(), $this->usersdb, $this->client->options());
 		return $client->storeDoc($user);
 	}
 
@@ -221,7 +221,7 @@ class couchAdmin
 		if (strlen($login) < 1) {
 			throw new InvalidArgumentException("Login can't be empty");
 		}
-		$client = new couchClient($this->client->dsn(), $this->usersdb);
+		$client = new CouchClient($this->client->dsn(), $this->usersdb);
 		$doc = $client->getDoc("org.couchdb.user:" . $login);
 		return $client->deleteDoc($doc);
 	}
@@ -238,7 +238,7 @@ class couchAdmin
 		if (strlen($login) < 1) {
 			throw new InvalidArgumentException("Login can't be empty");
 		}
-		$client = new couchClient($this->client->dsn(), $this->usersdb, $this->client->options());
+		$client = new CouchClient($this->client->dsn(), $this->usersdb, $this->client->options());
 		return $client->getDoc("org.couchdb.user:" . $login);
 	}
 
@@ -250,7 +250,7 @@ class couchAdmin
 	 */
 	public function getAllUsers($include_docs = false)
 	{
-		$client = new couchClient($this->client->dsn(), $this->usersdb, $this->client->options());
+		$client = new CouchClient($this->client->dsn(), $this->usersdb, $this->client->options());
 		if ($include_docs) {
 			$client->include_docs(true);
 		}
@@ -310,7 +310,7 @@ class couchAdmin
 	 *
 	 * @link http://wiki.apache.org/couchdb/Security_Features_Overview
 	 * @return stdClass security object of the database
-	 * @throws couchException
+	 * @throws CouchException
 	 */
 	public function getSecurity()
 	{
@@ -318,9 +318,9 @@ class couchAdmin
 		$raw = $this->client->query(
 				"GET", "/" . $dbname . "/_security"
 		);
-		$resp = couch::parseRawResponse($raw);
+		$resp = Couch::parseRawResponse($raw);
 		if ($resp['status_code'] != 200) {
-			throw new couchException($raw);
+			throw new CouchException($raw);
 		}
 		if (!property_exists($resp['body'], "admins")) {
 			$resp["body"]->admins = new stdClass();
@@ -350,11 +350,11 @@ class couchAdmin
 		$raw = $this->client->query(
 				"PUT", "/" . $dbname . "/_security", array(), json_encode($security)
 		);
-		$resp = couch::parseRawResponse($raw);
+		$resp = Couch::parseRawResponse($raw);
 		if ($resp['status_code'] == 200) {
 			return $resp['body'];
 		}
-		throw new couchException($raw);
+		throw new CouchException($raw);
 	}
 
 	/**

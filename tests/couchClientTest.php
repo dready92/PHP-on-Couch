@@ -3,9 +3,9 @@
 // error_reporting(E_STRICT);
 error_reporting(E_ALL);
 
-use PHPOnCouch\couchClient,
-	PHPOnCouch\couchDocument,
-	PHPOnCouch\couchAdmin;
+use PHPOnCouch\CouchClient,
+	PHPOnCouch\CouchDocument,
+	PHPOnCouch\CouchAdmin;
 
 require_once join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'config.php']);
 
@@ -21,8 +21,8 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 		$this->url = $config->getUrl($this->host, $this->port, null);
 		$this->aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
 		$this->couch_server = 'http://' . $this->host . ':' . $this->port . '/';
-		$this->client = new couchClient($this->url, 'couchclienttest');
-		$this->aclient = new couchClient($this->aUrl, 'couchclienttest');
+		$this->client = new CouchClient($this->url, 'couchclienttest');
+		$this->aclient = new CouchClient($this->aUrl, 'couchclienttest');
 		try {
 			$this->aclient->deleteDatabase();
 		} catch (\Exception $e) {
@@ -46,7 +46,7 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 			"4azerty" => false
 		);
 		foreach ($matches as $key => $val) {
-			$this->assertEquals($val, couchClient::isValidDatabaseName($key));
+			$this->assertEquals($val, CouchClient::isValidDatabaseName($key));
 		}
 	}
 
@@ -55,7 +55,7 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 		$exist = $this->client->databaseExists();
 		$this->assertTrue($exist, "testing against an existing database");
 
-		$client = new couchClient($this->couch_server, "foofoofooidontexist");
+		$client = new CouchClient($this->couch_server, "foofoofooidontexist");
 		$this->assertFalse($client->databaseExists(), "testing against a non-existing database");
 	}
 
@@ -194,7 +194,7 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 
 	public function testcompactAllViews()
 	{
-		$cd = new couchDocument($this->aclient);
+		$cd = new CouchDocument($this->aclient);
 		$cd->set(array(
 			'_id' => '_design/test',
 			'language' => 'javascript'
@@ -204,7 +204,7 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 
 	public function testCouchDocumentAttachment()
 	{
-		$cd = new couchDocument($this->aclient);
+		$cd = new CouchDocument($this->aclient);
 		$cd->set(array(
 			'_id' => 'somedoc'
 		));
@@ -217,7 +217,7 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 		$this->assertObjectHasAttribute("_attachments", $fields);
 		$this->assertObjectHasAttribute("file.txt", $fields->_attachments);
 
-		$cd = new couchDocument($this->client);
+		$cd = new CouchDocument($this->client);
 		$cd->set(array(
 			'_id' => 'somedoc2'
 		));
@@ -242,7 +242,7 @@ class couchClientTest extends PHPUnit_Framework_TestCase
 
 	public function testRevs()
 	{
-		$cd = new couchDocument($this->client);
+		$cd = new CouchDocument($this->client);
 		$cd->set(array(
 			'_id' => 'somedoc'
 		));

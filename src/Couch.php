@@ -23,7 +23,7 @@ use Exception,  InvalidArgumentException;
 * basics to implement JSON / REST / HTTP CouchDB protocol
 *
 */
-class couch {
+class Couch {
 	/**
 	* @var string database source name
 	*/

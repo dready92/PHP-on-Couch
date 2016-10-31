@@ -3,9 +3,9 @@
 // error_reporting(E_STRICT);
 error_reporting(E_ALL);
 
-use PHPOnCouch\couchClient,
-	PHPOnCouch\couchDocument,
-	PHPOnCouch\couchAdmin,
+use PHPOnCouch\CouchClient,
+	PHPOnCouch\CouchDocument,
+	PHPOnCouch\CouchAdmin,
 	PHPOnCouch\Replicator;
 
 require_once join(DIRECTORY_SEPARATOR,[__DIR__,'_config','config.php']);
@@ -21,8 +21,8 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 		$config = config::getInstance();
 		$url = $config->getUrl($this->host, $this->port, $config->getFirstNormalUser());
 		$aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
-		$this->client = new couchClient($url, 'couchclienttest');
-		$this->aclient = new couchClient($aUrl, 'couchclienttest');
+		$this->client = new CouchClient($url, 'couchclienttest');
+		$this->aclient = new CouchClient($aUrl, 'couchclienttest');
 		try {
 			$this->aclient->deleteDatabase();
 		} catch (Exception $e) {
@@ -39,7 +39,7 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 
 	protected function _makeView()
 	{
-		$doc = new couchDocument($this->aclient);
+		$doc = new CouchDocument($this->aclient);
 		$doc->_id = "_design/test";
 		$views = array();
 		$map = "function (doc) {
@@ -462,7 +462,7 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 		$infos = $this->client->getDatabaseInfos();
 		$this->assertEquals($infos->doc_count, 6);
 
-		$doc = couchDocument::getInstance($this->client, "_design/test");
+		$doc = CouchDocument::getInstance($this->client, "_design/test");
 		$views = $doc->views;
 		$views->multigroup = new stdClass();
 		$views->multigroup->map = "function (doc) {

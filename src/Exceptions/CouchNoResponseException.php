@@ -20,11 +20,11 @@
 namespace PHPOnCouch\Exceptions;
 
 /**
- * Description of couchConflictException
+ * Description of couchNoResponseException
  *
  * @author Alexis
  */
-class couchConflictException extends couchException
+class CouchNoResponseException extends CouchException
 {
 	//put your code here
 }

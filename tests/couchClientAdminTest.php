@@ -3,11 +3,11 @@
 // error_reporting(E_STRICT);
 error_reporting(E_ALL);
 
-use PHPOnCouch\couchClient,
-	PHPOnCouch\couchDocument,
-	PHPOnCouch\couchAdmin,
+use PHPOnCouch\CouchClient,
+	PHPOnCouch\CouchDocument,
+	PHPOnCouch\CouchAdmin,
 	PHPOnCouch\Exceptions,
-	PHPOnCouch\Exceptions\couchException;
+	PHPOnCouch\Exceptions\CouchException;
 
 require_once join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'config.php']);
 
@@ -24,8 +24,8 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 		$config = config::getInstance();
 		$url = $config->getUrl($this->host, $this->port, null);
 		$aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
-		$this->client = new couchClient($url, 'couchclienttest');
-		$this->aclient = new couchClient($aUrl, 'couchclienttest');
+		$this->client = new CouchClient($url, 'couchclienttest');
+		$this->aclient = new CouchClient($aUrl, 'couchclienttest');
 		try {
 			$this->aclient->deleteDatabase();
 		} catch (Exception $e) {
@@ -42,7 +42,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 
 	public function testFirstAdmin()
 	{
-		$adm = new couchAdmin($this->aclient);
+		$adm = new CouchAdmin($this->aclient);
 		$adm->createAdmin($this->admin["login"], $this->admin["password"]);
 	}
 
@@ -57,7 +57,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 //		}
 //		$this->assertEquals(302, $code);
 //// 		print_r($code);
-		$this->expectException(couchException::class);
+		$this->expectException(CouchException::class);
 		$this->expectExceptionCode('412');
 //		$this->setExpectedException('PHPOnCouch\Exceptions\couchException', '', 412);
 		$this->aclient->createDatabase();
@@ -80,7 +80,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 
 	public function testUserAccount()
 	{
-		$adm = new couchAdmin($this->aclient);
+		$adm = new CouchAdmin($this->aclient);
 		$ok = $adm->createUser("joe", "dalton");
 		$this->assertInternalType("object", $ok);
 		$this->assertObjectHasAttribute("ok", $ok);
@@ -91,7 +91,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 
 	public function testAllUsers()
 	{
-		$adm = new couchAdmin($this->aclient);
+		$adm = new CouchAdmin($this->aclient);
 		$ok = $adm->getAllUsers(true);
 		$this->assertInternalType("array", $ok);
 		$this->assertEquals(count($ok), 2);
@@ -99,7 +99,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 
 	public function testGetUser()
 	{
-		$adm = new couchAdmin($this->aclient);
+		$adm = new CouchAdmin($this->aclient);
 		$ok = $adm->getUser("joe");
 		$this->assertInternalType("object", $ok);
 		$this->assertObjectHasAttribute("_id", $ok);
@@ -108,7 +108,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 	public function testUserAccountWithRole()
 	{
 		$roles = array("badboys", "jailbreakers");
-		$adm = new couchAdmin($this->aclient);
+		$adm = new CouchAdmin($this->aclient);
 		$ok = $adm->createUser("jack", "dalton", $roles);
 		$this->assertInternalType("object", $ok);
 		$this->assertObjectHasAttribute("ok", $ok);
@@ -127,7 +127,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 	public function testGetSecurity()
 	{
 //		$this->aclient->createDatabase();
-		$adm = new couchAdmin($this->aclient);
+		$adm = new CouchAdmin($this->aclient);
 		$security = $adm->getSecurity();
 		$this->assertObjectHasAttribute("admins", $security);
 		$this->assertObjectHasAttribute("readers", $security);
@@ -141,7 +141,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 	public function testSetSecurity()
 	{
 // 		$this->aclient->createDatabase();
-		$adm = new couchAdmin($this->aclient);
+		$adm = new CouchAdmin($this->aclient);
 		$security = $adm->getSecurity();
 		$security->admins->names[] = "joe";
 		$security->readers->names[] = "jack";
@@ -159,7 +159,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 
 	public function testDatabaseAdminUser()
 	{
-		$adm = new couchAdmin($this->aclient);
+		$adm = new CouchAdmin($this->aclient);
 		$ok = $adm->removeDatabaseAdminUser("joe");
 		$this->assertInternalType("boolean", $ok);
 		$this->assertEquals($ok, true);
@@ -178,7 +178,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 	 */
 	public function testDatabaseReaderUser()
 	{
-		$adm = new couchAdmin($this->aclient);
+		$adm = new CouchAdmin($this->aclient);
 		$ok = $adm->removeDatabaseReaderUser("jack");
 		$this->assertInternalType("boolean", $ok);
 		$this->assertEquals($ok, true);
@@ -198,7 +198,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 	 */
 	public function testGetDatabaseAdminUsers()
 	{
-		$adm = new couchAdmin($this->aclient);
+		$adm = new CouchAdmin($this->aclient);
 		$users = $adm->getDatabaseAdminUsers();
 		$this->assertInternalType("array", $users);
 		$this->assertEquals(1, count($users));
@@ -210,7 +210,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 	 */
 	public function testGetDatabaseReaderUsers()
 	{
-		$adm = new couchAdmin($this->aclient);
+		$adm = new CouchAdmin($this->aclient);
 		$users = $adm->getDatabaseReaderUsers();
 		$this->assertInternalType("array", $users);
 		$this->assertEquals(1, count($users));
@@ -221,7 +221,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 
 	public function testDatabaseAdminRole()
 	{
-		$adm = new couchAdmin($this->aclient);
+		$adm = new CouchAdmin($this->aclient);
 		$security = $adm->getSecurity();
 		$this->assertEquals(count($security->admins->roles), 0);
 		$ok = $adm->addDatabaseAdminRole("cowboy");
@@ -239,7 +239,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 
 	public function testDatabaseReaderRole()
 	{
-		$adm = new couchAdmin($this->aclient);
+		$adm = new CouchAdmin($this->aclient);
 		$security = $adm->getSecurity();
 		$this->assertEquals(count($security->readers->roles), 0);
 		$ok = $adm->addDatabaseReaderRole("cowboy");
@@ -261,7 +261,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 	 */
 	public function testGetDatabaseAdminRoles()
 	{
-		$adm = new couchAdmin($this->aclient);
+		$adm = new CouchAdmin($this->aclient);
 		$users = $adm->getDatabaseAdminRoles();
 		$this->assertInternalType("array", $users);
 		$this->assertEquals(0, count($users));
@@ -274,7 +274,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 	 */
 	public function testGetDatabaseReaderRoles()
 	{
-		$adm = new couchAdmin($this->aclient);
+		$adm = new CouchAdmin($this->aclient);
 		$users = $adm->getDatabaseReaderRoles();
 		$this->assertInternalType("array", $users);
 		$this->assertEquals(0, count($users));
@@ -287,7 +287,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 
 	public function testUserRoles()
 	{
-		$adm = new couchAdmin($this->aclient);
+		$adm = new CouchAdmin($this->aclient);
 		$user = $adm->getUser("joe");
 		$this->assertInternalType("object", $user);
 		$this->assertObjectHasAttribute("_id", $user);
@@ -330,7 +330,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 
 	public function testDeleteUser()
 	{
-		$adm = new couchAdmin($this->aclient);
+		$adm = new CouchAdmin($this->aclient);
 		$ok = $adm->deleteUser("joe");
 		$this->assertInternalType("object", $ok);
 		$this->assertObjectHasAttribute("ok", $ok);
@@ -342,7 +342,7 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 
 	public function testDeleteAdmin()
 	{
-		$adm = new couchAdmin($this->aclient);
+		$adm = new CouchAdmin($this->aclient);
 		$adm->createAdmin("secondAdmin", "password");
 		$adm->deleteAdmin("secondAdmin");
 		$adm->createAdmin("secondAdmin", "password");
@@ -350,9 +350,9 @@ class couchClientAdminTest extends PHPUnit_Framework_TestCase
 
 	public function testUsersDatabaseName()
 	{
-		$adm = new couchAdmin($this->aclient, array("users_database" => "test"));
+		$adm = new CouchAdmin($this->aclient, array("users_database" => "test"));
 		$this->assertEquals("test", $adm->getUsersDatabase());
-		$adm = new couchAdmin($this->aclient);
+		$adm = new CouchAdmin($this->aclient);
 		$this->assertEquals("_users", $adm->getUsersDatabase());
 		$adm->setUsersDatabase("test");
 		$this->assertEquals("test", $adm->getUsersDatabase());

@@ -23,7 +23,7 @@ use stdClass,
 	Exception,
 	InvalidArgumentException;
 
-class couchDocument
+class CouchDocument
 {
 
 	/**
@@ -34,10 +34,10 @@ class couchDocument
 	/**
 	 * class constructor
 	 *
-	 * @param couchClient $client couchClient connection object
+	 * @param CouchClient $client couchClient connection object
 	 *
 	 */
-	function __construct(couchClient $client)
+	function __construct(CouchClient $client)
 	{
 		$this->__couch_data = new stdClass();
 		$this->__couch_data->client = $client;
@@ -49,7 +49,7 @@ class couchDocument
 	 * load a CouchDB document from the CouchDB server
 	 *
 	 * @param string $id CouchDB document ID
-	 * @return couchDocument $this
+	 * @return CouchDocument $this
 	 * @throws InvalidArgumentException
 	 */
 	public function load($id)
@@ -72,7 +72,7 @@ class couchDocument
 	 * </code>
 	 *
 	 * @param boolean $commit turn on or off the autocommit feature
-	 * @return couchDocument $this
+	 * @return CouchDocument $this
 	 */
 	public function setAutocommit($commit)
 	{
@@ -96,7 +96,7 @@ class couchDocument
 	 * note that this method clones the object given in argument
 	 *
 	 * @param object $doc CouchDB document (should have $doc->_id  , $doc->_rev, ...)
-	 * @return couchDocument $this
+	 * @return CouchDocument $this
 	 */
 	public function loadFromObject($doc)
 	{
@@ -108,13 +108,13 @@ class couchDocument
 	 * load a document in a couchDocument object and return it
 	 *
 	 * @static
-	 * @param couchClient $client couchClient instance
+	 * @param CouchClient $client couchClient instance
 	 * @param string $id id of the document to load
-	 * @return couchDocument couch document loaded with data of document $id
+	 * @return CouchDocument couch document loaded with data of document $id
 	 */
-	public static function getInstance(couchClient $client, $id)
+	public static function getInstance(CouchClient $client, $id)
 	{
-		$back = new couchDocument($client);
+		$back = new CouchDocument($client);
 		return $back->load($id);
 	}
 
@@ -205,7 +205,7 @@ class couchDocument
 			throw new InvalidArgumentException("Can't set _rev field");
 		if ($key == '_id' AND $this->get('_id'))
 			throw new InvalidArgumentException("Can't set _id field because it's already set");
-		if (substr($key, 0, 1) == '_' AND ! in_array($key, couchClient::$allowed_underscored_properties))
+		if (substr($key, 0, 1) == '_' AND ! in_array($key, CouchClient::$allowed_underscored_properties))
 			throw new InvalidArgumentException("Property $key can't begin with an underscore");
 		//echo "setting $key to ".print_r($value,TRUE)."<BR>\n";
 		$this->__couch_data->fields->$key = $value;
@@ -219,7 +219,7 @@ class couchDocument
 	 */
 	public function record()
 	{
-		foreach (couchClient::$underscored_properties_to_remove_on_storage as $key) {
+		foreach (CouchClient::$underscored_properties_to_remove_on_storage as $key) {
 			if (property_exists($this->__couch_data->fields, $key)) {
 				unset($this->__couch_data->fields->$key);
 			}
@@ -348,7 +348,7 @@ class couchDocument
 		if (!class_exists("couchReplicator")) {
 			return false;
 		}
-		$r = new couchReplicator($this->__couch_data->client);
+		$r = new CouchReplicator($this->__couch_data->client);
 		if ($create_target) {
 			$r->create_target();
 		}
@@ -376,7 +376,7 @@ class couchDocument
 		if (!class_exists("couchReplicator")) {
 			return false;
 		}
-		$r = new couchReplicator($this->__couch_data->client);
+		$r = new CouchReplicator($this->__couch_data->client);
 		if ($create_target) {
 			$r->create_target();
 		}

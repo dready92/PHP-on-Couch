@@ -21,7 +21,7 @@
 namespace PHPOnCouch;
 
 use Exception,
-	PHPOnCouch\Exceptions\couchException,
+	PHPOnCouch\Exceptions\CouchException,
 	InvalidArgumentException;
 
 /**
@@ -32,7 +32,7 @@ use Exception,
  *
  *
  */
-class couchClient extends couch
+class CouchClient extends Couch
 {
 
 	/**
@@ -154,7 +154,7 @@ class couchClient extends couch
 	 * @param array $parameters additionnal parameters to send with the request
 	 * @param string|object|array $data the request body. If it's an array or an object, $data is json_encode()d
 	 * @param string $content_type set the content-type of the request
-	 * @throws couchException
+	 * @throws CouchException
 	 * @return array
 	 */
 	protected function _queryAndTest($method, $url, $allowed_status_codes, $parameters = array(), $data = NULL, $content_type = NULL)
@@ -165,7 +165,7 @@ class couchClient extends couch
 		if (in_array($response['status_code'], $allowed_status_codes)) {
 			return $response['body'];
 		}
-		throw couchException::factory($response, $method, $url, $parameters);
+		throw CouchException::factory($response, $method, $url, $parameters);
 	}
 
 	function __call($name, $args)
@@ -208,7 +208,7 @@ class couchClient extends couch
 	 *
 	 * @link http://wiki.apache.org/couchdb/HTTP_view_API
 	 * @param array $options any json encodable thing
-	 * @return couchClient $this
+	 * @return CouchClient $this
 	 */
 	public function setQueryParameters(array $options)
 	{
@@ -222,7 +222,7 @@ class couchClient extends couch
 	 * set the name of the couchDB database to work on
 	 *
 	 * @param string $dbname name of the database
-	 * @return couchClient $this
+	 * @return CouchClient $this
 	 * @throws InvalidArgumentException
 	 */
 	public function useDatabase($dbname)
@@ -374,7 +374,7 @@ class couchClient extends couch
 	 * @link http://books.couchdb.org/relax/reference/change-notifications
 	 * @param string $value feed type
 	 * @param callable $continuous_callback in case of a continuous feed, the callback to be executed on new event reception
-	 * @return couchClient $this
+	 * @return CouchClient $this
 	 */
 	public function feed($value, $continuous_callback = null)
 	{
@@ -396,7 +396,7 @@ class couchClient extends couch
 	 * @link http://books.couchdb.org/relax/reference/change-notifications
 	 * @param string $value designdocname/filtername
 	 * @param  array $additional_query_options additional query options
-	 * @return couchClient $this
+	 * @return CouchClient $this
 	 */
 	public function filter($value, $additional_query_options = array())
 	{
@@ -433,7 +433,7 @@ class couchClient extends couch
 	 *
 	 * @link http://wiki.apache.org/couchdb/HTTP_Document_API
 	 * @param array|string $value array of revisions to fetch, or special keyword all
-	 * @return couchClient $this
+	 * @return CouchClient $this
 	 */
 	public function open_revs($value)
 	{
@@ -470,7 +470,7 @@ class couchClient extends couch
 			return $back;
 		}
 		$this->results_as_cd = false;
-		$c = new couchDocument($this);
+		$c = new CouchDocument($this);
 		return $c->loadFromObject($back);
 	}
 
@@ -486,9 +486,9 @@ class couchClient extends couch
 		if (!is_object($doc))
 			throw new InvalidArgumentException("Document should be an object");
 		foreach (array_keys(get_object_vars($doc)) as $key) {
-			if (in_array($key, couchClient::$underscored_properties_to_remove_on_storage)) {
+			if (in_array($key, CouchClient::$underscored_properties_to_remove_on_storage)) {
 				unset($doc->$key);
-			} elseif (substr($key, 0, 1) == '_' AND ! in_array($key, couchClient::$allowed_underscored_properties))
+			} elseif (substr($key, 0, 1) == '_' AND ! in_array($key, CouchClient::$allowed_underscored_properties))
 				throw new InvalidArgumentException("Property $key can't begin with an underscore");
 		}
 		$method = 'POST';
@@ -518,7 +518,7 @@ class couchClient extends couch
 		 */
 		$request = array('docs' => array());
 		foreach ($docs as $doc) {
-			if ($doc instanceof couchDocument) {
+			if ($doc instanceof CouchDocument) {
 				$request['docs'][] = $doc->getFields();
 			} else {
 				$request['docs'][] = $doc;
@@ -551,7 +551,7 @@ class couchClient extends couch
 		$request = array('docs' => array());
 		foreach ($docs as $doc) {
 			$destDoc = null;
-			if ($doc instanceof couchDocument)
+			if ($doc instanceof CouchDocument)
 				$destDoc = $doc->getFields();
 			else
 				$destDoc = $doc;
@@ -772,7 +772,7 @@ class couchClient extends couch
 	 * when view result is parsed, view documents are translated to objects and sent back
 	 *
 	 * @view  results_as_couchDocuments()
-	 * @return couchClient $this
+	 * @return CouchClient $this
 	 *
 	 */
 	public function asCouchDocuments()
@@ -787,7 +787,7 @@ class couchClient extends couch
 	 *
 	 * cannot be used in conjunction with asCouchDocuments()
 	 *
-	 * @return couchClient $this
+	 * @return CouchClient $this
 	 */
 	public function asArray()
 	{
@@ -872,7 +872,7 @@ class couchClient extends couch
 			if (!$row->key or ! $row->doc)
 				return false;
 			// create couchDocument
-			$cd = new couchDocument($this);
+			$cd = new CouchDocument($this);
 			$cd->loadFromObject($row->doc);
 
 			// set key name

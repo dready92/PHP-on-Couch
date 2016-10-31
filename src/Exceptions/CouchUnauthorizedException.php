@@ -20,11 +20,11 @@
 namespace PHPOnCouch\Exceptions;
 
 /**
- * Description of couchForbiddenException
+ * Description of couchUnauthorizedException
  *
  * @author Alexis
  */
-class couchForbiddenException extends couchException
+class CouchUnauthorizedException extends CouchException
 {
 	//put your code here
 }
