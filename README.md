@@ -8,7 +8,7 @@ To access PHP-on-Couch for CouchDB 2.0, please visit [this link](https://github.
 Due to the lack of support on the last repository, I forked it and I will make sure it's kept active.
 
 
-With the new release of 2.0, the master branch will support only 1.6.1. The new version is 99% compatible but there are few incompatibilities between the version. If the same tests/functions are updated from one version to the other, I'll try to keep them synced.
+With the new release of 2.0, the master branch will support only 2.0. The new version is 99% compatible but there are few incompatibilities between the versions. If the same tests/functions are updated from one version to the other, I'll try to keep them synced.
 
 ##Changes
 
