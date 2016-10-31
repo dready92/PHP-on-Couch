@@ -12,14 +12,14 @@ The basics
 Creating a new document
 =======================
 
-To create an empty couchDocument, simply instanciate the **couchDocument** class, passing the couchClient object as the constructor argument.
+To create an empty CouchDocument, simply instanciate the **CouchDocument** class, passing the CouchClient object as the constructor argument.
 
 Example :
 
-    $client = new couchClient('http://localhost:5984/','myDB');
-    $doc = new couchDocument($client);
+    $client = new CouchClient('http://localhost:5984/','myDB');
+    $doc = new CouchDocument($client);
 
-If I set a property on $doc, it'll be registered in the database. If the property is not _id, the unique identifier will be automatically created by CouchDB, and available in the couchDocument object.
+If I set a property on $doc, it'll be registered in the database. If the property is not _id, the unique identifier will be automatically created by CouchDB, and available in the CouchDocument object.
 
 Example :
 
@@ -31,7 +31,7 @@ However if you specify _id, that one will of course be used.
 
 Example :
 
-    $doc = new couchDocument($client);
+    $doc = new CouchDocument($client);
     $doc->_id = "some_doc";
     echo $doc->id();
     // some_doc
@@ -46,7 +46,7 @@ As we just saw, just set the property on the $doc object and it'll be recorded i
 
 Example :
 
-    $doc = new couchDocument($client);
+    $doc = new CouchDocument($client);
     $doc->_id = "some_doc";
     $doc->type = "page";
     $doc->title = "Introduction";
@@ -58,7 +58,7 @@ It's always possible to set several properties in one query using the **set()** 
 
 Example using an array :
 
-    $doc = new couchDocument($client);
+    $doc = new CouchDocument($client);
     $doc->set (
         array(
             '_id'   => 'some_doc',
@@ -74,7 +74,7 @@ Example using an object
     $prop->type = "page";
     $prop->title = "Introduction";
     
-    $doc = new couchDocument($client);
+    $doc = new CouchDocument($client);
     $doc->set ( $prop );
 
 Disabling auto-commit feature
@@ -84,7 +84,7 @@ If, for some reason, you need to disable the auto-commit feature, use the **setA
 
 Example :
 
-    $doc = new couchDocument($client);
+    $doc = new CouchDocument($client);
     $doc->setAutocommit(false);
     $doc->_id = "some_doc";
     $doc->type = "page";
@@ -106,19 +106,19 @@ Example :
     $prop->type = "page";
     $prop->title = "Introduction";
 
-    $doc = new couchDocument($client);
+    $doc = new CouchDocument($client);
     $doc->set ( $prop );
     unset($doc->title);
     echo $doc->title ; // won't echo anything
 
-Fetching a couchDocument from the database
+Fetching a CouchDocument from the database
 ==========================================
 
-The static method **getInstance()** returns a couchDocument when the specified id exists :
+The static method **getInstance()** returns a CouchDocument when the specified id exists :
 
 Example :
 
-    $doc = couchDocument::getInstance($client,'some_doc');
+    $doc = CouchDocument::getInstance($client,'some_doc');
     echo $doc->_rev."\n";
     echo $doc->type;
 
@@ -138,12 +138,12 @@ Example :
 Getting back classic PHP object
 ===============================
 
-To get the couch document fields from a couchDocument object, use the **getFields()** method
+To get the Couch document fields from a CouchDocument object, use the **getFields()** method
 
 
 Example :
 
-    $doc = couchDocument::getInstance($client,'some_doc');
+    $doc = CouchDocument::getInstance($client,'some_doc');
     print_r($doc->getFields());
     /*
         stdClass object {
@@ -164,7 +164,7 @@ The method **storeAttachment()** adds a new attachment, or update the attachment
 
 Example - Store the file /path/to/some/file.txt as an attachment of document id "some_doc" :
 
-    $doc = couchDocument::getInstance($client,'some_doc');
+    $doc = CouchDocument::getInstance($client,'some_doc');
     try {
         $doc->storeAttachment("/path/to/some/file.txt","text/plain");
     } catch (Exception $e) {
@@ -178,7 +178,7 @@ The method **storeAsAttachment()** adds a new attachment, or update the attachme
 
 Example - Store "Hello world !\nAnother Line" as an attachment named "file.txt" on document "some_doc" :
 
-    $doc = couchDocument::getInstance($client,'some_doc');
+    $doc = CouchDocument::getInstance($client,'some_doc');
     try {
         $doc->storeAsAttachment("Hello world !\nAnother Line", "file.txt" , "text/plain");
     } catch (Exception $e) {
@@ -192,7 +192,7 @@ The method **deleteAttachment()** permanently removes an attachment from a docum
     
 Example - Deletes the attachment "file.txt" of document "some_doc" :
 
-    $doc = couchDocument::getInstance($client,'some_doc');
+    $doc = CouchDocument::getInstance($client,'some_doc');
     try {
         $doc->deleteAttachment("file.txt");
     } catch (Exception $e) {
@@ -206,7 +206,7 @@ The method **getAttachmentUri()** returns the URI of an attachment.
 
 Example :
 
-    $doc = couchDocument::getInstance($client,'some_doc');
+    $doc = CouchDocument::getInstance($client,'some_doc');
     if ( $doc->_attachments ) {
         foreach ( $doc->_attachments as $name => $infos ) {
             echo $name.' '.$doc->getAttachmentURI($name); 
@@ -220,23 +220,23 @@ Example :
     }
 
 
-couchDocuments replication
+CouchDocuments replication
 ==========================
 
-The couchDocuments instance provides an easy way to replicate a document to, or from, another database. Think about replication like a copy-paste operation of the document to CouchDB databases.
+The CouchDocuments instance provides an easy way to replicate a document to, or from, another database. Think about replication like a copy-paste operation of the document to CouchDB databases.
 
-For those methods to work, you should have included the couchReplicator class file lib/couchReplicator.php .
+For those methods to work, you should have included the CouchReplicator class file src/CouchReplicator.php .
 
 Replicating a document to another CouchDB database
 --------------------------------------------------
 
-Use the **replicateTo()** method to replicate a couchDocument to another couchDB database.
+Use the **replicateTo()** method to replicate a CouchDocument to another CouchDB database.
 
 Example :
 
-    $client = new couchClient("http://couch.server.com:5984/","mydb");
+    $client = new CouchClient("http://couch.server.com:5984/","mydb");
     // load an existing document
-    $doc = couchDocument::getInstance($client,"some_doc_id");
+    $doc = CouchDocument::getInstance($client,"some_doc_id");
     // replicate document to another database
     $doc->replicateTo("http://another.server.com:5984/mydb/");
 
@@ -246,13 +246,13 @@ The replicateTo can have another argument, a boolean one. If true, the database 
 Replicating a document from another CouchDB database
 --------------------------------------------------
 
-Use the **replicateFrom()** method to replicate a couchDocument from another couchDB database, and then load it into the couchDocument instance.
+Use the **replicateFrom()** method to replicate a CouchDocument from another CouchDB database, and then load it into the CouchDocument instance.
 
 Example :
 
-    $client = new couchClient("http://couch.server.com:5984/","mydb");
+    $client = new CouchClient("http://couch.server.com:5984/","mydb");
     // load an existing document
-    $doc = new couchDocument($client);
+    $doc = new CouchDocument($client);
     
     // replicate document from another database, and then load it into $doc
     $doc->replicateFrom("some_doc_id","http://another.server.com:5984/mydb/");
@@ -280,21 +280,21 @@ Example : the database contains the following design document :
         }
     }
 
-and another document that got the id "some_doc". We load the "some_doc" document as a couchDocument object:
+and another document that got the id "some_doc". We load the "some_doc" document as a CouchDocument object:
 
-    $doc = couchDocument::getInstance($client,"some_doc");
+    $doc = CouchDocument::getInstance($client,"some_doc");
 
-We can then request couchDB to parse this document through a show function :
+We can then request CouchDB to parse this document through a show function :
 
     $html = $doc->show("clean","html");
     // html should contain "<p>ID: some_doc, rev: 3-2342342346</p>"
 
-The show method is a proxy method to the **getShow()** method of **couchClient**.
+The show method is a proxy method to the **getShow()** method of **CouchClient**.
 
 Updating a document using update handlers
 =========================================
 
 The **update($id,$name,$additionnal_params)** method allows to use the CouchDB [update handlers](http://wiki.apache.org/couchdb/Document_Update_Handlers) feature to update an existing document.
-The couchDocument object shouldd have an id for this to work ! Please see **couchClient** *updateDoc* method for more infos.
+The CouchDocument object shouldd have an id for this to work ! Please see **CouchClient** *updateDoc* method for more infos.
 
 
