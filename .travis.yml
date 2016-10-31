@@ -6,11 +6,7 @@ php:
 
 services:
     - docker
-#env:
-#    matrix:
-#    - DOCKERRUN="docker run -d -p 5984:5984 klaemo/couchdb:1.6.1"
-#    - DOCKERRUN="docker run -it klaemo/couchdb:2.0-dev --admin=foo:bar"
-
+    
 install:
   - composer self-update
   - composer install --prefer-source --no-interaction --dev
@@ -20,13 +16,8 @@ sudo:
   required
 
 before_install:
-#    - git clone https://github.com/klaemo/docker-couchdb.git
-#    - cd docker-couchdb
-#    - mkdir couchdb && cd ./couchdb
-#    - $DOCKERRUN
-    - docker run -d -it -p 5984:5984 klaemo/couchdb:2.0-dev --with-admin-party-please --with-haproxy
+    - docker run -d -it -p 5984:5984 klaemo/couchdb:1.6.1
     - sleep 5
-#    - cd ../../
 
 before_script:
   - "export DISPLAY=:99.0"
