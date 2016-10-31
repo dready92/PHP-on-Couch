@@ -3,7 +3,7 @@ This section details the available methods to work with documents
 Getting all documents
 =====================
 
-The method **getAllDocs()** retrieve all documents from the database. In fact it only retrieve document IDs, unless you specify the server to include the documents using the [View query parameters syntax](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-view.md).
+The method **getAllDocs()** retrieve all documents from the database. In fact it only retrieve document IDs, unless you specify the server to include the documents using the [View query parameters syntax](http://github.com/popojargo/PHP-on-Couch/blob/1.6.1/doc/couch_client-view.md).
 
 Example :
     
@@ -56,7 +56,7 @@ Example :
 Getting a document as a couchDocument object
 --------------------------------------------
 
-The **getDoc($id)** method returns a PHP stdClass object. You can however get back the document as a couchDocument object by calling the **asCouchDocuments()** method before the **getDoc($id)** method.
+The **getDoc($id)** method returns a PHP stdClass object. You can however get back the document as a CouchDocument object by calling the **asCouchDocuments()** method before the **getDoc($id)** method.
 
 Example :
 
@@ -68,7 +68,7 @@ Example :
         }
         exit(1);
     }
-    echo get_class($doc); // should echo "couchDocument"
+    echo get_class($doc); // should echo "CouchDocument"
 
 
 Adding conflicts informations (if any)
@@ -382,7 +382,7 @@ Example :
 Bulk documents storage
 ------------------------
 
-To store several documents in one go, use the method **storeDocs($docs,$all_or_nothing)**. $docs is an array containing the documents to store (as couchDocuments, PHP [stdClass](http://fr3.php.net/manual/en/reserved.classes.php) or PHP arrays). $all_or_nothing is related to the updates on the database : if set to false (which is the default), all documents are saved one by one, which means that, in case of a power failure on the database, we could have some documents stored and some not stored. When set to true, couchDB will commit all documents in one go : in case of a power failure, no document will be stored, or all documents will be stored.
+To store several documents in one go, use the method **storeDocs($docs,$all_or_nothing)**. $docs is an array containing the documents to store (as CouchDocuments, PHP [stdClass](http://fr3.php.net/manual/en/reserved.classes.php) or PHP arrays). $all_or_nothing is related to the updates on the database : if set to false (which is the default), all documents are saved one by one, which means that, in case of a power failure on the database, we could have some documents stored and some not stored. When set to true, couchDB will commit all documents in one go : in case of a power failure, no document will be stored, or all documents will be stored.
 
 Example :
     $docs = array (
@@ -425,10 +425,10 @@ Bulk documents removal
 To delete several documents in a single HTTP request, use the method **deleteDocs($docs,$all_or_nothing)**. $docs is an array containing the documents to store (as couchDocuments, PHP [stdClass](http://fr3.php.net/manual/en/reserved.classes.php) or PHP arrays). $all_or_nothing is related to the updates on the database : if set to false (which is the default), all documents are saved one by one, which means that, in case of a power failure on the database, we could have some documents deleted and some not deleted. When set to true, couchDB will commit all documents in one go : in case of a power failure, no document will be deleted, or all documents will be deleted.
 
 
-Choosing couchClient output format
+Choosing CouchClient output format
 ==================================
 
-When converting a JSON object to PHP, we can choose the type of the value returned from a couchClient query.
+When converting a JSON object to PHP, we can choose the type of the value returned from a CouchClient query.
 
 Take for example the following JSON object :
     { 'blog' : true, 'comments' : { 'title' : 'cool' } }
