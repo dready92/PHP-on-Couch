@@ -365,12 +365,12 @@ More infos on CouchDB show formatting [here](http://wiki.apache.org/couchdb/Form
 Bulk operations
 ===============
 
-A bulk operation is a unique query performing actions on several documents. CouchDB Bulk operations API are described in [this wiki page](http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API).
+A bulk operation is a unique query performing actions on several documents. CouchDB Bulk operations API are described in [this wiki page](http://docs.couchdb.org/en/2.0.0/api/database/bulk-api.html).
 
 Bulk documents retrieval
 ------------------------
 
-To retrieve several documents in one go, knowing their IDs, select documents using the **keys($ids)** coupled with the method **getAllDocs()**. $ids is an array of documents IDs. This function acts like a view, so the output is the view output of CouchDB, and you should use "include_docs(TRUE)" to have documents contents.
+To retrieve several documents in one go, knowing their IDs, select documents using the **keys($ids)** coupled with the method **getAllDocs()**. $ids is an array of documents IDs. This function acts like a view, so the output is the view output of CouchDB, and you should use "include_docs(true)" to have documents contents.
 
 Example :
 
@@ -382,7 +382,7 @@ Example :
 Bulk documents storage
 ------------------------
 
-To store several documents in one go, use the method **storeDocs($docs,$all_or_nothing)**. $docs is an array containing the documents to store (as CouchDocuments, PHP [stdClass](http://fr3.php.net/manual/en/reserved.classes.php) or PHP arrays). $all_or_nothing is related to the updates on the database : if set to false (which is the default), all documents are saved one by one, which means that, in case of a power failure on the database, we could have some documents stored and some not stored. When set to true, couchDB will commit all documents in one go : in case of a power failure, no document will be stored, or all documents will be stored.
+To store several documents in one go, use the method **storeDocs($docs,$new_edits)**. $docs is an array containing the documents to store (as CouchDocuments, PHP [stdClass](http://fr3.php.net/manual/en/reserved.classes.php) or PHP arrays). $new_edits is related to the updates of the revision. If set to true (which is the default), assign new revision id for each update. When set to false, it prevents the database from assigning them new reivision IDS.
 
 Example :
     $docs = array (
@@ -422,7 +422,7 @@ This method also works to update documents.
 Bulk documents removal
 ----------------------
 
-To delete several documents in a single HTTP request, use the method **deleteDocs($docs,$all_or_nothing)**. $docs is an array containing the documents to store (as couchDocuments, PHP [stdClass](http://fr3.php.net/manual/en/reserved.classes.php) or PHP arrays). $all_or_nothing is related to the updates on the database : if set to false (which is the default), all documents are saved one by one, which means that, in case of a power failure on the database, we could have some documents deleted and some not deleted. When set to true, couchDB will commit all documents in one go : in case of a power failure, no document will be deleted, or all documents will be deleted.
+To delete several documents in a single HTTP request, use the method **deleteDocs($docs,$new_edits)**. $docs is an array containing the documents to store (as couchDocuments, PHP [stdClass](http://fr3.php.net/manual/en/reserved.classes.php) or PHP arrays). $new_edits is related to the updates of the revision. If set to true (which is the default), assign new revision id for each update. When set to false, it prevents the database from assigning them new reivision IDS.
 
 
 Choosing CouchClient output format

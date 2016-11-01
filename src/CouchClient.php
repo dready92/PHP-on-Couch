@@ -115,8 +115,8 @@ class CouchClient extends Couch
 			if (!array_key_exists("user", $parts) || !array_key_exists("pass", $parts)) {
 				throw new Exception("You should provide a user and a password to use cookie based authentification");
 			}
-			$user = $parts["user"];
-			$pass = $parts["pass"];
+			$user = urlencode($parts["user"]);
+			$pass = urlencode($parts["pass"]);
 			$dsn = $parts["scheme"] . "://" . $parts["host"];
 			$dsn.= array_key_exists("port", $parts) ? ":" . $parts["port"] : "";
 			$dsn.= array_key_exists("path", $parts) ? $parts["path"] : "";
@@ -357,6 +357,88 @@ class CouchClient extends Couch
 	}
 
 	/**
+	 * 	Get the nodes that are part of the cluster and all the nodes that this node know.
+	 * @return object {"all_nodes":[],"cluster_nodes":[]}
+	 */
+	public function getMemberShip()
+	{
+		return $this->_queryAndTest('GET', '/_membership', array(200));
+	}
+
+	/**
+	 * Get the configuration from the selected node.
+	 * @link http://docs.couchdb.org/en/1.6.1/api/server/configuration.html#get--_config API
+	 * @param string $nodeName	The node name following the FQDN format : couchdb@localhost
+	 * @param string|null $section	If specified, it will get the configuration 
+	 * for the specified section as a JSON data structure. Otherwise, it returns
+	 *  the entire CouchDB server configuration as a JSON structure.
+	 * @param string|null $key If specified, it returns the value for this key in
+	 *  the section set earlier. Otherwise, it only returns the whole section.
+	 * @return object	Returns a response object
+	 * @throws InvalidArgumentExpcetion	Invalid parameters
+	 * @throws CouchNotFoundException	Whenever the section/key/node are invalids
+	 *  and the path to the value doesn't exist.
+	 */
+	public function getConfig($nodeName, $section = null, $key = null)
+	{
+		//Parameter validation
+		if (!is_string($nodeName))
+			throw new InvalidArgumentException("The node name must be of type String");
+		if ($section === null && $key !== $section)
+			throw new InvalidArgumentException("The section parameter can't be empty or null");
+
+		$url = '/_node/' . urlencode($nodeName) . '/_config';
+		if (!empty($section) && is_string($section)) {
+			$url.='/' . urlencode($section);
+			if (!empty($key) && is_string($key))
+				$url .='/' . urlencode($key);
+		}
+		return $this->_queryAndTest('GET', $url . '/', array(200));
+	}
+
+	/**
+	 * Set a configuration value to a specific node and return the old value
+	 * @param string $nodeName	The node name following the FQDN. For example : couchdb@localhost
+	 * @param string $section	The section name to update.
+	 * @param string $key		The key of the section to update.
+	 * @param mixed $value	The value to set to the key.
+	 * @throws InvalidArgumentException
+	 * @return object	Returns the old value  for example when you change the debug level : "info"
+	 */
+	public function setConfig($nodeName, $section, $key, $value)
+	{
+		//Parameter validation
+		if (!is_string($nodeName))
+			throw new InvalidArgumentException("The node name must be of type String");
+		if (empty($section) || empty($key))
+			throw new InvalidArgumentException("You must supply a section and key parameter.");
+		$nodeUrl = '/_node/' . urlencode($nodeName) . '/';
+		$configUrl = urlencode($section) . '/' . urlencode($key);
+		$value = json_encode($value);
+		return $this->_queryAndTest("PUT", $nodeUrl . '_config/' . $configUrl, array(200), array(), $value);
+	}
+
+	/**
+	 * Delete a configuration key to a specific node and return the old value
+	 * @param string $nodeName	The node name following the FQDN. For example : couchdb@localhost
+	 * @param string $section	The section name to update.
+	 * @param string $key		The key of the section to update.
+	 * @throws InvalidArgumentException
+	 * @return object	Returns the old value  for example when you change the debug level : "info"
+	 */
+	public function deleteConfig($nodeName, $section, $key)
+	{
+		//Parameter validation
+		if (!is_string($nodeName))
+			throw new InvalidArgumentException("The node name must be of type String");
+		if (empty($section) || empty($key))
+			throw new InvalidArgumentException("You must supply a section and key parameter.");
+		$nodeUrl = '/_node/' . urlencode($nodeName) . '/';
+		$configUrl = urlencode($section) . '/' . urlencode($key);
+		return $this->_queryAndTest("DELETE", $nodeUrl . '_config/' . $configUrl, array(200));
+	}
+
+	/**
 	 * launch a cleanup operation on database views
 	 *
 	 *
@@ -501,15 +583,15 @@ class CouchClient extends Couch
 	}
 
 	/**
-	 * store many CouchDB documents
+	 * Store many CouchDB documents
 	 *
-	 * @link http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API
+	 * @link http://docs.couchdb.org/en/2.0.0/api/database/bulk-api.html#api-db-bulk-docs
 	 * @param array $docs array of documents to store
-	 * @param boolean $all_or_nothing set the bulk update type to "all or nothing"
+	 * @param boolean $new_edits	Default to true. If false, prevents the database from assigning them new revision IDs.
 	 * @return object CouchDB bulk document storage response
 	 * @throws InvalidArgumentException
 	 */
-	public function storeDocs($docs, $all_or_nothing = false)
+	public function storeDocs($docs, $new_edits = true)
 	{
 		if (!is_array($docs))
 			throw new InvalidArgumentException("docs parameter should be an array");
@@ -524,8 +606,8 @@ class CouchClient extends Couch
 				$request['docs'][] = $doc;
 			}
 		}
-		if ($all_or_nothing) {
-			$request['all_or_nothing'] = true;
+		if ($new_edits === false) {
+			$request['new_edits'] = false;
 		}
 
 		$url = '/' . urlencode($this->dbname) . '/_bulk_docs';
@@ -535,13 +617,13 @@ class CouchClient extends Couch
 	/**
 	 * delete many CouchDB documents in a single HTTP request
 	 *
-	 * @link http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API
-	 * @param array $docs array of documents to delete
-	 * @param boolean $all_or_nothing set the bulk update type to "all or nothing"
+	 * @link http://docs.couchdb.org/en/2.0.0/api/database/bulk-api.html#api-db-bulk-docs
+	 * @param array $docs array of documents to delete.
+	 * @param boolean $new_edits	Default to true. If false, prevents the database from assigning them new revision IDs.
 	 * @return object CouchDB bulk document storage response
 	 * @throws InvalidArgumentException
 	 */
-	public function deleteDocs($docs, $all_or_nothing = false)
+	public function deleteDocs($docs, $new_edits = true)
 	{
 		if (!is_array($docs))
 			throw new InvalidArgumentException("docs parameter should be an array");
@@ -562,8 +644,8 @@ class CouchClient extends Couch
 				$destDoc->_deleted = true;
 			$request['docs'][] = $destDoc;
 		}
-		if ($all_or_nothing) {
-			$request['all_or_nothing'] = true;
+		if ($new_edits === false) {
+			$request['new_edits'] = false;
 		}
 
 		$url = '/' . urlencode($this->dbname) . '/_bulk_docs';

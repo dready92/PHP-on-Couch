@@ -7,12 +7,9 @@
             <file>./tests/couchClientAdminTest.php</file>
         </testsuite>
         <testsuite name="Ordered">
-            <file>./tests/couchClientListTest.php</file>
-            <file>./tests/couchClientShowTest.php</file>
-            <file>./tests/couchClientTest.php</file>
-            <file>./tests/couchClientUpdateDocTest.php</file>
+            <file>./tests/CouchClientTest.php</file>
             <file>./tests/couchClientViewTest</file>
-            <file>./tests/couchClientAdminTest.php</file>
+            <file>./tests/CouchAdminTest.php</file>
         </testsuite>
     </testsuites>
     <logging>

@@ -44,19 +44,26 @@ class CouchAdmin
 	 * @var the name of the CouchDB server "users" database
 	 */
 	private $usersdb = "_users";
+	private $node;
 
 	/**
 	 * constructor
 	 *
 	 * @param CouchClient $client the couchClient instance
-	 * @param array $options array. For now the only option is "users_database" to override the defaults "_users"
+	 * @param array $options array. For now the only options is "users_database"(to override the defaults "_users") or node which is the node that will be used for the configuration.
+	 *  It it's not specified, the first node will be used.
 	 */
 	public function __construct(CouchClient $client, $options = array())
 	{
 		$this->client = $client;
-		if (is_array($options) && isset($options["users_database"])) {
-			$this->usersdb = $options["users_database"];
+		if (is_array($options)) {
+			if (isset($options["users_database"]))
+				$this->usersdb = $options["users_database"];
+			if (isset($options['node']))
+				$this->node = $options['node'];
 		}
+		if (empty($this->node))
+			$this->node = $client->getMemberShip()->cluster_nodes[0];
 	}
 
 	/**
@@ -120,7 +127,7 @@ class CouchAdmin
 		if (strlen($data) < 1) {
 			throw new InvalidArgumentException("Password can't be empty");
 		}
-		$url = '/_config/admins/' . urlencode($login);
+		$url = '/_node/' . urlencode($this->node) . '/_config/admins/' . urlencode($login);
 		try {
 			$raw = $this->client->query(
 					"PUT", $url, array(), json_encode($data)
@@ -168,7 +175,7 @@ class CouchAdmin
 			
 		}
 
-		$url = '/_config/admins/' . urlencode($login);
+		$url = '/_node/' . urlencode($this->node) . '/_config/admins/' . urlencode($login);
 		$raw = $this->client->query(
 				"DELETE", $url
 		);
