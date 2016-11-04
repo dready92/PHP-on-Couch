@@ -154,6 +154,103 @@ Example :
     $client->useDatabase("db2");           //switch to "db2" database
     $all_docs_db2 = $client->getAllDocs(); //retrieve all docs of database db2
 
+Get membership (*2.0*)
+====================
+
+With the new Cluster infrastructure in CouchDB 2.0, you now have to configure each nodes. To do so, you need to get the information about them. The `_membership`endpoint allow you to get all the nodes that the current nodes knows and all the nodes that are in the same cluster. The method **getMemberShip()** returns an object like this :
+
+```
+{
+  "all_nodes": [],
+  "cluster_nodes": []
+}
+```
+
+
+Get config (*2.0*)
+==========
+
+*The configurations methods are implemented for PHP-on-Couch 2.0 only. Note that the configuration is per-node only* 
+
+To configure, you need to use **getConfig($nodeName[,$section, $key])**. If you don't know the nodeName, you can use the **getMemberShip()** method.
+
+Examples :
+
+**getConfig("couchdb@localhost")**
+
+Returns a JSON object with the whole configuration
+```
+{
+    "attachments":{
+
+    },
+    "couchdb":{
+        
+    }
+}
+```
+
+**getConfig("couchdb@localhost","httpd")**
+*Note : It will return a CouchNotFoundException is the section is not present*.
+Returns  a JSON object that represent the desired section
+
+```
+{
+    "allow_jsonp": "false",
+    "authentication_handlers": "{couch_httpd_oauth, oauth_authentication_handler}, {couch_httpd_auth, cookie_authentication_handler}, {couch_httpd_auth, default_authentication_handler}",
+    "bind_address": "127.0.0.1",
+    "default_handler": "{couch_httpd_db, handle_request}",
+    "enable_cors": "false",
+    "log_max_chunk_size": "1000000",
+    "port": "5984",
+    "secure_rewrites": "true",
+    "vhost_global_handlers": "_utils, _uuids, _session, _oauth, _users"
+}
+
+```
+
+**getConfig("couchdb@localhost","log","level")**
+
+Returns either text-plain of JSON value of the section/key.
+*Note : It will return a CouchNotFoundException is the section or key are not present*.
+
+```
+"debug"
+```
+
+
+Set config ( *2.0*)
+==========
+
+*The configurations methods are implemented for PHP-on-Couch 2.0 only. Note that the configuration is per-node only* 
+
+The method **setConfig($nodeName, $section, $key, $value)** let you configure your installation. It can returns CouchNotAuthorizedException or CouchNotFoundException depending on the parameters supplied.
+
+Example :
+
+**setConfig("couchdb@localhost","log","level","info")**
+
+Returns the old value in text-plain or JSON format.
+```
+"debug"
+```
+
+Delete config ( *2.0*)
+======================
+
+*The configurations methods are implemented for PHP-on-Couch 2.0 only. Note that the configuration is per-node only* 
+
+The method **deleteConfig($nodeName,$section,$key)** let you delete a configuration key from your node. 
+
+Example: 
+
+**deleteConfig("couchdb@localhost","log","level")**
+It will returns the JSON value of  the parameter before its deletion. Not that the method can throw a CouchNotFoundException or a CouchUnauthorizedException regarding of the section/key and permissions.
+
+```
+"info"
+```
+
 
 Database changes interface
 ==========================

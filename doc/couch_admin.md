@@ -79,7 +79,16 @@ Synopsys
 Creating a couchAdmin instance
 ==============================
 
-The couchAdmin class constructor takes an only parameter : a couchClient object. You have to be careful, the couchClient object should have enough credentials to perform the administrative tasks.
+**__construct(CouchClient $client,$options = array())**
+The couchAdmin class constructor takes 2 parameters : a couchClient object and an array of configuration options.
+
+*$client* :  You have to be careful, the couchClient object should have enough credentials to perform the administrative tasks.
+
+*$options*: This array has 2 possibles keys for the moments. 
+- users_database : The user database to use (overwrite the default _users)
+- node : The node to use for the configuration. **If it's not defined**, the first node of the *cluster_nodes* will be taken. 
+
+
 
 Example :
 

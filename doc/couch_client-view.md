@@ -1,4 +1,4 @@
-lThis section describes how to use PHP on Couch to retrieve views results from a CouchDB server.
+This section describes how to use PHP on Couch to retrieve views results from a CouchDB server.
 
 Creating views
 ==============
