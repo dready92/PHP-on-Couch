@@ -32,7 +32,7 @@ Legend : +:Added, /: Updated, -:Deleted
 Install the library using composer : `composer require popojargo/php-on-couch`.
 You can find more detailed informations about installation [here](INSTALL.md)
 
-To run the tests, you need to 
+Test instructions to be determined.
 
 ##Components and documentation
 
