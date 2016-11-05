@@ -1,8 +1,27 @@
 [![Build Status](https://travis-ci.org/popojargo/PHP-on-Couch.svg?branch=master)](https://travis-ci.org/popojargo/PHP-on-Couch)
 [![Coverage Status](https://coveralls.io/repos/github/popojargo/PHP-on-Couch/badge.svg?branch=master)](https://coveralls.io/github/popojargo/PHP-on-Couch?branch=master)
+
+##Table of content
+- [Introduction](#introduction)
+- [What's new](#whats-new)
+- [Changes](#changes)
+- [Installation and testing](#installation-and-testing)
+- [Components and documentation](#components-and-documentation)
+    + [Couch class](#couch-class)
+    + [CouchClient class](#couchclient-class)
+        * [Database functionnalities](#database-functionnalities)
+        * [Documents functionnalities](#documents-functionnalities)
+        * [Views functionnalities](#views-functionnalities)
+    + [CouchDocument class](#couchdocument-class)
+    + [CouchReplicator class](#couchreplicator-class)
+    + [CouchAdmin class](#couchadmin-class)
+- [Quick-start guide](#quick-start-guide)
+- [Example](#example)
+- [Feedback](#feedback)
+
 ##Introduction
 
-[PHP On Couch](http://github.com/dready92/PHP-on-Couch/) tries to provide an easy way to work with your [CouchDB](http://couchdb.apache.org) [documents](http://wiki.apache.org/couchdb/HTTP_Document_API) with [PHP](http://php.net). 
+[PHP On Couch](http://github.com/popojargo/PHP-on-Couch/) tries to provide an easy way to work with your [CouchDB](http://couchdb.apache.org) [documents](http://docs.couchdb.org/) with [PHP](http://php.net). 
 
 ##What's new
 
@@ -10,7 +29,7 @@ Due to the lack of support on the last repository, I forked it and I will make s
 
 With the new release of 2.0, the master branch will support only this version.
 
-To access PHP-on-Couch for CouchDB 1.6.1, please visit [this link](http://github.com/popojargo/PHP-on-Couch/blob/1.6.1).
+To access PHP-on-Couch for CouchDB 1.6.1, please visit [this link](https://github.com/popojargo/PHP-on-Couch/tree/1.6.1).
 
 ##Changes
 
@@ -45,31 +64,39 @@ This is the most basic of the three classes, and is responsible for the low leve
 
 This class maps all the actions the application can do on the CouchDB server. Documentation is split in three main topics :
 
-#### [database stuff](doc/couch_client-database.md)
+#### [Database functionnalities](doc/couch_client-database.md)
 
-list databases, create and delete a database, retrieve database informations, test whether a database exists, get uuids, get databases changes
+ - List databases
+ - Create and delete a database
+ - Retrieve database informations
+ - Test whether a database exists
+ - Get uuids
+ - Get databases changes
 
-#### [document stuff](doc/couch_client-document.md)
+#### [Documents functionnalities](doc/couch_client-document.md)
 
-fetching and storing documents, copy a document, store and delete document attachments, getting all documents
+- Fetching documents
+- Storing documents
+- Copy a document
+- Store attachments
+- Delete document attachments
+- Get all documents
 
-#### [view stuff](doc/couch_client-view.md)
+#### [Views functionnalities](doc/couch_client-view.md)
 
-calling a view with query options : key, startkey, endkey, limit, stale, ...
+- Calling a view with query options : key, startkey, endkey, limit, stale, ...
 
 ###CouchDocument class
 
-Easing the manipulation of documents, the CouchDocument class uses PHP magic getters and setters.
+Easing the manipulation of documents, the CouchDocument class uses PHP magic getters and setters. Documentation available [here](doc/couch_document.md).
 
-###[CouchReplicator class](doc/couch_replicator.md)
+###CouchReplicator class
 
+A dedicated class to manage replications over different instances of CouchDB databases. Documentation available [here](doc/couch_replicator.md).
 
-A dedicated class to manage replications over different instances of CouchDB databases.
+###CouchAdmin class
 
-###[CouchAdmin class](doc/couch_admin.md)
-
-
-A class to manage users and database/users associations
+A class to manage users and database/users associations. Documentation available [here](doc/couch_admin.md).
 
 ##Quick-start guide
   
@@ -159,5 +186,4 @@ $doc->name = "Brown"; // set document property "name" to "Brown" and store the u
        
 ##Feedback
 
-
-Don't hesitate to submit feedback, bugs and feature requests ! My contact address is alexiscote19 at hotmail dot com
+Don't hesitate to submit feedback, bugs and feature requests ! My contact address is [alexiscote19@hotmail.com](mailto:alexiscote19@hotmail.com?subject=Feedback)
