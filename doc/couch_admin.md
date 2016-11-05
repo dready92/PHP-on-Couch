@@ -1,7 +1,47 @@
-This section give details about the couchAdmin object.
+This section give details about the CouchAdmin object.
 
-Please Read this first !!
-=========================
+##Table of content
+
+- [Please read this first](#please-read-this-first-)
+- [Managing CouchDB users](#managing-couchdb-users)
+- [Synopsys](#synopsys)
+- [Getting started](#getting-started)
+- [Admin party](#admin-party)
+- [Create users and admins](#create-users-and-admins)
+    + [createAdmin($login, $password, $roles = array())](#createadminlogin-password-roles--array)
+    + [createUser($login, $password, $roles = array())](#createuserlogin-password-roles--array)
+    + [getUser($login)](#getuserlogin)
+    + [getAllUsers()](#getallusers)
+- [Removing users](#removing-users)
+    + [deleteAdmin ($login)](#deleteadminlogin)
+    + [deleteUser($login)](#deleteuserlogin)
+- [Roles assignation](#roles-assignation)
+    + [addRoleToUser($user, $role)](#addroletouseruser-role)
+    + [removeRoleFromUser($user, $role)](#removerolefromuseruser-role)
+- [Database user security](#database-user-security)
+    + [addDatabaseReaderUser($login)](#adddatabasereaderuserlogin)
+    + [addDatabaseAdminUser($login)](#adddatabaseadminuserlogin)
+    + [getDatabaseReaderUsers()](#getdatabasereaderusers)
+    + [getDatabaseAdminUsers()](#getdatabaseadminusers)
+    + [removeDatabaseReaderUser($login)](#removedatabasereaderuserlogin)
+    + [removeDatabaseAdminUser($login)](#removedatabaseadminuserlogin)
+- [Database roles security](#database-roles-security)
+    + [addDatabaseReaderRole($role)](#adddatabasereaderrolerole)
+    + [addDatabaseAdminRole($role)](#adddatabaseadminrolerole)
+    + [getDatabaseReaderRoles()](#getdatabasereaderroles)
+    + [getDatabaseAdminRoles()](#getdatabaseadminroles)
+    + [removeDatabaseReaderRole($role)](#removedatabasereaderrolerole)
+    + [removeDatabaseAdminRole($role)](#removedatabaseadminrole-role)
+- [Accessing Database security object](#accessing-database-security-object)
+    + [getSecurity()](#getsecurity)
+    + [setSecurity($security)](#setsecuritysecurity)
+- [Database options](#database-options)
+    + [CouchAdmin users_database](#couchadmin-users_database)
+    + [setUserDatabase($name)](#setuserdatabasename)
+    + [getUserDatabase($name)](#getuserdatabasename)
+
+##Please read this first !!
+
 
 The CouchAdmin class is only needed to **manage** users of a CouchDB server : add users, add admins, ...
 
@@ -10,15 +50,14 @@ You don't need the couchAdmin class to connect to CouchDB with a login / passwor
     $client = new CouchClient ("http://theuser:secretpass@couch.server.com:5984","mydatabase");
 
 
-Managing CouchDB users
-======================
+##Managing CouchDB users
 
 CouchDB rights management is really complex. [This page](http://wiki.apache.org/couchdb/Security_Features_Overview) can really help to understand how security is implemented in couchDB.
 
-The **couchAdmin** class contains helpful methods to create admins, users, and associate users to databases.
+The **CouchAdmin** class contains helpful methods to create admins, users, and associate users to databases.
 
-Synopsys
---------
+##Synopsys
+
 
     <?PHP
     use PHPOnCouch\Couch,
@@ -76,8 +115,7 @@ Synopsys
     $users = $adm->getDatabaseReaderUsers();  // array ( "joe" )
     
 
-Creating a couchAdmin instance
-==============================
+##Getting started
 
 **__construct(CouchClient $client,$options = array())**
 The couchAdmin class constructor takes 2 parameters : a couchClient object and an array of configuration options.
@@ -99,8 +137,7 @@ Example :
     // here $adm will connect to CouchDB without any credentials : that will only work if there is no administrator created yet on the server.
 
 
-First time configuration of CouchDB
------------------------------------
+##Admin party
 
 On a fresh install, CouchDB is in **admin party** mode : that means any operation (create / delete databases, store documents and design documents) can be performed without any authentication.
 
@@ -126,14 +163,11 @@ We need to create a couchClient instance with the credentials of **couchAdmin**.
     $adm = new CouchAdmin($client);
 
 
+##Create users and admins
 
-Creating / getting users
-========================
+###createAdmin($login, $password, $roles = array())
 
-Creating a server administrator
--------------------------------
-
-The method **createAdmin ($login, $password, $roles = array() )** creates a CouchDB *server* administrator. A server administrator can do everything on a CouchDB server.
+The method **createAdmin ($login, $password, $roles = array())** creates a CouchDB *server* administrator. A server administrator can do everything on a CouchDB server.
 
 Example :
 
@@ -152,10 +186,10 @@ Example :
     }
 
 
-Creating a normal user
-----------------------
+###createUser($login, $password, $roles = array())
 
-The method **createUser ($login, $password, $roles = array())** creates a CouchDB user.
+
+The method **createUser($login, $password, $roles = array())** creates a CouchDB user and returns it.
 
 Example :
 
@@ -192,10 +226,9 @@ Example - creating a user and adding it to some roles
     }
 
 
-Getting a user document
------------------------
+###getUser($login)
 
-The method **getUser ( $login )** returns the user document stored in the users database of the CouchDB server.
+The method **getUser($login)** returns the user document stored in the users database of the CouchDB server.
 
 Example :
 
@@ -218,10 +251,9 @@ Example :
     }
 
 
-Getting all users documents
----------------------------
+###getAllUsers() 
 
-The method **getAllUsers ()** returns the list of all users registered in the users database of the CouchDB server. This method calls a view, so you can use the view query options !
+The method **getAllUsers()** returns the list of all users registered in the users database of the CouchDB server. This method calls a view, so you can use the view query options !
 
 Example :
 
@@ -304,13 +336,11 @@ Example - including user documents and not showing the design documents
     **/
 
 
-Removing users
-==============
+##Removing users
 
 Warning : this only works with CouchDB starting at version 1.0.1
 
-Removing a server administrator
--------------------------------
+###deleteAdmin($login)
 
 The method **deleteAdmin($login)** permanently removes the admin $login.
 
@@ -342,8 +372,7 @@ Example : creating and immediately removing a server administrator
 
 Note : the response of deleteAdmin() method is a string : it's the hash of the password this admin had before been removed. Example : -hashed-0c796d26c439bec7445663c2c2a18933858a8fbb,f3ada55b560c7ca77e5a5cdf61d40e1a
 
-Removing a user
----------------
+###deleteUser($login)
 
 The method **deleteUser($login)** permanently removes the user $login.
 
@@ -374,11 +403,9 @@ Example : removing a server user
 
 
 
-Assigning roles to users
-========================
+##Roles assignation
 
-Assigning a role to a user
------------------------
+###addRoleToUser($user, $role)
 
 The method **addRoleToUser($user, $role)** adds the role *$role* to the list of roles user *$user* belongs to. **$user** can be a PHP stdClass representing a CouchDB user object (as returned by getUser() method), or a user login.
 
@@ -399,8 +426,7 @@ Example : adding the role *cowboy* to user *joe*
     echo "Joe now got role cowboy";
 
 
-Removing a role from the list of roles a user belongs to
---------------------------------------------------------
+###removeRoleFromUser($user, $role)
 
 The method **removeRoleFromUser($user, $role)** removes the role *$role* from the list of roles user *$user* belongs to. **$user** can be a PHP stdClass representing a CouchDB user object (as returned by getUser() method), or a user login.
 
@@ -422,18 +448,16 @@ Example : removing the role *cowboy* of user *joe*
 
 
 
-Assigning users to databases
-============================
+##Database user security
 
 CouchDB databases got two types of privileged users : the *readers*, that can read all documents, and only write normal (non-design) documents.
 The *admins* got all privileges of the *readers*, and they also can write design documents, use temporary views, add and remove *readers* and *admins* of the database.
 [The CouchDB wiki gives all details regarding rights management.](http://wiki.apache.org/couchdb/Security_Features_Overview)
 
 
-Adding a user to the "readers"
-------------------------------
+###addDatabaseReaderUser($login)
 
-The method **addDatabaseReaderUser ($login)** adds a user in the readers list of the database.
+The method **addDatabaseReaderUser($login)** adds a user in the readers list of the database.
 
 Example - adding joe to the readers of the database mydb
 
@@ -451,10 +475,9 @@ Example - adding joe to the readers of the database mydb
     }
 
 
-Adding a user to the "admins"
-------------------------------
+###addDatabaseAdminUser($login)
 
-The method **addDatabaseAdminUser ($login)** adds a user in the admins list of the database.
+The method **addDatabaseAdminUser($login)** adds a user in the admins list of the database.
 
 Example - adding joe to the admins of the database mydb
 
@@ -472,10 +495,9 @@ Example - adding joe to the admins of the database mydb
     }
 
 
-Getting the list of "readers" of the database
----------------------------------------------
+###getDatabaseReaderUsers()
 
-The method **getDatabaseReaderUsers ()** returns the list of users belonging to the *readers* of the database.
+The method **getDatabaseReaderUsers()** returns the list of users belonging to the *readers* of the database.
 
 Example - getting all users beeing *readers* of the database mydb
 
@@ -495,10 +517,9 @@ Example - getting all users beeing *readers* of the database mydb
     // will echo something like: Array ( "joe" , "jack" )
 
 
-Getting the list of "admins" of the database
----------------------------------------------
+###getDatabaseAdminUsers()
 
-The method **getDatabaseAdminUsers ()** returns the list of users belonging to the *admins* of the database.
+The method **getDatabaseAdminUsers()** returns the list of users belonging to the *admins* of the database.
 
 Example - getting all users beeing *admins* of the database mydb
 
@@ -518,10 +539,9 @@ Example - getting all users beeing *admins* of the database mydb
     // will echo something like: Array ( "william" )
 
 
-Removing a user from the "readers"
-------------------------------
+###removeDatabaseReaderUser($login)
 
-The method **removeDatabaseReaderUser ($login)** removes a user from the readers list of the database.
+The method **removeDatabaseReaderUser($login)** removes a user from the readers list of the database.
 
 Example - removing joe from the readers of the database mydb
 
@@ -539,10 +559,9 @@ Example - removing joe from the readers of the database mydb
     }
 
 
-Removing a user from the "admins"
-------------------------------
+###removeDatabaseAdminUser($login)
 
-The method **removeDatabaseAdminUser ($login)** removes a user from the admins list of the database.
+The method **removeDatabaseAdminUser($login)** removes a user from the admins list of the database.
 
 Example - removing joe from the admins of the database mydb
 
@@ -561,17 +580,15 @@ Example - removing joe from the admins of the database mydb
 
 
 
-Assigning roles to databases
-============================
+##Database roles security
 
 Just like users, roles can be assigned as admins or readers in a CouchDB database.
 [The CouchDB wiki gives all details regarding rights management.](http://wiki.apache.org/couchdb/Security_Features_Overview)
 
 
-Adding a role to the "readers"
-------------------------------
+###addDatabaseReaderRole($role)
 
-The method **addDatabaseReaderrole ($role)** adds a role in the readers list of the database.
+The method **addDatabaseReaderrole($role)** adds a role in the readers list of the database.
 
 Example - adding cowboy to the readers of the database mydb
 
@@ -589,10 +606,9 @@ Example - adding cowboy to the readers of the database mydb
     }
 
 
-Adding a role to the "admins"
-------------------------------
+###addDatabaseAdminRole($role)
 
-The method **addDatabaseAdminRole ($role)** adds a role in the admins list of the database.
+The method **addDatabaseAdminRole($role)** adds a role in the admins list of the database.
 
 Example - adding *cowboy* role to the *admins* of the database mydb
 
@@ -610,10 +626,9 @@ Example - adding *cowboy* role to the *admins* of the database mydb
     }
 
 
-Getting the list of "readers" of the database
----------------------------------------------
+###getDatabaseReaderRoles()
 
-The method **getDatabaseReaderRoles ()** returns the list of roles belonging to the *readers* of the database.
+The method **getDatabaseReaderRoles()** returns the list of roles belonging to the *readers* of the database.
 
 Example - getting all roles beeing *readers* of the database mydb
 
@@ -633,10 +648,9 @@ Example - getting all roles beeing *readers* of the database mydb
     // will echo something like: Array ( "cowboy" , "indians" )
 
 
-Getting the list of "admins" of the database
----------------------------------------------
+###getDatabaseAdminRoles()
 
-The method **getDatabaseAdminRoles ()** returns the list of roles belonging to the *admins* of the database.
+The method **getDatabaseAdminRoles()** returns the list of roles belonging to the *admins* of the database.
 
 Example - getting all roles beeing *admins* of the database mydb
 
@@ -656,10 +670,9 @@ Example - getting all roles beeing *admins* of the database mydb
     // will echo something like: Array ( "martians" )
 
 
-Removing a role from the "readers"
-------------------------------
+###removeDatabaseReaderRole($role)
 
-The method **removeDatabaseReaderRole ($role)** removes a role from the readers list of the database.
+The method **removeDatabaseReaderRole($role)** removes a role from the readers list of the database.
 
 Example - removing *cowboy* from the *readers* of the database mydb
 
@@ -677,10 +690,9 @@ Example - removing *cowboy* from the *readers* of the database mydb
     }
 
 
-Removing a role from the "admins"
-------------------------------
+###removeDatabaseAdminRole($role)
 
-The method **removeDatabaseAdminRole ($role)** removes a role from the admins list of the database.
+The method **removeDatabaseAdminRole($role)** removes a role from the admins list of the database.
 
 Example - removing *martians* from the admins of the database mydb
 
@@ -700,8 +712,7 @@ Example - removing *martians* from the admins of the database mydb
 
 
 
-Accessing the database security object
-======================================
+##Accessing Database security object
 
 Each Couch database got a security object. The security object is made like :
 
@@ -719,10 +730,9 @@ Each Couch database got a security object. The security object is made like :
 PHP on Couch provides methods to directly get and set the security object.
 
 
-Getting the security object
----------------------------
+###getSecurity()
 
-The method **getSecurity ()** returns the security object of a CouchDB database.
+The method **getSecurity()** returns the security object of a CouchDB database.
 
 Example - getting the security object of the database mydb
 
@@ -740,8 +750,7 @@ Example - getting the security object of the database mydb
     }
 
 
-Setting the security object
----------------------------
+###setSecurity($security)
 
 The method **setSecurity($security)** set the security object of a Couch database
 
@@ -760,14 +769,12 @@ Example - setting the security object of the database mydb
         die("unable to set security object: ".$e->getMessage());
     }
 
-Setting the name of the CouchDB users database
-==============================================
+##Database options
 
 CouchDB got a special database used to store users. By default this database is called **_users**, but this can be changed.
 
 
-Setting the users database name on couchAdmin creation
-------------------------------------------------------
+###CouchAdmin users_database
 
 To create a couchAdmin instance and specify the name of the users database, use the constructor second parameter $options, setting the option **users_database**:
 
@@ -780,13 +787,14 @@ Example - setting the couchdb users database name on couchAdmin object creation
     $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
     $adm = new CouchAdmin($client, array ("users_database"=> "theUsers") );
     
-Changing the users database name of an existing couchAdmin instance
--------------------------------------------------------------------
+
+
+###setUserDatabase($name)
 
 The **setUsersDatabase($name)** method allows to specify an alternate name for the users database on an already created couchAdmin instance.
 
-Getting the users database name currently set in an existing couchAdmin instance
---------------------------------------------------------------------------------
+
+###getUserDatabase($name)
 
 The **getUsersDatabase($name)** method return the name that is used actually to connect to the users database.
 

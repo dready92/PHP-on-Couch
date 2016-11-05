@@ -10,7 +10,7 @@ To install the library and actually use it, you've got two choices:
 Before we get into the installation, you need to know that multiple versions are available at the moment. Since it's forked project, you have always access to the origin branches. For the future, here are the description of the available versions :
 
 - dev-master : The lastest tested sources (Production)
-- dev-dev : The lasted developments. Include new features but not tested for production.
+- dev-develop : The lasted developments. Include new features but not tested for production.
 - 2.0.0 : The PHP-on-Couch 2.0 Release (Will be installed by default)
 - 1.6.1.x-dev : The PHP-on-Couch 1.6.1 production branch. This branch contains the latest developments supporting CouchDB 1.6.1.
 
