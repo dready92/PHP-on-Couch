@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/popojargo/PHP-on-Couch.png?label=ready&title=Ready)](https://waffle.io/popojargo/PHP-on-Couch)
 [![Build Status](https://travis-ci.org/popojargo/PHP-on-Couch.svg?branch=master)](https://travis-ci.org/popojargo/PHP-on-Couch)
 [![Coverage Status](https://coveralls.io/repos/github/popojargo/PHP-on-Couch/badge.svg?branch=master)](https://coveralls.io/github/popojargo/PHP-on-Couch?branch=master)
 
