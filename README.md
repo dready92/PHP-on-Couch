@@ -1,6 +1,11 @@
-[![Stories in Ready](https://badge.waffle.io/popojargo/PHP-on-Couch.png?label=ready&title=Ready)](https://waffle.io/popojargo/PHP-on-Couch)
+##Tests and coverage
+
 [![Build Status](https://travis-ci.org/popojargo/PHP-on-Couch.svg?branch=master)](https://travis-ci.org/popojargo/PHP-on-Couch)
 [![Coverage Status](https://coveralls.io/repos/github/popojargo/PHP-on-Couch/badge.svg?branch=master)](https://coveralls.io/github/popojargo/PHP-on-Couch?branch=master)
+
+##Dev status
+
+[![Stories in Ready](https://badge.waffle.io/popojargo/PHP-on-Couch.png?label=ready&title=Ready)](https://waffle.io/popojargo/PHP-on-Couch)
 
 ##Table of content
 - [Introduction](#introduction)
@@ -31,7 +36,7 @@ Due to the lack of support on the last repository, I forked it and I will make s
 With the new release of 2.0, the master branch will support only this version and the next one.
 
 ###Devlopments
-If you want to get involved, feel free to fork this branch and make a pull request. We can discuss of the new feature together and split the works. For the organization and developments, I created a Taiga project that you can find [here](https://tree.taiga.io/project/alexiscote19-php-on-couch/). 
+If you want to get involved, feel free to fork this branch and make a pull request. We can discuss of the new feature together and split the works. Simply create an issue and we will discuss on it.
 
 To access PHP-on-Couch for CouchDB 1.6.1, please visit [this link](https://github.com/popojargo/PHP-on-Couch/tree/1.6.1).
 
