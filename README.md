@@ -202,4 +202,8 @@ $doc->name = "Brown"; // set document property "name" to "Brown" and store the u
        
 ##Feedback
 
+[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/popojargo/PHP-on-Couch)
+
 Don't hesitate to submit feedback, bugs and feature requests ! My contact address is [alexiscote19@hotmail.com](mailto:alexiscote19@hotmail.com?subject=Feedback)
+
+
