@@ -1,7 +1,18 @@
-lThis section describes how to use PHP on Couch to retrieve views results from a CouchDB server.
+This section describes how to use PHP on Couch to retrieve views results from a CouchDB server.
 
-Creating views
-==============
+##Table of content
+- [Creating views](#creating-views)
+- [getView($id, $name)](#getviewid-name)
+- [View response](#view-response)
+- [Query parameters](#query-parameters)
+- [setQueryParameters($params)](#setqueryparametersparams)
+- [asArray()](#asarray)
+- [getList($design_id, $name, $view_name, $additionnal_parameters = array())](#getlistdesign_id-name-view_name-additionnal_parameters--array)
+- [getForeignList($list_design_id, $name, $view_design_id, $view_name, $additionnal_parameters = array()) ](#getforeignlistlist_design_id-name-view_design_id-view_name-additionnal_parameters--array)
+- [getViewInfos($design_id)](#getviewinfosdesign_id)
+
+###Creating views
+
 
 [As said in the documentation](http://wiki.apache.org/couchdb/HTTP_view_API) , views are stored in CouchDB documents called "design documents". So to create a view, you have to create a design document.
 
@@ -13,8 +24,7 @@ Example
     $design_doc->views = array ( 'by_date'=> array ('map' => $view_fn ) );
     $client->storeDoc($design_doc);
 
-Basics of view retrieval
-========================
+###getView($id, $name)
 
 The method **getView($id, $name)** sends back the CouchDB response of a view.
  
@@ -25,8 +35,7 @@ Example :
 
     $result = $client->getView('all','by_date');
 
-CouchDB response for a view
-===========================
+##View response
 
 The CouchDB response of a view is an object containing :
 
@@ -41,11 +50,7 @@ Each object in **rows** contains the properties :
 * **value** : the emited value
 * **doc** : the document object, if query parameter include_docs is set (read on for that).
 
-Query parameters
-================
-
-Using chainable methods
------------------------
+##Query parameters
 
 PHP on Couch implements chainable methods to add query parameters. The method names are mapped on their CouchDB counterparts :
 
@@ -77,8 +82,7 @@ Which is the same as :
     $client->include_docs(TRUE);
     $response = $client->getView('all','by_date');
 
-Setting query parameters using an array
----------------------------------------
+###setQueryParameters($params)
 
 You also can set query parameters with a PHP array, using the **setQueryParameters** method :
 
@@ -86,10 +90,9 @@ You also can set query parameters with a PHP array, using the **setQueryParamete
     $response = $client->setQueryParameters(opts)->getView("all","by_date");
 
 
-Choose JSON decoding option
-===========================
+###asArray()
 
-When converting a JSON object to PHP, we can choose the type of the value returned from a couchClient query.
+When converting a JSON object to PHP, we can choose the type of the value returned from a CouchClient query.
 
 Take for example the following JSON object :
     { 'blog' : true, 'comments' : { 'title' : 'cool' } }
@@ -129,8 +132,7 @@ Format a view with CouchDB list formatting feature
 
 More infos on CouchDB lists [here](http://wiki.apache.org/couchdb/Formatting_with_Show_and_List).
 
-View and list definition in the same design document
-----------------------------------------------------
+###getList($design_id, $name, $view_name, $additionnal_parameters = array())
 
 The method **getList($design_id, $name, $view_name, $additionnal_parameters = array() )** retrive a view and then format it using the algorithm of the $name list.
 
@@ -140,8 +142,7 @@ Example :
     // will run the view declared in _design/all and named *by_date*, and then
     // pass it through the list declared in _design/all and named *html*.
 
-View and list definition in differents design documents
--------------------------------------------------------
+###getForeignList($list_design_id, $name, $view_design_id, $view_name, $additionnal_parameters = array())
 
 The method **getForeignList($list_design_id, $name, $view_design_id, $view_name, $additionnal_parameters = array() )** retrive a view 
 defined in the document *_design/$view_design_id* and then format it using the algorithm of the list defined in the design document 
@@ -155,8 +156,7 @@ Example :
 
 
 
-Getting informations about a view
-=================================
+###getViewInfos($design_id)
 
 More info on view informations [here](http://wiki.apache.org/couchdb/HTTP_view_API#Getting_Information_about_Design_Documents_.28and_their_Views.29)
 
