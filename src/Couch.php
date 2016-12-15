@@ -15,14 +15,15 @@ Copyright (C) 2009  Mickael Bailly
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+namespace PHPOnCouch;
+use Exception,  InvalidArgumentException;
 /**
 * couch class
 *
 * basics to implement JSON / REST / HTTP CouchDB protocol
 *
 */
-class couch {
+class Couch {
 	/**
 	* @var string database source name
 	*/

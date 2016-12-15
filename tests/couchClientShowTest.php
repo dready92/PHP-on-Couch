@@ -3,38 +3,44 @@
 // error_reporting(E_STRICT);
 error_reporting(E_ALL);
 
-require_once 'PHPUnit/Framework.php';
+use PHPOnCouch\CouchClient,
+	PHPOnCouch\CouchDocument,
+	PHPOnCouch\CouchAdmin;
 
-require_once "lib/couch.php";
-require_once "lib/couchClient.php";
-require_once "lib/couchDocument.php";
-require_once "lib/couchReplicator.php";
-
+require_once join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'config.php']);
 
 class couchClientShowTest extends PHPUnit_Framework_TestCase
 {
 
-	private $couch_server = "http://localhost:5984/";
+	private $host = 'localhost';
+	private $port = '5984';
 
-    public function setUp()
-    {
-        $this->client = new couchClient($this->couch_server,"couchclienttest");
+	public function setUp()
+	{
+		$config = config::getInstance();
+		$url = $config->getUrl($this->host, $this->port,null);
+		$aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
+		$this->client = new CouchClient($url, 'couchclienttest');
+		$this->aclient = new CouchClient($aUrl, 'couchclienttest');
 		try {
-			$this->client->deleteDatabase();
-		} catch ( Exception $e) {}
-		$this->client->createDatabase();
-    }
+			$this->aclient->deleteDatabase();
+		} catch (Exception $e) {
+			
+		}
+		$this->aclient->createDatabase();
+	}
 
 	public function tearDown()
-    {
-        $this->client = null;
-    }
+	{
+		$this->client = null;
+		$this->aclient = null;
+	}
 
-
-	public function testShow () {
-		$doc = new couchDocument($this->client);
-		$doc->_id="_design/test";
-		$show = array (
+	public function testShow()
+	{
+		$doc = new CouchDocument($this->aclient);
+		$doc->_id = "_design/test";
+		$show = array(
 			"simple" => "function (doc, ctx) {
 				ro = {body: ''};
 				if ( ! doc ) {
@@ -67,18 +73,18 @@ class couchClientShowTest extends PHPUnit_Framework_TestCase
 			}"
 		);
 		$doc->shows = $show;
-		$test = $this->client->getShow("test","simple","_design/test");
-		$this->assertEquals ( $test, "document: _design/test 0" );
-		$test = $this->client->getShow("test","simple","_design/test",array("param1"=>"value1"));
-		$this->assertEquals ( $test, "document: _design/test 1" );
-		$test = $this->client->getShow("test","simple",null);
-		$this->assertEquals ( $test, "no document 0" );
-		$test = $this->client->getShow("test","simple",null,array("param1"=>"value1"));
-		$this->assertEquals ( $test, "no document 1" );
-		$test = $this->client->getShow("test","json",null);
-		$this->assertType("object", $test);
-		$this->assertObjectHasAttribute("doc",$test);
-		$this->assertObjectHasAttribute("query_length",$test);
+		$test = $this->client->getShow("test", "simple", "_design/test");
+		$this->assertEquals($test, "document: _design/test 0");
+		$test = $this->client->getShow("test", "simple", "_design/test", array("param1" => "value1"));
+		$this->assertEquals($test, "document: _design/test 1");
+		$test = $this->client->getShow("test", "simple", null);
+		$this->assertEquals($test, "no document 0");
+		$test = $this->client->getShow("test", "simple", null, array("param1" => "value1"));
+		$this->assertEquals($test, "no document 1");
+		$test = $this->client->getShow("test", "json", null);
+		$this->assertInternalType("object", $test);
+		$this->assertObjectHasAttribute("doc", $test);
+		$this->assertObjectHasAttribute("query_length", $test);
 	}
 
 }

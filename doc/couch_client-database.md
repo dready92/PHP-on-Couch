@@ -7,25 +7,25 @@ To use PHP on Couch client, you have to create a couchClient instance, setting t
 
 Example : connect to the couchDB server at http://my.server.com on port 5984 and on database mydb :
 
-    $client = new couchClient("http://my.server.com:5984/","mydb");
+    $client = new CouchClient("http://my.server.com:5984/","mydb");
 
 If you want to authenticate to the server using a username & password, just set it in the URL.
 
 Example : connect to the couchDB server at http://my.server.com on port 5984 using the username "couchAdmin", the password "secret" and on database mydb :
 
-    $client = new couchClient("http://couchAdmin:secret@my.server.com:5984/","mydb");
+    $client = new CouchClient("http://couchAdmin:secret@my.server.com:5984/","mydb");
 
 You can also tell couchClient to use cookie based authentification, by passing an additional flag "cookie_auth" set to TRUE in the options array, as the third parameter of the couchClient constructor.
 
 Example : as the previous one, but using cookie based authentification
 
-    $client = new couchClient("http://couchAdmin:secret@my.server.com:5984/","mydb", array("cookie_auth"=>TRUE) );
+    $client = new CouchClient("http://couchAdmin:secret@my.server.com:5984/","mydb", array("cookie_auth"=>TRUE) );
 
 You can also manually set the session cookie.
 
 Example : manually setting the session cookie :
 
-    $client = new couchClient("http://my.server.com:5984/","mydb");
+    $client = new CouchClient("http://my.server.com:5984/","mydb");
     $client->setSessionCookie("AuthSession=Y291Y2g6NENGNDgzNzY6Gk0NjM-UKxhpX_IyiH-C-9yXY44");
 
 
@@ -37,7 +37,7 @@ The method **dsn()** returns the DSN of the server. Database is not included in 
 
 Example :
 
-    $client = new couchClient("http://couch.server.com:5984/","hello");
+    $client = new CouchClient("http://couch.server.com:5984/","hello");
     echo $client->dsn(); // will echo : http://couch.server.com:5984
 
 Testing a database name
@@ -48,8 +48,8 @@ Database names on CouchDB have restrictions : only lowercase characters (a-z), d
 Example :
 
     $my_database = "user311(public)";
-    if ( couchClient::isValidDatabaseName($my_database) ) {
-        $client = new couchClient("http://couch.server.com:5984/",$my_database);
+    if ( CouchClient::isValidDatabaseName($my_database) ) {
+        $client = new CouchClient("http://couch.server.com:5984/",$my_database);
     } else {
         die("Invalid database name");
     }
@@ -149,7 +149,7 @@ The method **useDatabase($dbname)** changes the working database on the CouchDB 
 
 Example :
 
-    $client = new couchClient("http://localhost:5984", "db1");
+    $client = new CouchClient("http://localhost:5984", "db1");
     $all_docs_db1 = $client->getAllDocs(); //retrieve all docs of database db1
     $client->useDatabase("db2");           //switch to "db2" database
     $all_docs_db2 = $client->getAllDocs(); //retrieve all docs of database db2

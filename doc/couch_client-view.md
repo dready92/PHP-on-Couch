@@ -89,7 +89,7 @@ You also can set query parameters with a PHP array, using the **setQueryParamete
 Choose JSON decoding option
 ===========================
 
-When converting a JSON object to PHP, we can choose the type of the value returned from a couchClient query.
+When converting a JSON object to PHP, we can choose the type of the value returned from a CouchClient query.
 
 Take for example the following JSON object :
     { 'blog' : true, 'comments' : { 'title' : 'cool' } }

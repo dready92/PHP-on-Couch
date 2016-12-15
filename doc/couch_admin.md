@@ -3,11 +3,11 @@ This section give details about the couchAdmin object.
 Please Read this first !!
 =========================
 
-The couchAdmin class is only needed to **manage** users of a CouchDB server : add users, add admins, ...
+The CouchAdmin class is only needed to **manage** users of a CouchDB server : add users, add admins, ...
 
 You don't need the couchAdmin class to connect to CouchDB with a login / password. You only need to add your login and password to the DSN argument when creating your CouchDB client :
 
-    $client = new couchClient ("http://theuser:secretpass@couch.server.com:5984","mydatabase");
+    $client = new CouchClient ("http://theuser:secretpass@couch.server.com:5984","mydatabase");
 
 
 Managing CouchDB users
@@ -21,15 +21,15 @@ Synopsys
 --------
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
     // Here my couchDB is in "admin party" mode (no user, no admin defined)
     //
     // I create an "anonymous" connector to the database
-    $client = new couchClient ("http://localhost:5984/","mydb" );
+    $client = new CouchClient ("http://localhost:5984/","mydb" );
     // I then create an instance of the couchAdmin class, passing the couchClient as a parameter
-    $anonymous_adm = new couchAdmin($client);
+    $anonymous_adm = new CouchAdmin($client);
     
     // I create the first admin user
     try {
@@ -41,8 +41,8 @@ Synopsys
     //
     // now my database is not in "admin party" anymore : to continue Administration I need to setup an authenticated connector
     //
-    $admclient = new couchClient ("http://superAdmin:secretpass@localhost:5984/", "mydb" );
-    $adm = new couchAdmin($admclient);
+    $admclient = new CouchClient ("http://superAdmin:secretpass@localhost:5984/", "mydb" );
+    $adm = new CouchAdmin($admclient);
     
     // create a regular (no superadmin) user)
     try {
@@ -83,10 +83,10 @@ The couchAdmin class constructor takes an only parameter : a couchClient object.
 
 Example :
 
-    // create a couchClient instance
-    $client = new couchClient("http://localhost:5984/","mydb");
-    // now create the couchAdmin instance
-    $adm = new couchAdmin($client);
+    // create a CouchClient instance
+    $client = new CouchClient("http://localhost:5984/","mydb");
+    // now create the CouchAdmin instance
+    $adm = new CouchAdmin($client);
     // here $adm will connect to CouchDB without any credentials : that will only work if there is no administrator created yet on the server.
 
 
@@ -98,9 +98,9 @@ On a fresh install, CouchDB is in **admin party** mode : that means any operatio
 Below is an example to configure the first server administrator, that we will name **couchAdmin** with the password **secretpass** :
 
     // create an anonymous couchClient connection (no user/pass)
-    $client = new couchClient("http://localhost:5984/","mydb");
+    $client = new CouchClient("http://localhost:5984/","mydb");
     // now create the couchAdmin instance
-    $adm = new couchAdmin($client);
+    $adm = new CouchAdmin($client);
     //create the server administrator
     try {
         $adm->createAdmin("couchAdmin","secretpass");
@@ -112,9 +112,9 @@ Now that the couch server got a server administrator, it's not in "admin party" 
 We need to create a couchClient instance with the credentials of **couchAdmin**.
 
     // create a server administrator couchClient connection
-    $client = new couchClient("http://couchAdmin:secretpass@localhost:5984/","mydb");
-    // now create the couchAdmin instance
-    $adm = new couchAdmin($client);
+    $client = new CouchClient("http://couchAdmin:secretpass@localhost:5984/","mydb");
+    // now create the CouchAdmin instance
+    $adm = new CouchAdmin($client);
 
 
 
@@ -129,11 +129,11 @@ The method **createAdmin ($login, $password, $roles = array() )** creates a Couc
 Example :
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     // Create an admin user
     try {
@@ -151,11 +151,11 @@ The method **createUser ($login, $password, $roles = array())** creates a CouchD
 Example :
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     // Create a user
     try {
@@ -168,11 +168,11 @@ Example :
 Example - creating a user and adding it to some roles
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     $roles = array ("thief","jailbreaker");
     
@@ -191,11 +191,11 @@ The method **getUser ( $login )** returns the user document stored in the users 
 Example :
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     // get a user
     try {
@@ -217,11 +217,11 @@ The method **getAllUsers ()** returns the list of all users registered in the us
 Example :
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     // get all users
     try {
@@ -260,11 +260,11 @@ Example :
 Example - including user documents and not showing the design documents
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     try {
         $all = $adm->include_docs(true)->startkey("org.couchdb.user:")->getAllUsers();
@@ -308,11 +308,11 @@ The method **deleteAdmin($login)** permanently removes the admin $login.
 Example : creating and immediately removing a server administrator
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     $adminLogin = "butterfly";
     $adminPass = "wing";
@@ -341,9 +341,9 @@ The method **deleteUser($login)** permanently removes the user $login.
 Example : removing a server user
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
     $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
     $adm = new couchAdmin($client);
     
@@ -376,11 +376,11 @@ The method **addRoleToUser($user, $role)** adds the role *$role* to the list of 
 Example : adding the role *cowboy* to user *joe*
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     try {
         $adm->addRoleToUser("joe","cowboy");
@@ -398,11 +398,11 @@ The method **removeRoleFromUser($user, $role)** removes the role *$role* from th
 Example : removing the role *cowboy* of user *joe*
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     try {
         $adm->removeRoleFromUser("joe","cowboy");
@@ -429,11 +429,11 @@ The method **addDatabaseReaderUser ($login)** adds a user in the readers list of
 Example - adding joe to the readers of the database mydb
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     try {
         $adm->addDatabaseReaderUser("joe");
@@ -450,11 +450,11 @@ The method **addDatabaseAdminUser ($login)** adds a user in the admins list of t
 Example - adding joe to the admins of the database mydb
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     try {
         $adm->addDatabaseAdminUser("joe");
@@ -471,11 +471,11 @@ The method **getDatabaseReaderUsers ()** returns the list of users belonging to 
 Example - getting all users beeing *readers* of the database mydb
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     try {
         $users = $adm->getDatabaseReaderUsers();
@@ -494,11 +494,11 @@ The method **getDatabaseAdminUsers ()** returns the list of users belonging to t
 Example - getting all users beeing *admins* of the database mydb
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     try {
         $users = $adm->getDatabaseAdminUsers();
@@ -517,11 +517,11 @@ The method **removeDatabaseReaderUser ($login)** removes a user from the readers
 Example - removing joe from the readers of the database mydb
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     try {
         $adm->removeDatabaseReaderUser("joe");
@@ -538,11 +538,11 @@ The method **removeDatabaseAdminUser ($login)** removes a user from the admins l
 Example - removing joe from the admins of the database mydb
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     try {
         $adm->removeDatabaseAdminUser("joe");
@@ -567,11 +567,11 @@ The method **addDatabaseReaderrole ($role)** adds a role in the readers list of 
 Example - adding cowboy to the readers of the database mydb
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     try {
         $adm->addDatabaseReaderRole("cowboy");
@@ -588,11 +588,11 @@ The method **addDatabaseAdminRole ($role)** adds a role in the admins list of th
 Example - adding *cowboy* role to the *admins* of the database mydb
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     try {
         $adm->addDatabaseAdminrole("cowboy");
@@ -609,11 +609,11 @@ The method **getDatabaseReaderRoles ()** returns the list of roles belonging to 
 Example - getting all roles beeing *readers* of the database mydb
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     try {
         $roles = $adm->getDatabaseReaderRoles();
@@ -632,11 +632,11 @@ The method **getDatabaseAdminRoles ()** returns the list of roles belonging to t
 Example - getting all roles beeing *admins* of the database mydb
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     try {
         $roles = $adm->getDatabaseAdminRoles();
@@ -655,11 +655,11 @@ The method **removeDatabaseReaderRole ($role)** removes a role from the readers 
 Example - removing *cowboy* from the *readers* of the database mydb
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     try {
         $adm->removeDatabaseReaderRole("cowboy");
@@ -676,11 +676,11 @@ The method **removeDatabaseAdminRole ($role)** removes a role from the admins li
 Example - removing *martians* from the admins of the database mydb
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
+   use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
     $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    $adm = new CouchAdmin($client);
     
     try {
         $adm->removeDatabaseAdminRole("martians");
@@ -718,10 +718,10 @@ The method **getSecurity ()** returns the security object of a CouchDB database.
 Example - getting the security object of the database mydb
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
     $adm = new couchAdmin($client);
     
     try {
@@ -739,11 +739,11 @@ The method **setSecurity($security)** set the security object of a Couch databas
 Example - setting the security object of the database mydb
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client);
     
     try {
         $adm->setSecurity($security);
@@ -765,11 +765,11 @@ To create a couchAdmin instance and specify the name of the users database, use 
 Example - setting the couchdb users database name on couchAdmin object creation
 
     <?PHP
-    require_once "lib/couch.php";
-    require_once "lib/couchClient.php";
-    require_once "lib/couchAdmin.php";
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client, array ("users_database"=> "theUsers") );
+    use PHPOnCouch\Couch,
+        PHPOnCouch\CouchClient,
+        PHPOnCouch\CouchAdmin;
+    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+    $adm = new CouchAdmin($client, array ("users_database"=> "theUsers") );
     
 Changing the users database name of an existing couchAdmin instance
 -------------------------------------------------------------------

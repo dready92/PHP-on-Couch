@@ -15,7 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
     */
 
-
+namespace PHPOnCouch;
 
 /**
 * Special class to handle replication stuff, as the API is still evolving
@@ -24,7 +24,7 @@
 *
 *
 */
-class couchReplicator {
+class CouchReplicator {
 	/**
 	* @var reference to our CouchDB client
 	*/
@@ -38,16 +38,16 @@ class couchReplicator {
 	/**
 	*constructor
 	*
-	* @param couchClient $client the couchClient instance
+	* @param CouchClient $client the couchClient instance
 	*/
-	function __construct ( couchClient $client ) {
+	function __construct ( CouchClient $client ) {
 		$this->client = $client;
 	}
 
 	/**
 	* chainable method : tell couchdb to create target database if it doesn't exist
 	*
-	* @return couchReplicator $this
+	* @return CouchReplicator $this
 	*/
 	public function create_target () {
 		$this->opts['create_target'] = true;
@@ -57,7 +57,7 @@ class couchReplicator {
 	/**
 	* chainable method : setup a continuous replication stream
 	*
-	* @return couchReplicator $this
+	* @return CouchReplicator $this
 	*/
 	public function continuous () {
 		$this->opts['continuous'] = true;
@@ -69,7 +69,7 @@ class couchReplicator {
 	*
 	* TODO: check if that works (apparently that doesn't)
 	*
-	* @return couchReplicator $this
+	* @return CouchReplicator $this
 	*/
 	public function cancel () {
 		$this->opts['cancel'] = true;
@@ -80,7 +80,7 @@ class couchReplicator {
 	* chainable method : restrict replication to given document ids
 	*
 	* @param array $ids list of document ids to replicate
-	* @return couchReplicator $this
+	* @return CouchReplicator $this
 	*/
 	public function doc_ids ( array $ids ) {
 		$this->opts['doc_ids'] = $ids;
@@ -93,7 +93,7 @@ class couchReplicator {
 	* filter design doc should belong to the source database
 	*
 	* @param string $name replication filter name ( ex mydesign/myfilter )
-	* @return couchReplicator $this
+	* @return CouchReplicator $this
 	*/
 	public function filter ( $name ) {
 		$this->opts['filter'] = $name;
@@ -104,7 +104,7 @@ class couchReplicator {
 	* chainable method : set query params (for example for a filtered replication)
 	*
 	* @param array|object $params list of document ids to replicate
-	* @return couchReplicator $this
+	* @return CouchReplicator $this
 	*/
 	public function query_params ( $params ) {
 		$this->opts['query_params'] = $params;
@@ -148,7 +148,7 @@ class couchReplicator {
 			$opts
 		);
 // 		print_r($raw);
-		$resp = couch::parseRawResponse($raw);
+		$resp = Couch::parseRawResponse($raw);
 // 		print_r($resp);
 		if ( $resp['status_code'] == 200 ) {
 			return $resp['body'];
