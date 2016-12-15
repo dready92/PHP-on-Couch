@@ -1,0 +1,10 @@
+#Netbean project folders
+/nbproject/private/
+/nbproject
+
+#Composer files
+composer.lock
+/vendor
+
+#Test config
+/tests/_config/_users.php
