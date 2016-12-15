@@ -106,10 +106,20 @@ class Couch
 	}
 
 	/**
+	 * get the session cookie
+	 *
+	 * @return string cookie
+	 */
+	public function getSessionCookie()
+	{
+		return $this->sessioncookie;
+	}
+
+	/**
 	 * set the session cookie to send in the headers
 	 * @param string $cookie the session cookie ( example : AuthSession=Y291Y2g6NENGNDgzNz )
 	 *
-	 * @return \couch
+	 * @return \Couch
 	 */
 	public function setSessionCookie($cookie)
 	{
