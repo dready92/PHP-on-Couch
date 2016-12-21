@@ -38,7 +38,9 @@ With the new release of 2.0, the master branch will support only this version an
 ###Devlopments
 If you want to get involved, feel free to fork this branch and make a pull request. We can discuss of the new feature together and split the works. Simply create an issue and we will discuss on it.
 
-To access PHP-on-Couch for CouchDB 1.6.1, please visit [this link](https://github.com/popojargo/PHP-on-Couch/tree/1.6.1).
+
+To access PHP-on-Couch for CouchDB 1.6.1, please visit [this link](https://github.com/dready92/PHP-on-Couch/tree/1.6.1).
+
 
 ##Changes
 
