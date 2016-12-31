@@ -377,7 +377,7 @@ To retrieve several documents in one go, knowing their IDs, select documents usi
 
 Example :
 
-    $view = $client->include_docs(true)->keys->( array('BlogPost5676','BlogComments5676') )->getAllDocs();
+    $view = $client->include_docs(true)->keys( array('BlogPost5676','BlogComments5676') )->getAllDocs();
     foreach ( $view->rows as $row ) {
       echo "doc id :".$row->doc->_id."\n";
     }
