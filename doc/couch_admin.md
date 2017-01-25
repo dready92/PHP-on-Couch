@@ -19,18 +19,18 @@ This section give details about the CouchAdmin object.
     + [addRoleToUser($user, $role)](#addroletouseruser-role)
     + [removeRoleFromUser($user, $role)](#removerolefromuseruser-role)
 - [Database user security](#database-user-security)
-    + [addDatabaseReaderUser($login)](#adddatabasereaderuserlogin)
+    + [addDatabaseMemberUser($login)](#adddatabasememberuserlogin)
     + [addDatabaseAdminUser($login)](#adddatabaseadminuserlogin)
-    + [getDatabaseReaderUsers()](#getdatabasereaderusers)
+    + [getDatabaseMemberUsers()](#getdatabasememberusers)
     + [getDatabaseAdminUsers()](#getdatabaseadminusers)
-    + [removeDatabaseReaderUser($login)](#removedatabasereaderuserlogin)
+    + [removeDatabaseMemberUser($login)](#removedatabasememberuserlogin)
     + [removeDatabaseAdminUser($login)](#removedatabaseadminuserlogin)
 - [Database roles security](#database-roles-security)
-    + [addDatabaseReaderRole($role)](#adddatabasereaderrolerole)
+    + [addDatabaseMemberRole($role)](#adddatabasememberrolerole)
     + [addDatabaseAdminRole($role)](#adddatabaseadminrolerole)
-    + [getDatabaseReaderRoles()](#getdatabasereaderroles)
+    + [getDatabaseMemberRoles()](#getdatabasememberroles)
     + [getDatabaseAdminRoles()](#getdatabaseadminroles)
-    + [removeDatabaseReaderRole($role)](#removedatabasereaderrolerole)
+    + [removeDatabaseMemberRole($role)](#removedatabasememberrolerole)
     + [removeDatabaseAdminRole($role)](#removedatabaseadminrole-role)
 - [Accessing Database security object](#accessing-database-security-object)
     + [getSecurity()](#getsecurity)
@@ -104,15 +104,15 @@ The **CouchAdmin** class contains helpful methods to create admins, users, and a
         die("unable to remove joe from the admins list of mydb: ".$e->getMessage());
     }
     
-    // and add it to the readers group of database "mydb"
+    // and add it to the members group of database "mydb"
     try {
-        $adm->addDatabaseReaderUser("joe");
+        $adm->addDatabaseMemberUser("joe");
     } catch ( Exception $e ) {
-        die("unable to add joe to the readers list of mydb: ".$e->getMessage());
+        die("unable to add joe to the members list of mydb: ".$e->getMessage());
     }
     
-    // well... get the list of users belonging to the "readers" group of "mydb"
-    $users = $adm->getDatabaseReaderUsers();  // array ( "joe" )
+    // well... get the list of users belonging to the "members" group of "mydb"
+    $users = $adm->getDatabaseMemberUsers();  // array ( "joe" )
     
 
 ##Getting started
@@ -450,16 +450,16 @@ Example : removing the role *cowboy* of user *joe*
 
 ##Database user security
 
-CouchDB databases got two types of privileged users : the *readers*, that can read all documents, and only write normal (non-design) documents.
-The *admins* got all privileges of the *readers*, and they also can write design documents, use temporary views, add and remove *readers* and *admins* of the database.
+CouchDB databases got two types of privileged users : the *members*, that can read all documents, and only write normal (non-design) documents.
+The *admins* got all privileges of the *members*, and they also can write design documents, use temporary views, add and remove *members* and *admins* of the database.
 [The CouchDB wiki gives all details regarding rights management.](http://wiki.apache.org/couchdb/Security_Features_Overview)
 
 
-###addDatabaseReaderUser($login)
+###addDatabaseMemberUser($login)
 
-The method **addDatabaseReaderUser($login)** adds a user in the readers list of the database.
+The method **addDatabaseMemberUser($login)** adds a user in the members list of the database.
 
-Example - adding joe to the readers of the database mydb
+Example - adding joe to the members of the database mydb
 
     <?PHP
     use PHPOnCouch\Couch,
@@ -469,7 +469,7 @@ Example - adding joe to the readers of the database mydb
     $adm = new CouchAdmin($client);
     
     try {
-        $adm->addDatabaseReaderUser("joe");
+        $adm->addDatabaseMemberUser("joe");
     } catch ( Exception $e ) {
         die("unable to add user: ".$e->getMessage());
     }
@@ -495,11 +495,11 @@ Example - adding joe to the admins of the database mydb
     }
 
 
-###getDatabaseReaderUsers()
+###getDatabaseMemberUsers()
 
-The method **getDatabaseReaderUsers()** returns the list of users belonging to the *readers* of the database.
+The method **getDatabaseMemberUsers()** returns the list of users belonging to the *members* of the database.
 
-Example - getting all users beeing *readers* of the database mydb
+Example - getting all users beeing *members* of the database mydb
 
     <?PHP
     use PHPOnCouch\Couch,
@@ -509,7 +509,7 @@ Example - getting all users beeing *readers* of the database mydb
     $adm = new CouchAdmin($client);
     
     try {
-        $users = $adm->getDatabaseReaderUsers();
+        $users = $adm->getDatabaseMemberUsers();
     } catch ( Exception $e ) {
         die("unable to list users: ".$e->getMessage());
     }
@@ -539,11 +539,11 @@ Example - getting all users beeing *admins* of the database mydb
     // will echo something like: Array ( "william" )
 
 
-###removeDatabaseReaderUser($login)
+###removeDatabaseMemberUser($login)
 
-The method **removeDatabaseReaderUser($login)** removes a user from the readers list of the database.
+The method **removeDatabaseMemberUser($login)** removes a user from the members list of the database.
 
-Example - removing joe from the readers of the database mydb
+Example - removing joe from the members of the database mydb
 
     <?PHP
     use PHPOnCouch\Couch,
@@ -553,7 +553,7 @@ Example - removing joe from the readers of the database mydb
     $adm = new CouchAdmin($client);
     
     try {
-        $adm->removeDatabaseReaderUser("joe");
+        $adm->removeDatabaseMemberUser("joe");
     } catch ( Exception $e ) {
         die("unable to remove user: ".$e->getMessage());
     }
@@ -582,15 +582,15 @@ Example - removing joe from the admins of the database mydb
 
 ##Database roles security
 
-Just like users, roles can be assigned as admins or readers in a CouchDB database.
+Just like users, roles can be assigned as admins or members in a CouchDB database.
 [The CouchDB wiki gives all details regarding rights management.](http://wiki.apache.org/couchdb/Security_Features_Overview)
 
 
-###addDatabaseReaderRole($role)
+###addDatabaseMemberRole($role)
 
-The method **addDatabaseReaderrole($role)** adds a role in the readers list of the database.
+The method **addDatabaseMemberrole($role)** adds a role in the members list of the database.
 
-Example - adding cowboy to the readers of the database mydb
+Example - adding cowboy to the members of the database mydb
 
     <?PHP
     use PHPOnCouch\Couch,
@@ -600,7 +600,7 @@ Example - adding cowboy to the readers of the database mydb
     $adm = new CouchAdmin($client);
     
     try {
-        $adm->addDatabaseReaderRole("cowboy");
+        $adm->addDatabaseMemberRole("cowboy");
     } catch ( Exception $e ) {
         die("unable to add role: ".$e->getMessage());
     }
@@ -626,11 +626,11 @@ Example - adding *cowboy* role to the *admins* of the database mydb
     }
 
 
-###getDatabaseReaderRoles()
+###getDatabaseMemberRoles()
 
-The method **getDatabaseReaderRoles()** returns the list of roles belonging to the *readers* of the database.
+The method **getDatabaseMemberRoles()** returns the list of roles belonging to the *members* of the database.
 
-Example - getting all roles beeing *readers* of the database mydb
+Example - getting all roles beeing *members* of the database mydb
 
     <?PHP
     use PHPOnCouch\Couch,
@@ -640,7 +640,7 @@ Example - getting all roles beeing *readers* of the database mydb
     $adm = new CouchAdmin($client);
     
     try {
-        $roles = $adm->getDatabaseReaderRoles();
+        $roles = $adm->getDatabaseMemberRoles();
     } catch ( Exception $e ) {
         die("unable to list roles: ".$e->getMessage());
     }
@@ -670,11 +670,11 @@ Example - getting all roles beeing *admins* of the database mydb
     // will echo something like: Array ( "martians" )
 
 
-###removeDatabaseReaderRole($role)
+###removeDatabaseMemberRole($role)
 
-The method **removeDatabaseReaderRole($role)** removes a role from the readers list of the database.
+The method **removeDatabaseMemberRole($role)** removes a role from the members list of the database.
 
-Example - removing *cowboy* from the *readers* of the database mydb
+Example - removing *cowboy* from the *members* of the database mydb
 
     <?PHP
     use PHPOnCouch\Couch,
@@ -684,7 +684,7 @@ Example - removing *cowboy* from the *readers* of the database mydb
     $adm = new CouchAdmin($client);
     
     try {
-        $adm->removeDatabaseReaderRole("cowboy");
+        $adm->removeDatabaseMemberRole("cowboy");
     } catch ( Exception $e ) {
         die("unable to remove role: ".$e->getMessage());
     }
@@ -721,7 +721,7 @@ Each Couch database got a security object. The security object is made like :
             "names" : ["joe", "phil"],
             "roles" : ["boss"]
         },
-        "readers" : {
+        "members" : {
             "names" : ["dave"],
             "roles" : ["producer", "consumer"]
         }
