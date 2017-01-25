@@ -333,6 +333,8 @@ class CouchAdmin
 			$resp["body"]->admins = new stdClass();
 			$resp["body"]->admins->names = array();
 			$resp["body"]->admins->roles = array();
+		}
+		if (!property_exists($resp['body'], "members")) {
 			$resp["body"]->members = new stdClass();
 			$resp["body"]->members->names = array();
 			$resp["body"]->members->roles = array();
