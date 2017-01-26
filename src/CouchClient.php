@@ -54,7 +54,7 @@ class CouchClient extends Couch
 	 * 	- filter : the type of filter to apply to the value (ex to force a cast to an integer ...)
 	 */
 	protected $query_defs = array(
-		"since" => array("name" => "since", "filter" => "int"),
+		"since" => array("name" => "since", "filter" => "string"),
 		"heartbeat" => array("name" => "heartbeat", "filter" => "int"),
 		"style" => array("name" => "style", "filter" => null),
 		"conflicts" => array("name" => "conflicts", "filter" => "staticValue", "staticValue" => "true"),
