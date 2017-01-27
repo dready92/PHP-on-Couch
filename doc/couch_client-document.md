@@ -1,9 +1,34 @@
 This section details the available methods to work with documents
+##Table of content
+- [getAllDocs()](#getalldocs)
+- [getDoc($id)](#getdocid)
+    + [Chainable methods to use with getDoc()](#chainable-methods-to-use-with-getdoc)
+    + [rev($value)](#revvalue)
+    + [asCouchDocuments()](#ascouchdocuments)
+    + [conflicts()](#conflicts)
+    + [revs()](#revs)
+    + [revs_info()](#revs_info)
+    + [open_revs($value)](#open_revsvalue)
+- [storeDoc($doc)](#storedocdoc)
+- [Updating a document](#updating-a-document)
+- [updateDoc($ddoc_id, $handler_name, $params, $doc_id = null)](#updatedocddoc_id-handler_name-params-doc_id--null)
+- [updateDocFullAPI($ddoc_id, $handler_name, $options)](#updatedocfullapiddoc_id-handler_name-options)
+- [deleteDoc($doc)](#deletedocdoc)
+- [copyDoc($id, $new_id)](#copydocid-new_id)
+- [Attachments](#attachments)
+- [storeAttachment($doc, $file, $content_type = 'application/octet-stream', $filename = null)](#storeattachmentdoc-file-content_type--applicationoctet-stream-filename--null)
+- [storeAsAttachment($doc,$data,$filename,$content_type = 'application/octet-stream')](#storeasattachmentdocdatafilenamecontent_type--applicationoctet-stream)
+- [deleteAttachment($doc,$attachment_name)](#deleteattachmentdocattachment_name)
+- [getShow($design_id, $name, $doc_id = null, $additionnal_parameters = array())](#getshowdesign_id-name-doc_id--null-additionnal_parameters--array)
+- [Bulk operations](#bulk-operations)
+- [keys($ids)->getAllDocs()](#keysids-getalldocs)
+- [storeDocs($docs, $new_edits)](#storedocsdocs-new_edits)
+- [deleteDocs($docs, $new_edits)](#deletedocsdocs-new_edits)
+- [asArray()](#asarray)
 
-Getting all documents
-=====================
+###getAllDocs()
 
-The method **getAllDocs()** retrieve all documents from the database. In fact it only retrieve document IDs, unless you specify the server to include the documents using the [View query parameters syntax](http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-view.md).
+The method **getAllDocs()** retrieve all documents from the database. In fact it only retrieve document IDs, unless you specify the server to include the documents using the [View query parameters syntax](couch_client-view.md).
 
 Example :
     
@@ -13,8 +38,7 @@ Example :
         echo "Document ".$row->id."<BR>\n";
     }
 
-Getting a document by ID
-========================
+###getDoc($id)
 
 The method **getDoc($id)** gives back the document that got ID $id, if it exists. Note that if the document does not exist, the method will throw an error.
 
@@ -32,11 +56,9 @@ Example :
     }
     echo $doc->_id.' revision '.$doc->_rev;
 
-Chainable methods to use with getDoc()
-======================================
+###Chainable methods to use with getDoc()
 
-Getting a particular revision of the document
----------------------------------------------
+####rev($value)
 
 The chainable **rev($value)** method specify the document revision to fetch.
 
@@ -53,10 +75,9 @@ Example :
     echo $doc->_rev ; // should echo 1-849aff6ad4a38b1225c80a2119dc31cb
 
 
-Getting a document as a couchDocument object
---------------------------------------------
+####asCouchDocuments()
 
-The **getDoc($id)** method returns a PHP stdClass object. You can however get back the document as a couchDocument object by calling the **asCouchDocuments()** method before the **getDoc($id)** method.
+The **getDoc($id)** method returns a PHP stdClass object. You can however get back the document as a CouchDocument object by calling the **asCouchDocuments()** method before the **getDoc($id)** method.
 
 Example :
 
@@ -68,11 +89,10 @@ Example :
         }
         exit(1);
     }
-    echo get_class($doc); // should echo "couchDocument"
+    echo get_class($doc); // should echo "CouchDocument"
 
 
-Adding conflicts informations (if any)
---------------------------------------
+####conflicts()
 
 The chainable method **conflicts()** asks CouchDB to add to the document a property *_conflicts* containing conflicting revisions on an object.
 
@@ -91,8 +111,7 @@ Example :
     }
     
 
-Adding revisions list
---------------------------------------
+####revs()
 
 The chainable method **revs()** asks CouchDB to add to the document a property *_revisions* containing the list of revisions for an object.
 
@@ -108,8 +127,7 @@ Example :
     }
     print_r($doc->_revisions);
 
-Adding revisions informations
---------------------------------------
+####revs_info()
 
 The chainable method **revs_info()** asks CouchDB to add to the document a property *_revs_info* containing the avaibility of revisions for an object.
 
@@ -126,10 +144,9 @@ Example :
     print_r($doc->_revs_info);
 
 
-Fetching Several revisions of a document
-========================================
+####open_revs($value)
 
-Using the **open_revs( $value )** method, CouchDB returns an array of objects.
+Using the **open_revs($value)** method, CouchDB returns an array of objects.
 
 **$value** should be an array of revision ids or the special keyword all (to fetch all revisions of a document)
 
@@ -160,8 +177,7 @@ Which should return something similar to :
         )
     )
 
-Storing a document
-==================
+###storeDoc($doc)
 
 The method **storeDoc($doc)** store a document on the CouchDB server. $doc should be an object. If the property $doc->_rev is set, the method understand that it's an update, and as so requires the property $doc->\_id to be set. If the property $doc->\_rev is not set, the method checks for the existance of property $doc->\_id and initiate the appropriate request.
 
@@ -216,15 +232,13 @@ Example : updating an existing document :
     echo "Doc recorded. id = ".$response->id." and revision = ".$response->rev."<br>\n";
     // Doc recorded. id = BlogPost6576 and revision = 2-456769086
 
-Updating a document
-===================
+##Updating a document
 
 Using CouchDB [Update handlers](http://wiki.apache.org/couchdb/Document_Update_Handlers), you can easily update any document part without having to send back the whole document.
 
-Basic API
----------
+###updateDoc($ddoc_id, $handler_name, $params, $doc_id = null)
 
-The method **updateDoc( $ddoc_id, $handler_name, $params, $doc_id = null )** will try to update document according to the code defined in the update handler *$handler_name* of th design document *_design/$ddoc_id*.
+The method **updateDoc($ddoc_id, $handler_name, $params, $doc_id = null)** will try to update document according to the code defined in the update handler *$handler_name* of th design document *_design/$ddoc_id*.
 
 Example : incrementing a document counter
 
@@ -245,8 +259,7 @@ To bump the counter of the document "some_doc" , use :
     $client->updateDoc("myapp","bump-counter",array(),"some_doc");
 
 
-Full API
---------
+###updateDocFullAPI($ddoc_id, $handler_name, $options)
 
 The method **updateDocFullAPI($ddoc_id, $handler_name, $options)** will try to update document according to the code defined in the update handler *$handler_name* of th design document *_design/$ddoc_id*.
 
@@ -257,16 +270,14 @@ $options is an array of optionnal query modifiers :
 
 
 Example :
----------
 
     $client->updateDocFullAPI("myapp","bump-counter",array( "data" => array("Something"=>"is set") ) );
 
 
 
-Deleting a document
-===================
+###deleteDoc($doc)
 
-The method **deleteDoc ( $doc )** permanently removes $doc from the CouchDB server. $doc should be an object containing at least \_id and \_rev properties.
+The method **deleteDoc($doc)** permanently removes $doc from the CouchDB server. $doc should be an object containing at least \_id and \_rev properties.
 
 Example :
 
@@ -284,10 +295,9 @@ Example :
     }
 
 
-Copying a document
-==================
+###copyDoc($id, $new_id)
 
-The **copyDoc($id,$new_id)** method provides an handy way to copy a document. $id is the id of the document to copy. $new_id is the id of the new document.
+The **copyDoc($id, $new_id)** method provides an handy way to copy a document. $id is the id of the document to copy. $new_id is the id of the new document.
 
 Upon success, this method returns the CouchDB server response, which has the main form than a document storage :
 
@@ -301,15 +311,13 @@ Example :
         echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
     }
 
-Attaching a file to a document
-==============================
+##Attachments
 
 There is two methods handling attachments, it depends whether the file to send as attachment is on the harddrive, or if it's contained in a PHP variable. The first one should be more reliable for large attachments.
 
-On-disk files to attachments
-----------------------------
+###storeAttachment($doc, $file, $content_type = 'application/octet-stream', $filename = null)
 
-The method **storeAttachment($doc,$file,$content_type = 'application/octet-stream',$filename = null) ** handles the process of storing an attachment on a CouchDB document.
+The method **storeAttachment($doc,$file,$content_type = 'application/octet-stream',$filename = null)** handles the process of storing an attachment on a CouchDB document.
 
 * **$doc** is a PHP object containing at least the properties \_id and \_rev
 * **$file** is the complete path to the file on disk
@@ -323,8 +331,7 @@ Example :
     print_r($ok);
     // stdClass ( "ok" => true, "id" => "BlogPost5676" , "rev" => "5-2342345476" )
 
-PHP data to attachments
-----------------------------
+###storeAsAttachment($doc,$data,$filename,$content_type = 'application/octet-stream')
 
 The method **storeAsAttachment($doc,$data,$filename,$content_type = 'application/octet-stream')** records as a CouchDB document's attachment the content of a PHP variable.
 
@@ -337,24 +344,22 @@ Example :
 
     $doc = $client->getDoc('BlogPost5676');
     $google_home=file_get_contents('http://www.google.com/');
-    $ok = $client->storeAsAttachment($doc,$google_home,'text/html', 'GoogleHomepage.html');
+    $ok = $client->storeAsAttachment($doc,$google_home,'GoogleHomepage.html','text/html');
     print_r($ok);
     // stdClass ( "ok" => true, "id" => "BlogPost5676" , "rev" => "5-2342345476" )
 
-Delete a document attachment
-============================
+###deleteAttachment($doc,$attachment_name)
 
-the method **deleteAttachment($doc,$attachment_name )** delete an attachment from a CouchDB document. $doc is an object with, at least, \_id and \_rev properties, and $attachment_name is the name of the attachment to delete.
+the method **deleteAttachment($doc,$attachment_name)** delete an attachment from a CouchDB document. $doc is an object with, at least, \_id and \_rev properties, and $attachment_name is the name of the attachment to delete.
 
 Example :
 
     $doc = $client->getDoc('BlogPost5676');
     $ok = $client->deleteAttachment($doc,'GoogleHomepage.html');
 
-Request a show view on a document
-=================================
+###getShow($design_id, $name, $doc_id = null, $additionnal_parameters = array())
 
-The method **getShow($design_id, $name, $doc_id = null, $additionnal_parameters = array() )** request a show formatting of document *$doc_id* with show method *$name* stored in design document *design_id*.
+The method **getShow($design_id, $name, $doc_id = null, $additionnal_parameters = array())** request a show formatting of document *$doc_id* with show method *$name* stored in design document *design_id*.
 
 Example :
 
@@ -362,27 +367,24 @@ Example :
 
 More infos on CouchDB show formatting [here](http://wiki.apache.org/couchdb/Formatting_with_Show_and_List)
 
-Bulk operations
-===============
+###Bulk operations
 
-A bulk operation is a unique query performing actions on several documents. CouchDB Bulk operations API are described in [this wiki page](http://wiki.apache.org/couchdb/HTTP_Bulk_Document_API).
+A bulk operation is a unique query performing actions on several documents. CouchDB Bulk operations API are described in [this wiki page](http://docs.couchdb.org/en/2.0.0/api/database/bulk-api.html).
 
-Bulk documents retrieval
-------------------------
+###keys($ids)->getAllDocs()
 
-To retrieve several documents in one go, knowing their IDs, select documents using the **keys($ids)** coupled with the method **getAllDocs()**. $ids is an array of documents IDs. This function acts like a view, so the output is the view output of CouchDB, and you should use "include_docs(TRUE)" to have documents contents.
+To retrieve several documents in one go, knowing their IDs, select documents using the **keys($ids)** coupled with the method **getAllDocs()**. $ids is an array of documents IDs. This function acts like a view, so the output is the view output of CouchDB, and you should use "include_docs(true)" to have documents contents.
 
 Example :
 
-    $view = $client->include_docs(true)->keys->( array('BlogPost5676','BlogComments5676') )->getAllDocs();
+    $view = $client->include_docs(true)->keys( array('BlogPost5676','BlogComments5676') )->getAllDocs();
     foreach ( $view->rows as $row ) {
       echo "doc id :".$row->doc->_id."\n";
     }
 
-Bulk documents storage
-------------------------
+###storeDocs($docs, $new_edits)
 
-To store several documents in one go, use the method **storeDocs($docs,$all_or_nothing)**. $docs is an array containing the documents to store (as couchDocuments, PHP [stdClass](http://fr3.php.net/manual/en/reserved.classes.php) or PHP arrays). $all_or_nothing is related to the updates on the database : if set to false (which is the default), all documents are saved one by one, which means that, in case of a power failure on the database, we could have some documents stored and some not stored. When set to true, couchDB will commit all documents in one go : in case of a power failure, no document will be stored, or all documents will be stored.
+To store several documents in one go, use the method **storeDocs($docs, $new_edits)**. $docs is an array containing the documents to store (as CouchDocuments, PHP [stdClass](http://fr3.php.net/manual/en/reserved.classes.php) or PHP arrays). $new_edits is related to the updates of the revision. If set to true (which is the default), assign new revision id for each update. When set to false, it prevents the database from assigning them new reivision IDS.
 
 Example :
     $docs = array (
@@ -419,16 +421,14 @@ which should give you something like :
 
 This method also works to update documents.
 
-Bulk documents removal
-----------------------
+###deleteDocs($docs, $new_edits)
 
-To delete several documents in a single HTTP request, use the method **deleteDocs($docs,$all_or_nothing)**. $docs is an array containing the documents to store (as couchDocuments, PHP [stdClass](http://fr3.php.net/manual/en/reserved.classes.php) or PHP arrays). $all_or_nothing is related to the updates on the database : if set to false (which is the default), all documents are saved one by one, which means that, in case of a power failure on the database, we could have some documents deleted and some not deleted. When set to true, couchDB will commit all documents in one go : in case of a power failure, no document will be deleted, or all documents will be deleted.
+To delete several documents in a single HTTP request, use the method **deleteDocs($docs, $new_edits)**. $docs is an array containing the documents to store (as couchDocuments, PHP [stdClass](http://fr3.php.net/manual/en/reserved.classes.php) or PHP arrays). $new_edits is related to the updates of the revision. If set to true (which is the default), assign new revision id for each update. When set to false, it prevents the database from assigning them new reivision IDS.
 
 
-Choosing couchClient output format
-==================================
+###asArray()
 
-When converting a JSON object to PHP, we can choose the type of the value returned from a couchClient query.
+When converting a JSON object to PHP, we can choose the type of the value returned from a CouchClient query.
 
 Take for example the following JSON object :
     { 'blog' : true, 'comments' : { 'title' : 'cool' } }
