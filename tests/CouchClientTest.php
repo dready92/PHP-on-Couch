@@ -123,6 +123,7 @@ EOT
 
 	/**
 	 * @covers PHPOnCouch\CouchClient::isValidDatabaseName
+	 * Create database failed: Name: '4akte'. Only lowercase characters (a-z), digits (0-9), and any of the characters _, $, (, ), +, -, and / are allowed. Must begin with a letter.
 	 */
 	public function testIsValidDatabaseName()
 	{
@@ -130,7 +131,8 @@ EOT
 			"Azerty" => false,
 			"a-zer_ty" => true,
 			"a(zert)y" => true,
-			"4azerty" => false
+			"4azerty" => false,
+                        "a_$()+-/test"=>true
 		);
 		foreach ($matches as $key => $val) {
 			$this->assertEquals($val, CouchClient::isValidDatabaseName($key));

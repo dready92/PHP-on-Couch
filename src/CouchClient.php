@@ -246,7 +246,7 @@ class CouchClient extends Couch
 	{
 		if ($dbname == "_users")
 			return true;
-		if (preg_match("@^[a-z0-9_\$\(\)\+\-/]*$@", $dbname))
+		if (preg_match("/^[a-z][a-z0-9_$()+\/-]*$/", $dbname))
 			return true;
 		return false;
 	}
