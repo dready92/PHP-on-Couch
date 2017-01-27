@@ -21,7 +21,7 @@ This section give details on actions on the CouchDB server through PHP on Couch.
 - [Changes](#changes)
     + [getChanges()](#getchanges)
     + [Chainable methods to use before getChanges()](#chainable-methods-to-use-before-getchanges)
-        * [since(integer $value)](#sinceinteger-value)
+        * [since(string $value)](#sincestring-value)
         * [heartbeat(integer $value)](#heartbeatinteger-value)
         * [feed(string $value, $callback)](#feedstring-value-callback)
         * [filter(string $value, array $additional_query_options)](#filterstring-value-array-additional_query_options)  
@@ -300,7 +300,7 @@ Example :
                 (             
                     [0] => stdClass Object
                         (                 
-                            [seq] => 3
+                            [seq] => 'example-last-update-sequence'
                             [id] => 482fa0bed0473fd651239597d1080f03
                             [changes] => Array
                                 (
@@ -316,7 +316,7 @@ Example :
         
                     [1] => stdClass Object
                         (
-                            [seq] => 4
+                            [seq] => 'example-last-update-sequence'
                             [id] => 2f3f913f34d60e473fad4334c13a24ed
                             [changes] => Array
                                 (
@@ -341,7 +341,7 @@ Example :
 
 The following methods allow a fine grained control on the _changes_ request to issue.
 
-###since(integer $value)
+###since(string $value)
 Retrieve changes that happened after sequence number $value
 
 ###heartbeat(integer $value)
@@ -360,8 +360,8 @@ Changes display style, use "all_docs" to switch to verbose
 
 Example :
 
-    // fetching changes since sequence number 546 using filter "messages/incoming"
-    $changes = $client->since(546)->filter("messages/incoming")->getChanges();
+    // fetching changes since sequence 'example-last-update-sequence' using filter "messages/incoming"
+    $changes = $client->since('example-last-update-sequence')->filter("messages/incoming")->getChanges();
 
 Example - Continuous changes with a callback function
 

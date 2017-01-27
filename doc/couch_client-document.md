@@ -344,7 +344,7 @@ Example :
 
     $doc = $client->getDoc('BlogPost5676');
     $google_home=file_get_contents('http://www.google.com/');
-    $ok = $client->storeAsAttachment($doc,$google_home,'text/html', 'GoogleHomepage.html');
+    $ok = $client->storeAsAttachment($doc,$google_home,'GoogleHomepage.html','text/html');
     print_r($ok);
     // stdClass ( "ok" => true, "id" => "BlogPost5676" , "rev" => "5-2342345476" )
 
@@ -377,7 +377,7 @@ To retrieve several documents in one go, knowing their IDs, select documents usi
 
 Example :
 
-    $view = $client->include_docs(true)->keys->( array('BlogPost5676','BlogComments5676') )->getAllDocs();
+    $view = $client->include_docs(true)->keys( array('BlogPost5676','BlogComments5676') )->getAllDocs();
     foreach ( $view->rows as $row ) {
       echo "doc id :".$row->doc->_id."\n";
     }
