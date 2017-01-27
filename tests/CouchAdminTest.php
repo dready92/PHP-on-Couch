@@ -213,11 +213,11 @@ class CouchAdminTest extends \PHPUnit_Framework_TestCase
 		$adm = new CouchAdmin($this->aclient);
 		$security = $adm->getSecurity();
 		$this->assertObjectHasAttribute("admins", $security);
-		$this->assertObjectHasAttribute("readers", $security);
+		$this->assertObjectHasAttribute("members", $security);
 		$this->assertObjectHasAttribute("names", $security->admins);
 		$this->assertObjectHasAttribute("roles", $security->admins);
-		$this->assertObjectHasAttribute("names", $security->readers);
-		$this->assertObjectHasAttribute("roles", $security->readers);
+		$this->assertObjectHasAttribute("names", $security->members);
+		$this->assertObjectHasAttribute("roles", $security->members);
 	}
 
 	/**
@@ -228,36 +228,36 @@ class CouchAdminTest extends \PHPUnit_Framework_TestCase
 		$adm = new CouchAdmin($this->aclient);
 		$security = $adm->getSecurity();
 		$security->admins->names[] = "joe";
-		$security->readers->names[] = "jack";
+		$security->members->names[] = "jack";
 		$ok = $adm->setSecurity($security);
 		$this->assertInternalType("object", $ok);
 		$this->assertObjectHasAttribute("ok", $ok);
 		$this->assertEquals($ok->ok, true);
 
 		$security = $adm->getSecurity();
-		$this->assertEquals(count($security->readers->names), 1);
-		$this->assertEquals(reset($security->readers->names), "jack");
+		$this->assertEquals(count($security->members->names), 1);
+		$this->assertEquals(reset($security->members->names), "jack");
 		$this->assertEquals(count($security->admins->names), 1);
 		$this->assertEquals(reset($security->admins->names), "joe");
 	}
 
 	/**
-	 * @covers PHPOnCouch\CouchAdmin::addDatabaseReaderUser
+	 * @covers PHPOnCouch\CouchAdmin::addDatabaseMemberUser
 	 */
-	public function testAddDatabaseReaderUser()
+	public function testAddDatabaseMemberUser()
 	{
 		$adm = new CouchAdmin($this->aclient);
-		$ok = $adm->removeDatabaseReaderUser("jack");
+		$ok = $adm->removeDatabaseMemberUser("jack");
 		$this->assertInternalType("boolean", $ok);
 		$this->assertEquals($ok, true);
 		$security = $adm->getSecurity();
-		$this->assertEquals(count($security->readers->names), 0);
-		$ok = $adm->addDatabaseReaderUser("jack");
+		$this->assertEquals(count($security->members->names), 0);
+		$ok = $adm->addDatabaseMemberUser("jack");
 		$this->assertInternalType("boolean", $ok);
 		$this->assertEquals($ok, true);
 		$security = $adm->getSecurity();
-		$this->assertEquals(count($security->readers->names), 1);
-		$this->assertEquals(reset($security->readers->names), "jack");
+		$this->assertEquals(count($security->members->names), 1);
+		$this->assertEquals(reset($security->members->names), "jack");
 	}
 
 	/**
@@ -298,28 +298,28 @@ class CouchAdminTest extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
-	 * @covers PHPOnCouch\CouchAdmin::getDatabaseReaderUsers
-	 * @depends testAddDatabaseReaderUser
+	 * @covers PHPOnCouch\CouchAdmin::getDatabaseMemberUsers
+	 * @depends testAddDatabaseMemberUser
 	 */
-	public function testGetDatabaseReaderUsers()
+	public function testGetDatabaseMemberUsers()
 	{
 		$adm = new CouchAdmin($this->aclient);
-		$users = $adm->getDatabaseReaderUsers();
+		$users = $adm->getDatabaseMemberUsers();
 		$this->assertInternalType("array", $users);
 		$this->assertEquals(0, count($users));
 
-		$adm->addDatabaseReaderUser("jack");
-		$users = $adm->getDatabaseReaderUsers();
+		$adm->addDatabaseMemberUser("jack");
+		$users = $adm->getDatabaseMemberUsers();
 		$this->assertInternalType("array", $users);
 		$this->assertEquals(1, count($users));
 		$this->assertEquals("jack", reset($users));
 	}
 
 	/**
-	 * @covers PHPOnCouch\CouchAdmin::removeDatabaseReaderUser
-	 * @todo   Implement testRemoveDatabaseReaderUser().
+	 * @covers PHPOnCouch\CouchAdmin::removeDatabaseMemberUser
+	 * @todo   Implement testRemoveDatabaseMemberUser().
 	 */
-	public function testRemoveDatabaseReaderUser()
+	public function testRemoveDatabaseMemberUser()
 	{
 		// Remove the following lines when you implement this test.
 		$this->markTestIncomplete(
@@ -340,24 +340,24 @@ class CouchAdminTest extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
-	 * @covers PHPOnCouch\CouchAdmin::addDatabaseReaderRole
+	 * @covers PHPOnCouch\CouchAdmin::addDatabaseMemberRole
 	 */
-	public function testAddDatabaseReaderRole()
+	public function testAddDatabaseMemberRole()
 	{
 		$adm = new CouchAdmin($this->aclient);
 		$security = $adm->getSecurity();
-		$this->assertEquals(count($security->readers->roles), 0);
-		$ok = $adm->addDatabaseReaderRole("cowboy");
+		$this->assertEquals(count($security->members->roles), 0);
+		$ok = $adm->addDatabaseMemberRole("cowboy");
 		$this->assertInternalType("boolean", $ok);
 		$this->assertEquals($ok, true);
 		$security = $adm->getSecurity();
-		$this->assertEquals(count($security->readers->roles), 1);
-		$this->assertEquals(reset($security->readers->roles), "cowboy");
-		$ok = $adm->removeDatabaseReaderRole("cowboy");
+		$this->assertEquals(count($security->members->roles), 1);
+		$this->assertEquals(reset($security->members->roles), "cowboy");
+		$ok = $adm->removeDatabaseMemberRole("cowboy");
 		$this->assertInternalType("boolean", $ok);
 		$this->assertEquals($ok, true);
 		$security = $adm->getSecurity();
-		$this->assertEquals(count($security->readers->roles), 0);
+		$this->assertEquals(count($security->members->roles), 0);
 	}
 
 	/**
@@ -393,22 +393,22 @@ class CouchAdminTest extends \PHPUnit_Framework_TestCase
 	}
 
 	/**
-	 * @covers PHPOnCouch\CouchAdmin::getDatabaseReaderRoles
-	 * @todo   Implement testGetDatabaseReaderRoles().
+	 * @covers PHPOnCouch\CouchAdmin::getDatabaseMemberRoles
+	 * @todo   Implement testGetDatabaseMemberRoles().
 	 */
-	public function testGetDatabaseReaderRoles()
+	public function testGetDatabaseMemberRoles()
 	{
 		$adm = new CouchAdmin($this->aclient);
-		$users = $adm->getDatabaseReaderRoles();
+		$users = $adm->getDatabaseMemberRoles();
 		$this->assertInternalType("array", $users);
 		$this->assertEquals(0, count($users));
 	}
 
 	/**
-	 * @covers PHPOnCouch\CouchAdmin::removeDatabaseReaderRole
-	 * @todo   Implement testRemoveDatabaseReaderRole().
+	 * @covers PHPOnCouch\CouchAdmin::removeDatabaseMemberRole
+	 * @todo   Implement testRemoveDatabaseMemberRole().
 	 */
-	public function testRemoveDatabaseReaderRole()
+	public function testRemoveDatabaseMemberRole()
 	{
 		// Remove the following lines when you implement this test.
 		$this->markTestIncomplete(

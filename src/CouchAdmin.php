@@ -333,9 +333,11 @@ class CouchAdmin
 			$resp["body"]->admins = new stdClass();
 			$resp["body"]->admins->names = array();
 			$resp["body"]->admins->roles = array();
-			$resp["body"]->readers = new stdClass();
-			$resp["body"]->readers->names = array();
-			$resp["body"]->readers->roles = array();
+		}
+		if (!property_exists($resp['body'], "members")) {
+			$resp["body"]->members = new stdClass();
+			$resp["body"]->members->names = array();
+			$resp["body"]->members->roles = array();
 		}
 		return $resp['body'];
 	}
@@ -365,22 +367,22 @@ class CouchAdmin
 	}
 
 	/**
-	 * add a user to the list of readers for the current database
+	 * add a user to the list of members for the current database
 	 *
 	 * @param string $login user login
 	 * @return boolean true if the user has successfuly been added
 	 * @throws InvalidArgumentException
 	 */
-	public function addDatabaseReaderUser($login)
+	public function addDatabaseMemberUser($login)
 	{
 		if (strlen($login) < 1) {
 			throw new InvalidArgumentException("Login can't be empty");
 		}
 		$sec = $this->getSecurity();
-		if (in_array($login, $sec->readers->names)) {
+		if (in_array($login, $sec->members->names)) {
 			return true;
 		}
-		array_push($sec->readers->names, $login);
+		array_push($sec->members->names, $login);
 		$back = $this->setSecurity($sec);
 		if (is_object($back) && property_exists($back, "ok") && $back->ok == true) {
 			return true;
@@ -424,33 +426,33 @@ class CouchAdmin
 	}
 
 	/**
-	 * get the list of readers for the current database
+	 * get the list of members for the current database
 	 *
-	 * @return array database readers logins
+	 * @return array database members logins
 	 */
-	public function getDatabaseReaderUsers()
+	public function getDatabaseMemberUsers()
 	{
 		$sec = $this->getSecurity();
-		return $sec->readers->names;
+		return $sec->members->names;
 	}
 
 	/**
-	 * remove a user from the list of readers for the current database
+	 * remove a user from the list of members for the current database
 	 *
 	 * @param string $login user login
 	 * @return boolean true if the user has successfuly been removed
 	 * @throws InvalidArgumentException
 	 */
-	public function removeDatabaseReaderUser($login)
+	public function removeDatabaseMemberUser($login)
 	{
 		if (strlen($login) < 1) {
 			throw new InvalidArgumentException("Login can't be empty");
 		}
 		$sec = $this->getSecurity();
-		if (!in_array($login, $sec->readers->names)) {
+		if (!in_array($login, $sec->members->names)) {
 			return true;
 		}
-		$sec->readers->names = $this->rmFromArray($login, $sec->readers->names);
+		$sec->members->names = $this->rmFromArray($login, $sec->members->names);
 		$back = $this->setSecurity($sec);
 		if (is_object($back) && property_exists($back, "ok") && $back->ok == true) {
 			return true;
@@ -485,22 +487,22 @@ class CouchAdmin
 /// roles
 
 	/**
-	 * add a role to the list of readers for the current database
+	 * add a role to the list of members for the current database
 	 *
 	 * @param string $role role name
 	 * @return boolean true if the role has successfuly been added
 	 * @throws InvalidArgumentException
 	 */
-	public function addDatabaseReaderRole($role)
+	public function addDatabaseMemberRole($role)
 	{
 		if (strlen($role) < 1) {
 			throw new InvalidArgumentException("Role can't be empty");
 		}
 		$sec = $this->getSecurity();
-		if (in_array($role, $sec->readers->roles)) {
+		if (in_array($role, $sec->members->roles)) {
 			return true;
 		}
-		array_push($sec->readers->roles, $role);
+		array_push($sec->members->roles, $role);
 		$back = $this->setSecurity($sec);
 		if (is_object($back) && property_exists($back, "ok") && $back->ok == true) {
 			return true;
@@ -544,33 +546,33 @@ class CouchAdmin
 	}
 
 	/**
-	 * get the list of reader roles for the current database
+	 * get the list of member roles for the current database
 	 *
-	 * @return array database readers roles
+	 * @return array database members roles
 	 */
-	public function getDatabaseReaderRoles()
+	public function getDatabaseMemberRoles()
 	{
 		$sec = $this->getSecurity();
-		return $sec->readers->roles;
+		return $sec->members->roles;
 	}
 
 	/**
-	 * remove a role from the list of readers for the current database
+	 * remove a role from the list of members for the current database
 	 *
 	 * @param string $role role name
 	 * @return boolean true if the role has successfuly been removed
 	 * @throws InvalidArgumentException
 	 */
-	public function removeDatabaseReaderRole($role)
+	public function removeDatabaseMemberRole($role)
 	{
 		if (strlen($role) < 1) {
 			throw new InvalidArgumentException("Role can't be empty");
 		}
 		$sec = $this->getSecurity();
-		if (!in_array($role, $sec->readers->roles)) {
+		if (!in_array($role, $sec->members->roles)) {
 			return true;
 		}
-		$sec->readers->roles = $this->rmFromArray($role, $sec->readers->roles);
+		$sec->members->roles = $this->rmFromArray($role, $sec->members->roles);
 		$back = $this->setSecurity($sec);
 		if (is_object($back) && property_exists($back, "ok") && $back->ok == true) {
 			return true;

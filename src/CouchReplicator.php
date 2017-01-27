@@ -17,6 +17,8 @@
 
 namespace PHPOnCouch;
 
+use PHPOnCouch\Exceptions\CouchException;
+
 /**
  * Special class to handle replication stuff, as the API is still evolving
  *
