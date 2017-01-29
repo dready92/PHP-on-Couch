@@ -1,21 +1,9 @@
-#IMPORTANT!
-
-For the most updated version of PHP-on-Couch, please use this repository instead : https://github.com/PHP-on-Couch/PHP-on-Couch
-
-This organization is will be more official and I will be maintening it as well.
-
-Thank you all!
-
----
-
-##Tests and coverage
-
-[![Build Status](https://travis-ci.org/popojargo/PHP-on-Couch.svg?branch=master)](https://travis-ci.org/popojargo/PHP-on-Couch)
-[![Coverage Status](https://coveralls.io/repos/github/popojargo/PHP-on-Couch/badge.svg?branch=master)](https://coveralls.io/github/popojargo/PHP-on-Couch?branch=master)
+[![Build Status](https://travis-ci.org/PHP-on-Couch/PHP-on-Couch.svg?branch=master)](https://travis-ci.org/PHP-on-Couch/PHP-on-Couch)
+[![Coverage Status](https://coveralls.io/repos/github/PHP-on-Couch/PHP-on-Couch/badge.svg?branch=master)](https://coveralls.io/github/PHP-on-Couch/PHP-on-Couch?branch=master)
 
 ##Dev status
 
-[![Stories in Ready](https://badge.waffle.io/popojargo/PHP-on-Couch.png?label=ready&title=Ready)](https://waffle.io/popojargo/PHP-on-Couch)
+[![Stories in Ready](https://badge.waffle.io/PHP-on-Couch/PHP-on-Couch.png?label=ready&title=Ready)](https://waffle.io/PHP-on-Couch/PHP-on-Couch)
 
 ##Table of content
 - [Introduction](#introduction)
@@ -37,7 +25,7 @@ Thank you all!
 
 ##Introduction
 
-[PHP On Couch](http://github.com/popojargo/PHP-on-Couch/) tries to provide an easy way to work with your [CouchDB](http://couchdb.apache.org) [documents](http://docs.couchdb.org/) with [PHP](http://php.net). 
+[PHP On Couch](http://github.com/PHP-on-Couch/PHP-on-Couch/) tries to provide an easy way to work with your [CouchDB](http://couchdb.apache.org) [documents](http://docs.couchdb.org/) with [PHP](http://php.net). 
 
 ##What's new
 
@@ -76,7 +64,7 @@ Since I forked the origin branch, I updated the library a bit. We are now using 
 
 ##Installation and testing
 
-Install the library using composer : `composer require popojargo/php-on-couch`.
+Install the library using composer : `composer require PHP-on-Couch/php-on-couch`.
 You can find more detailed informations about installation [here](INSTALL.md)
 
 Test instructions to be determined.
@@ -214,7 +202,7 @@ $doc->name = "Brown"; // set document property "name" to "Brown" and store the u
        
 ##Feedback
 
-[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/popojargo/PHP-on-Couch)
+[![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/PHP-on-Couch/PHP-on-Couch)
 
 Don't hesitate to submit feedback, bugs and feature requests ! My contact address is [alexiscote19@hotmail.com](mailto:alexiscote19@hotmail.com?subject=Feedback)
 
