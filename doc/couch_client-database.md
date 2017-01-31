@@ -77,7 +77,9 @@ Example :
 
 ###isValidDatabaseName()
 
-Database names on CouchDB have restrictions : only lowercase characters (a-z), digits (0-9), and any of the characters _, $, (, ), +, -, and / are allowed. To test if a given database name is valid, use the static **isValidDatabaseName()** couchClient method.
+Database names on CouchDB have restrictions : only lowercase characters (a-z), digits (0-9), and any of the characters _, $, (, ), +, -, and / are allowed. The name has to start with a lowercase letter (a-z). To test if a given database name is valid, use the static **isValidDatabaseName()** couchClient method.
+
+Note: to allow access to system databases (_users, _replicator), those names added to special list and will return `true`.
 
 Example :
 
