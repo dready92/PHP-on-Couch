@@ -74,20 +74,20 @@ PHP on Couch implements chainable methods to add query parameters. The method na
 
 Example querying a view with a startkey, a limit and include_docs
 
-    $response = $client->startkey(100000000)->limit(100)->include_docs(TRUE)->getView('all','by_date');
+    $response = $client->startkey(100000000)->limit(100)->include_docs(true)->getView('all','by_date');
 
 Which is the same as :
 
     $client->startkey(100000000);
     $client->limit(100);
-    $client->include_docs(TRUE);
+    $client->include_docs(true);
     $response = $client->getView('all','by_date');
 
 ###setQueryParameters($params)
 
 You also can set query parameters with a PHP array, using the **setQueryParameters** method :
 
-    $opts = array ( "include_docs" => TRUE, "limit" => 10, "descending" => true );
+    $opts = array ( "include_docs" => true, "limit" => 10, "descending" => true );
     $response = $client->setQueryParameters(opts)->getView("all","by_date");
 
 
@@ -126,7 +126,7 @@ Using the defaults, JSON objects are mapped to PHP objects. The **asArray()** me
 
 Example :
 
-    $response = $client->startkey(100000000)->limit(100)->include_docs(TRUE)->asArray()->getView('all','by_date');
+    $response = $client->startkey(100000000)->limit(100)->include_docs(true)->asArray()->getView('all','by_date');
 
 Format a view with CouchDB list formatting feature
 ==================================================
@@ -139,7 +139,7 @@ The method **getList($design_id, $name, $view_name, $additionnal_parameters = ar
 
 Example :
 
-    $response = $client->limit(100)->include_docs(TRUE)->getList('all','html','by_date');
+    $response = $client->limit(100)->include_docs(true)->getList('all','html','by_date');
     // will run the view declared in _design/all and named *by_date*, and then
     // pass it through the list declared in _design/all and named *html*.
 

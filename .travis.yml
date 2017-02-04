@@ -28,6 +28,7 @@ script:
     - curl http://localhost:5984
     - php ./tests/_config/_setupEnvironment.php "nonode@nohost"
     - vendor/bin/phpunit --coverage-clover ./tests/logs/clover.xml --configuration ./phpunit.xml  --testsuite Ordered
+    - php vendor/phpcheckstyle/phpcheckstyle/run.php --src src --config ./php-on-couch-style.xml
 
     
 after_success:

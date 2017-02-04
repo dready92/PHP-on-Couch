@@ -8,7 +8,7 @@ Couch Documents take care of revision numbers, and automatically propagate updat
 ##Table of content
 
 - [Creating a new document](#creating-a-new-document)
-- [set($key, $value = NULL)](#setkey-value--null)
+- [set($key, $value = null)](#setkey-value--null)
 - [set($params)](#setparams)
 - [setAutocommit(boolean $autoCommit)](#setautocommitboolean-autocommit)
 - [record()](#record)
@@ -54,7 +54,7 @@ Example :
     // some_doc
 
 
-###set($key, $value = NULL)
+###set($key, $value = null)
 
 As we just saw, just set the property on the $doc object and it'll be recorded in the database. There are 2 ways to do it. You can either use the **set($key, $value)** method or simply use the setter **$obj->key = $value**.
 

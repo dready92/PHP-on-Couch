@@ -986,7 +986,7 @@ EOT
 		$test = $this->client
 				->startkey(array('test2'))
 				->endkey(array('test2', array()))
-				->include_docs(TRUE)
+				->include_docs(true)
 				->getForeignList('test2', 'list2', 'test', 'simple');
 		$this->assertInternalType("array", $test);
 		$this->assertEquals(count($test), 1);

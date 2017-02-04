@@ -24,7 +24,6 @@ namespace PHPOnCouch\Exceptions;
  *
  * @author Alexis
  */
-class CouchNoResponseException extends CouchException
-{
-	//put your code here
+class CouchNoResponseException extends CouchException {
+    //put your code here
 }

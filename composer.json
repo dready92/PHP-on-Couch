@@ -1,41 +1,48 @@
 {
-  "name": "popojargo/php-on-couch",
-  "type": "library",
-  "description": "CouchDB NoSQL database access in PHP",
-  "keywords": [
-    "couchdb",
-    "couch",
-    "db",
-    "apache",
-    "nosql",
-    "driver"
-  ],
-  "homepage": "https://github.com/popojargo/PHP-on-Couch",
-  "license": "GPLv3",
-  "authors": [
-    {
-      "name": "Michael Bailly",
-      "email": "mickael.bailly@free.fr",
-      "homepage": "https://github.com/dready92/",
-      "role": "Developer"
+    "name": "popojargo/php-on-couch",
+    "type": "library",
+    "description": "CouchDB NoSQL database access in PHP",
+    "keywords": [
+        "couchdb",
+        "couch",
+        "db",
+        "apache",
+        "nosql",
+        "driver"
+    ],
+    "homepage": "https://github.com/popojargo/PHP-on-Couch",
+    "license": "GPLv3",
+    "authors": [
+        {
+            "name": "Michael Bailly",
+            "email": "mickael.bailly@free.fr",
+            "homepage": "https://github.com/dready92/",
+            "role": "Developer"
+        },
+        {
+            "name": "Alexis Côté",
+            "email": "alexiscote19@hotmail.com",
+            "homepage": "https://popojargo.github.io/",
+            "role": "Developer"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "PHPOnCouch\\": "src/"
+        }
     },
-    {
-      "name": "Alexis Côté",
-      "email": "alexiscote19@hotmail.com",
-      "homepage": "https://popojargo.github.io/",
-      "role": "Developer"
+    "require": {
+        "php": ">=5.2.0"
+    },
+    "repositories": [
+        {
+            "type":"vcs",
+            "url":"https://github.com/popojargo/phpcheckstyle"
+        }
+    ],  
+    "require-dev": {
+        "phpunit/phpunit": "5.5.*",
+        "satooshi/php-coveralls": "*",
+        "phpcheckstyle/phpcheckstyle": "dev-master"
     }
-  ],
-  "autoload": {
-    "psr-4": {
-      "PHPOnCouch\\": "src/"
-    }
-  },
-  "require": {
-    "php": ">=5.2.0"
-  },
-  "require-dev": {
-    "phpunit/phpunit": "5.5.*",
-    "satooshi/php-coveralls": "*"
-  }
 }

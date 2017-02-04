@@ -143,7 +143,7 @@ If you need to use replication features, also use the couchReplicator definition
         $doc = new CouchDocument($client);
         $doc->set( array('_id'=>'some_doc_id', 'type'=>'story','title'=>"First story") );
         
-        $view = $client->limit(10)->descending(TRUE)->getView('some_design_doc','viewname');
+        $view = $client->limit(10)->descending(true)->getView('some_design_doc','viewname');
 
 
 ##Example

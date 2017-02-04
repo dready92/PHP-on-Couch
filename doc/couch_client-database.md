@@ -50,11 +50,11 @@ Example : connect to the couchDB server at http://my.server.com on port 5984 usi
 
     $client = new CouchClient("http://couchAdmin:secret@my.server.com:5984/","mydb");
 
-You can also tell couchClient to use cookie based authentification, by passing an additional flag "cookie_auth" set to TRUE in the options array, as the third parameter of the couchClient constructor.
+You can also tell couchClient to use cookie based authentification, by passing an additional flag "cookie_auth" set to true in the options array, as the third parameter of the couchClient constructor.
 
 Example : as the previous one, but using cookie based authentification
 
-    $client = new CouchClient("http://couchAdmin:secret@my.server.com:5984/","mydb", array("cookie_auth"=>TRUE) );
+    $client = new CouchClient("http://couchAdmin:secret@my.server.com:5984/","mydb", array("cookie_auth"=>true) );
 
 You can also manually set the session cookie.
 
