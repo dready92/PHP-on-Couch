@@ -679,7 +679,7 @@ class CouchClient extends Couch {
      * 				and the content-type of the request is set to 'application/x-www-form-urlencoded'
      * 		- 'Content-Type' : the http header 'Content-Type' to send to the couch server
      * @return bool|array 
-     * @see _queryAndTest($method, $url, $allowed_status_codes, $parameters = array(),$data = null, $contentType = null)
+     * @see _queryAndTest
      */
     public function updateDocFullAPI($ddocId, $handlerName, $options = []) {
         $params = [];
@@ -1199,19 +1199,17 @@ class CouchClient extends Couch {
      * @param array|object $selector    An associative array or an object that follow Mango Query selector syntax.
      * @param array $fields Optional. An array of fields to return from the documents. By default, it returns 
      * everything.
-     * @param array $sort    An array of fields to sort. You can either specify each name of the fields and CouchDB will
-     *  assume a sort direction.
-     * Otherwise, you can use an array of objects. In this case, each object will need a key with the name of the field 
-     * and the direction as a value.
+     * @param array $sort    An array of fields to sort. You can either specify each name of the fields and CouchDB 
+     * will assume a sort direction.
+     * Otherwise, you can use an array of objects. In this case, each object will need a key with the name of the 
+     * field and the direction as a value.
      * the direction can be either desc or asc.
-     * @param int $limit    Maximum number of results returned. Default to 25.
-     * @param int $skip Optional. Skip the first 'n' results.
-     * @param array|string $useIndex  Optional. Let your determine a specific index to use for your query.
+     * @param array|string $index  Optional. Let your determine a specific index to use for your query.
      * @returns array Returns an array of documents.
      */
-    public function find($selector, array $fields = null, $sort = null, $limit = null, $skip = null, $useIndex = null) {
+    public function find($selector, array $fields = null, $sort = null, $index = null) {
         $method = 'POST';
-        $url = '/' . urlencode($this->dbname) . './_find';
+        $url = '/' . urlencode($this->dbname) . '/_find';
         $request = [
             'selector' => $selector
         ];
@@ -1221,12 +1219,16 @@ class CouchClient extends Couch {
             $request['fields'] = $fields;
         if (isset($sort))
             $request['sort'] = $sort;
-        if (isset($limit))
-            $request['limit'] = $limit;
-        if (isset($skip))
-            $request['skip'] = $skip;
-        if (isset($useIndex) && (is_array($useIndex) || is_string($useIndex)))
-            $request['use_index'] = $useIndex;
+        if (isset($this->queryParameters['limit'])) {
+            $request['limit'] = $this->queryParameters['limit'];
+            unset($this->queryParameters['limit']);
+        }
+        if (isset($this->queryParameters['skip'])) {
+            $request['skip'] = $this->queryParameters['skip'];
+            unset($this->queryParameters['skip']);
+        }
+        if (isset($index) && (is_array($index) || is_string($index)))
+            $request['use_index'] = $index;
         $response = $this->queryAndTest($method, $url, [200], [], $request);
         return $response->docs;
     }
@@ -1243,14 +1245,12 @@ class CouchClient extends Couch {
      * Otherwise, you can use an array of objects. In this case, each object will need a key with the name of the field
      *  and the direction as a value.
      * the direction can be either desc or asc.
-     * @param int $limit    Maximum number of results returned. Default to 25.
-     * @param int $skip Optional. Skip the first 'n' results.
-     * @param array|string $useIndex  Optional. Let your determine a specific index to use for your query.
+     * @param array|string $index  Optional. Let your determine a specific index to use for your query.
      * @returns object Returns an object that contains all the information about the query.
      */
-    public function explain($selector, array $fields = null, $sort = null, $limit = null, $skip = null, $useIndex = null) {
+    public function explain($selector, array $fields = null, $sort = null, $index = null) {
         $method = 'POST';
-        $url = '/' . urlencode($this->dbname) . './_explain';
+        $url = '/' . urlencode($this->dbname) . '/_explain';
         $request = [
             'selector' => $selector
         ];
@@ -1260,12 +1260,16 @@ class CouchClient extends Couch {
             $request['fields'] = $fields;
         if (isset($sort))
             $request['sort'] = $sort;
-        if (isset($limit))
-            $request['limit'] = $limit;
-        if (isset($skip))
-            $request['skip'] = $skip;
-        if (isset($useIndex) && (is_array($useIndex) || is_string($useIndex)))
-            $request['use_index'] = $useIndex;
+        if (isset($this->queryParameters['limit'])) {
+            $request['limit'] = $this->queryParameters['limit'];
+            unset($this->queryParameters['limit']);
+        }
+        if (isset($this->queryParameters['skip'])) {
+            $request['skip'] = $this->queryParameters['skip'];
+            unset($this->queryParameters['skip']);
+        }
+        if (isset($index) && (is_array($index) || is_string($index)))
+            $request['use_index'] = $index;
         return $this->queryAndTest($method, $url, [200], [], $request);
     }
 

@@ -33,8 +33,12 @@ use InvalidArgumentException;
 class CouchException extends Exception {
 
     // CouchDB response codes we handle specialized exceptions
-    protected static $codeSubtypes = [401 => 'CouchUnauthorizedException', 403 => 'CouchForbiddenException',
-        404 => 'CouchNotFoundException', 417 => 'CouchExpectationException'];
+    protected static $codeSubtypes = [
+        401 => 'CouchUnauthorizedException',
+        403 => 'CouchForbiddenException',
+        404 => 'CouchNotFoundException',
+        417 => 'CouchExpectationException'
+    ];
     // more precise response problem
     protected static $statusSubtypes = ['Conflict' => 'CouchConflictException'];
     // couchDB response once parsed
