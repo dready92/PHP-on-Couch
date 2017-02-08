@@ -158,7 +158,8 @@ class CouchClient extends Couch {
      * @throws CouchException
      * @return array
      */
-    protected function queryAndTest($method, $url, $allowedStatusCodes, $parameters = [], $data = null, $contentType = null) {
+    protected function queryAndTest($method, $url, $allowedStatusCodes, $parameters = [], $data = null,
+            $contentType = null) {
         $raw = $this->query($method, $url, $parameters, $data, $contentType);
         $response = $this->parseRawResponse($raw, $this->resultAsArray);
         $this->resultAsArray = false;

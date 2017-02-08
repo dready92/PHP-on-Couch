@@ -48,7 +48,7 @@ class Couch {
     /**
      * @var array allowed HTTP methods for REST dialog
      */
-    const HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'COPY'];
+    private $_httpMethods = ['GET', 'POST', 'PUT', 'DELETE', 'COPY'];
 
     /**
      * @var resource HTTP server socket
@@ -245,7 +245,7 @@ class Couch {
      * @throws Exception|InvalidArgumentException|CouchException|CouchNoResponseException
      */
     public function continuousQuery($callable, $method, $url, $parameters = [], $data = null) {
-        if (!in_array($method, self::HTTP_METHODS))
+        if (!in_array($method, $this->_httpMethods))
             throw new Exception("Bad HTTP method: $method");
         if (!is_callable($callable))
             throw new InvalidArgumentException("callable argument have to success to is_callable PHP function");
@@ -255,7 +255,6 @@ class Couch {
         $request = $this->socketBuildRequest($method, $url, $data, null);
         if (!$this->connect())
             return false;
-        fwrite($this->socket, $request);
 
         //Read the headers and check that the response is valid
         $response = '';
@@ -318,7 +317,7 @@ class Couch {
      * @throws Exception
      */
     public function socketQuery($method, $url, $parameters = [], $data = null, $contentType = null) {
-        if (!in_array($method, self::HTTP_METHODS))
+        if (!in_array($method, $this->_httpMethods))
             throw new Exception("Bad HTTP method: $method");
 
         if (is_array($parameters) && count($parameters))
@@ -564,7 +563,7 @@ class Couch {
      * @throws Exception
      */
     public function curlQuery($method, $url, $parameters = [], $data = null, $contentType = null) {
-        if (!in_array($method, self::HTTP_METHODS))
+        if (!in_array($method, $this->_httpMethods))
             throw new Exception("Bad HTTP method: $method");
 
         $url = $this->dsn . $url;

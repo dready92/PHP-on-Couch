@@ -47,8 +47,9 @@ The CouchAdmin class is only needed to **manage** users of a CouchDB server : ad
 
 You don't need the couchAdmin class to connect to CouchDB with a login / password. You only need to add your login and password to the DSN argument when creating your CouchDB client :
 
-    $client = new CouchClient ("http://theuser:secretpass@couch.server.com:5984","mydatabase");
-
+```php
+$client = new CouchClient ("http://theuser:secretpass@couch.server.com:5984","mydatabase");
+```
 
 ##Managing CouchDB users
 
@@ -58,62 +59,62 @@ The **CouchAdmin** class contains helpful methods to create admins, users, and a
 
 ##Synopsys
 
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+// Here my couchDB is in "admin party" mode (no user, no admin defined)
+//
+// I create an "anonymous" connector to the database
+$client = new CouchClient ("http://localhost:5984/","mydb" );
+// I then create an instance of the couchAdmin class, passing the couchClient as a parameter
+$anonymous_adm = new CouchAdmin($client);
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    // Here my couchDB is in "admin party" mode (no user, no admin defined)
-    //
-    // I create an "anonymous" connector to the database
-    $client = new CouchClient ("http://localhost:5984/","mydb" );
-    // I then create an instance of the couchAdmin class, passing the couchClient as a parameter
-    $anonymous_adm = new CouchAdmin($client);
-    
-    // I create the first admin user
-    try {
-        $anonymous_adm->createAdmin("superAdmin","secretpass");
-    } catch ( Exception $e ) {
-        die("unable to create admin user: ".$e->getMessage());
-    }
-    
-    //
-    // now my database is not in "admin party" anymore : to continue Administration I need to setup an authenticated connector
-    //
-    $admclient = new CouchClient ("http://superAdmin:secretpass@localhost:5984/", "mydb" );
-    $adm = new CouchAdmin($admclient);
-    
-    // create a regular (no superadmin) user)
-    try {
-        $adm->createUser("joe","secret");
-    } catch ( Exception $e ) {
-        die("unable to create regular user: ".$e->getMessage());
-    }
-    
-    // set "joe" as admin of the database "mydb"
-    try {
-        $adm->addDatabaseAdminUser("joe");
-    } catch ( Exception $e ) {
-        die("unable to add joe to the admins list of mydb: ".$e->getMessage());
-    }
-    
-    // Oh no I missed up remove "joe" from database "mydb" admins
-    try {
-        $adm->removeDatabaseAdminUser("joe");
-    } catch ( Exception $e ) {
-        die("unable to remove joe from the admins list of mydb: ".$e->getMessage());
-    }
-    
-    // and add it to the members group of database "mydb"
-    try {
-        $adm->addDatabaseMemberUser("joe");
-    } catch ( Exception $e ) {
-        die("unable to add joe to the members list of mydb: ".$e->getMessage());
-    }
-    
-    // well... get the list of users belonging to the "members" group of "mydb"
-    $users = $adm->getDatabaseMemberUsers();  // array ( "joe" )
-    
+// I create the first admin user
+try {
+    $anonymous_adm->createAdmin("superAdmin","secretpass");
+} catch ( Exception $e ) {
+    die("unable to create admin user: ".$e->getMessage());
+}
+
+//
+// now my database is not in "admin party" anymore : to continue Administration I need to setup an authenticated connector
+//
+$admclient = new CouchClient ("http://superAdmin:secretpass@localhost:5984/", "mydb" );
+$adm = new CouchAdmin($admclient);
+
+// create a regular (no superadmin) user)
+try {
+    $adm->createUser("joe","secret");
+} catch ( Exception $e ) {
+    die("unable to create regular user: ".$e->getMessage());
+}
+
+// set "joe" as admin of the database "mydb"
+try {
+    $adm->addDatabaseAdminUser("joe");
+} catch ( Exception $e ) {
+    die("unable to add joe to the admins list of mydb: ".$e->getMessage());
+}
+
+// Oh no I missed up remove "joe" from database "mydb" admins
+try {
+    $adm->removeDatabaseAdminUser("joe");
+} catch ( Exception $e ) {
+    die("unable to remove joe from the admins list of mydb: ".$e->getMessage());
+}
+
+// and add it to the members group of database "mydb"
+try {
+    $adm->addDatabaseMemberUser("joe");
+} catch ( Exception $e ) {
+    die("unable to add joe to the members list of mydb: ".$e->getMessage());
+}
+
+// well... get the list of users belonging to the "members" group of "mydb"
+$users = $adm->getDatabaseMemberUsers();  // array ( "joe" )
+```
 
 ##Getting started
 
@@ -130,12 +131,13 @@ The couchAdmin class constructor takes 2 parameters : a couchClient object and a
 
 Example :
 
-    // create a CouchClient instance
-    $client = new CouchClient("http://localhost:5984/","mydb");
-    // now create the CouchAdmin instance
-    $adm = new CouchAdmin($client);
-    // here $adm will connect to CouchDB without any credentials : that will only work if there is no administrator created yet on the server.
-
+```php
+// create a CouchClient instance
+$client = new CouchClient("http://localhost:5984/","mydb");
+// now create the CouchAdmin instance
+$adm = new CouchAdmin($client);
+// here $adm will connect to CouchDB without any credentials : that will only work if there is no administrator created yet on the server.
+```
 
 ##Admin party
 
@@ -143,25 +145,28 @@ On a fresh install, CouchDB is in **admin party** mode : that means any operatio
 
 Below is an example to configure the first server administrator, that we will name **couchAdmin** with the password **secretpass** :
 
-    // create an anonymous couchClient connection (no user/pass)
-    $client = new CouchClient("http://localhost:5984/","mydb");
-    // now create the couchAdmin instance
-    $adm = new CouchAdmin($client);
-    //create the server administrator
-    try {
-        $adm->createAdmin("couchAdmin","secretpass");
-    } catch ( Exception $e ) {
-        die ("Can't create server administrator : ".$e->getMessage());
-    }
+```php
+// create an anonymous couchClient connection (no user/pass)
+$client = new CouchClient("http://localhost:5984/","mydb");
+// now create the couchAdmin instance
+$adm = new CouchAdmin($client);
+//create the server administrator
+try {
+    $adm->createAdmin("couchAdmin","secretpass");
+} catch ( Exception $e ) {
+    die ("Can't create server administrator : ".$e->getMessage());
+}
+```
 
 Now that the couch server got a server administrator, it's not in "admin party" mode anymore : we can't create a second server administrator using the same, anonymous couchClient instance.
 We need to create a couchClient instance with the credentials of **couchAdmin**.
 
-    // create a server administrator couchClient connection
-    $client = new CouchClient("http://couchAdmin:secretpass@localhost:5984/","mydb");
-    // now create the CouchAdmin instance
-    $adm = new CouchAdmin($client);
-
+```php
+// create a server administrator couchClient connection
+$client = new CouchClient("http://couchAdmin:secretpass@localhost:5984/","mydb");
+// now create the CouchAdmin instance
+$adm = new CouchAdmin($client);
+```
 
 ##Create users and admins
 
@@ -171,20 +176,21 @@ The method **createAdmin ($login, $password, $roles = array())** creates a Couch
 
 Example :
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    // Create an admin user
-    try {
-        $adm->createAdmin("superAdmin","ommfgwtf");
-    } catch ( Exception $e ) {
-        die("unable to create admin user: ".$e->getMessage());
-    }
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
 
+// Create an admin user
+try {
+    $adm->createAdmin("superAdmin","ommfgwtf");
+} catch ( Exception $e ) {
+    die("unable to create admin user: ".$e->getMessage());
+}
+```
 
 ###createUser($login, $password, $roles = array())
 
@@ -193,38 +199,40 @@ The method **createUser($login, $password, $roles = array())** creates a CouchDB
 
 Example :
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    // Create a user
-    try {
-        $adm->createUser("joe","dalton");
-    } catch ( Exception $e ) {
-        die("unable to create user: ".$e->getMessage());
-    }
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
 
+// Create a user
+try {
+    $adm->createUser("joe","dalton");
+} catch ( Exception $e ) {
+    die("unable to create user: ".$e->getMessage());
+}
+```
 
 Example - creating a user and adding it to some roles
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    $roles = array ("thief","jailbreaker");
-    
-    try {
-        $adm->createUser("jack","dalton",$roles);
-    } catch ( Exception $e ) {
-        die("unable to create user: ".$e->getMessage());
-    }
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
 
+$roles = array ("thief","jailbreaker");
+
+try {
+    $adm->createUser("jack","dalton",$roles);
+} catch ( Exception $e ) {
+    die("unable to create user: ".$e->getMessage());
+}
+```
 
 ###getUser($login)
 
@@ -232,24 +240,25 @@ The method **getUser($login)** returns the user document stored in the users dat
 
 Example :
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    // get a user
-    try {
-        $joe = $adm->getUser("joe");
-    } catch ( Exception $e ) {
-        if ( $e->getCode() == 404 ) {
-            echo "User joe does not exist.";
-        } else {
-            die("unable to get user: ".$e->getMessage());
-        }
-    }
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
 
+// get a user
+try {
+    $joe = $adm->getUser("joe");
+} catch ( Exception $e ) {
+    if ( $e->getCode() == 404 ) {
+        echo "User joe does not exist.";
+    } else {
+        die("unable to get user: ".$e->getMessage());
+    }
+}
+```
 
 ###getAllUsers() 
 
@@ -257,84 +266,87 @@ The method **getAllUsers()** returns the list of all users registered in the use
 
 Example :
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    // get all users
-    try {
-        $all = $adm->getAllUsers();
-    } catch ( Exception $e ) {
-        die("unable to get users: ".$e->getMessage());
-    }
-    print_r($all);
-    
-    /** will print something like 
-    Array (
-        stdClass (
-            "id" => "_design/_auth",
-            "key" => "_design/_auth",
-            "value" => stdClass (
-                            "rev" => "1-54a591939c91922a35efee07eb2c3a72"
-                      )
-        ),
-        stdClass (
-            "id" => "org.couchdb.user:jack",
-            "key" => "org.couchdb.user:jack",
-            "value" => stdClass (
-                             "rev" => "1-3e4dd4a7c5a9d422f8379f059fcfce98"
-                       )
-        ),
-        stdClass (
-            "id" => "org.couchdb.user:joe",
-            "key" => "org.couchdb.user:joe",
-            "value" => stdClass (
-                             "rev" => "1-9456a56f060799567ec4560fccf34534"
-                       )
-        )
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
+
+// get all users
+try {
+    $all = $adm->getAllUsers();
+} catch ( Exception $e ) {
+    die("unable to get users: ".$e->getMessage());
+}
+print_r($all);
+
+/** will print something like 
+Array (
+    stdClass (
+        "id" => "_design/_auth",
+        "key" => "_design/_auth",
+        "value" => stdClass (
+                        "rev" => "1-54a591939c91922a35efee07eb2c3a72"
+                  )
+    ),
+    stdClass (
+        "id" => "org.couchdb.user:jack",
+        "key" => "org.couchdb.user:jack",
+        "value" => stdClass (
+                         "rev" => "1-3e4dd4a7c5a9d422f8379f059fcfce98"
+                   )
+    ),
+    stdClass (
+        "id" => "org.couchdb.user:joe",
+        "key" => "org.couchdb.user:joe",
+        "value" => stdClass (
+                         "rev" => "1-9456a56f060799567ec4560fccf34534"
+                   )
     )
-    **/
+)
+**/
+```
 
 Example - including user documents and not showing the design documents
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    try {
-        $all = $adm->include_docs(true)->startkey("org.couchdb.user:")->getAllUsers();
-    } catch ( Exception $e ) {
-        die("unable to get users: ".$e->getMessage());
-    }
-    print_r($all);
-    
-    /** will print something like 
-    Array (
-        stdClass (
-            "id" => "org.couchdb.user:jack",
-            "key" => "org.couchdb.user:jack",
-            "value" => stdClass (
-                             "rev" => "1-3e4dd4a7c5a9d422f8379f059fcfce98"
-                       ),
-            "doc" => stdClass ( "_id" => "org.couchdb.user:jack", ... )
-        ),
-        stdClass (
-            "id" => "org.couchdb.user:joe",
-            "key" => "org.couchdb.user:joe",
-            "value" => stdClass (
-                             "rev" => "1-9456a56f060799567ec4560fccf34534"
-                       ),
-            "doc" => stdClass ( "_id" => "org.couchdb.user:joe", ... )
-        )
-    )
-    **/
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
 
+try {
+    $all = $adm->include_docs(true)->startkey("org.couchdb.user:")->getAllUsers();
+} catch ( Exception $e ) {
+    die("unable to get users: ".$e->getMessage());
+}
+print_r($all);
+
+/** will print something like 
+Array (
+    stdClass (
+        "id" => "org.couchdb.user:jack",
+        "key" => "org.couchdb.user:jack",
+        "value" => stdClass (
+                         "rev" => "1-3e4dd4a7c5a9d422f8379f059fcfce98"
+                   ),
+        "doc" => stdClass ( "_id" => "org.couchdb.user:jack", ... )
+    ),
+    stdClass (
+        "id" => "org.couchdb.user:joe",
+        "key" => "org.couchdb.user:joe",
+        "value" => stdClass (
+                         "rev" => "1-9456a56f060799567ec4560fccf34534"
+                   ),
+        "doc" => stdClass ( "_id" => "org.couchdb.user:joe", ... )
+    )
+)
+**/
+```
 
 ##Removing users
 
@@ -346,29 +358,31 @@ The method **deleteAdmin($login)** permanently removes the admin $login.
 
 Example : creating and immediately removing a server administrator
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    $adminLogin = "butterfly";
-    $adminPass = "wing";
-    try {
-        $ok = $adm->createAdmin($adminLogin, $adminPass);
-    } catch (Exception $e) {
-        die("unable to create admin user: ".$e->getMessage());
-    }
-    // here "butterfly" admin exists and can login to couchDB to manage the server
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
 
-    // now we remove it
-    try {
-        $ok = $adm->deleteAdmin($adminLogin);
-    } catch (Exception $e) {
-        die("unable to delete admin user: ".$e->getMessage());
-    }
-    // here "butterfly" admin does not exist anymore
+$adminLogin = "butterfly";
+$adminPass = "wing";
+try {
+    $ok = $adm->createAdmin($adminLogin, $adminPass);
+} catch (Exception $e) {
+    die("unable to create admin user: ".$e->getMessage());
+}
+// here "butterfly" admin exists and can login to couchDB to manage the server
+
+// now we remove it
+try {
+    $ok = $adm->deleteAdmin($adminLogin);
+} catch (Exception $e) {
+    die("unable to delete admin user: ".$e->getMessage());
+}
+// here "butterfly" admin does not exist anymore
+```
 
 Note : the response of deleteAdmin() method is a string : it's the hash of the password this admin had before been removed. Example : -hashed-0c796d26c439bec7445663c2c2a18933858a8fbb,f3ada55b560c7ca77e5a5cdf61d40e1a
 
@@ -378,29 +392,30 @@ The method **deleteUser($login)** permanently removes the user $login.
 
 Example : removing a server user
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
-    
-    try {
-        $ok = $adm->deleteUser("joe");
-    } catch (Exception $e) {
-        die("unable to delete user: ".$e->getMessage());
-    }
-    print_r($ok);
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new couchAdmin($client);
 
-    /** will print something like :
-    stdClass Object
-    (
-        [ok] => 1
-        [id] => org.couchdb.user:joe
-        [rev] => 6-415784680cff486e2d0144ed39da2431
-    )
-    */
+try {
+    $ok = $adm->deleteUser("joe");
+} catch (Exception $e) {
+    die("unable to delete user: ".$e->getMessage());
+}
+print_r($ok);
 
+/** will print something like :
+stdClass Object
+(
+    [ok] => 1
+    [id] => org.couchdb.user:joe
+    [rev] => 6-415784680cff486e2d0144ed39da2431
+)
+*/
+```
 
 
 ##Roles assignation
@@ -411,20 +426,21 @@ The method **addRoleToUser($user, $role)** adds the role *$role* to the list of 
 
 Example : adding the role *cowboy* to user *joe*
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    try {
-        $adm->addRoleToUser("joe","cowboy");
-    } catch ( Exception $e ) {
-        die("unable to add a role to user: ".$e->getMessage());
-    }
-    echo "Joe now got role cowboy";
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
 
+try {
+    $adm->addRoleToUser("joe","cowboy");
+} catch ( Exception $e ) {
+    die("unable to add a role to user: ".$e->getMessage());
+}
+echo "Joe now got role cowboy";
+```
 
 ###removeRoleFromUser($user, $role)
 
@@ -432,20 +448,21 @@ The method **removeRoleFromUser($user, $role)** removes the role *$role* from th
 
 Example : removing the role *cowboy* of user *joe*
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    try {
-        $adm->removeRoleFromUser("joe","cowboy");
-    } catch ( Exception $e ) {
-        die("unable to remove a role of a user: ".$e->getMessage());
-    }
-    echo "Joe don't belongs to the cowboy role anymore";
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
 
+try {
+    $adm->removeRoleFromUser("joe","cowboy");
+} catch ( Exception $e ) {
+    die("unable to remove a role of a user: ".$e->getMessage());
+}
+echo "Joe don't belongs to the cowboy role anymore";
+```
 
 
 ##Database user security
@@ -461,19 +478,20 @@ The method **addDatabaseMemberUser($login)** adds a user in the members list of 
 
 Example - adding joe to the members of the database mydb
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    try {
-        $adm->addDatabaseMemberUser("joe");
-    } catch ( Exception $e ) {
-        die("unable to add user: ".$e->getMessage());
-    }
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
 
+try {
+    $adm->addDatabaseMemberUser("joe");
+} catch ( Exception $e ) {
+    die("unable to add user: ".$e->getMessage());
+}
+```
 
 ###addDatabaseAdminUser($login)
 
@@ -481,19 +499,20 @@ The method **addDatabaseAdminUser($login)** adds a user in the admins list of th
 
 Example - adding joe to the admins of the database mydb
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    try {
-        $adm->addDatabaseAdminUser("joe");
-    } catch ( Exception $e ) {
-        die("unable to add user: ".$e->getMessage());
-    }
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
 
+try {
+    $adm->addDatabaseAdminUser("joe");
+} catch ( Exception $e ) {
+    die("unable to add user: ".$e->getMessage());
+}
+```
 
 ###getDatabaseMemberUsers()
 
@@ -501,21 +520,22 @@ The method **getDatabaseMemberUsers()** returns the list of users belonging to t
 
 Example - getting all users beeing *members* of the database mydb
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    try {
-        $users = $adm->getDatabaseMemberUsers();
-    } catch ( Exception $e ) {
-        die("unable to list users: ".$e->getMessage());
-    }
-    print_r($users);
-    // will echo something like: Array ( "joe" , "jack" )
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
 
+try {
+    $users = $adm->getDatabaseMemberUsers();
+} catch ( Exception $e ) {
+    die("unable to list users: ".$e->getMessage());
+}
+print_r($users);
+// will echo something like: Array ( "joe" , "jack" )
+```
 
 ###getDatabaseAdminUsers()
 
@@ -523,21 +543,22 @@ The method **getDatabaseAdminUsers()** returns the list of users belonging to th
 
 Example - getting all users beeing *admins* of the database mydb
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    try {
-        $users = $adm->getDatabaseAdminUsers();
-    } catch ( Exception $e ) {
-        die("unable to list users: ".$e->getMessage());
-    }
-    print_r($users);
-    // will echo something like: Array ( "william" )
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
 
+try {
+    $users = $adm->getDatabaseAdminUsers();
+} catch ( Exception $e ) {
+    die("unable to list users: ".$e->getMessage());
+}
+print_r($users);
+// will echo something like: Array ( "william" )
+```
 
 ###removeDatabaseMemberUser($login)
 
@@ -545,19 +566,20 @@ The method **removeDatabaseMemberUser($login)** removes a user from the members 
 
 Example - removing joe from the members of the database mydb
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    try {
-        $adm->removeDatabaseMemberUser("joe");
-    } catch ( Exception $e ) {
-        die("unable to remove user: ".$e->getMessage());
-    }
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
 
+try {
+    $adm->removeDatabaseMemberUser("joe");
+} catch ( Exception $e ) {
+    die("unable to remove user: ".$e->getMessage());
+}
+```
 
 ###removeDatabaseAdminUser($login)
 
@@ -565,19 +587,20 @@ The method **removeDatabaseAdminUser($login)** removes a user from the admins li
 
 Example - removing joe from the admins of the database mydb
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    try {
-        $adm->removeDatabaseAdminUser("joe");
-    } catch ( Exception $e ) {
-        die("unable to remove user: ".$e->getMessage());
-    }
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
 
+try {
+    $adm->removeDatabaseAdminUser("joe");
+} catch ( Exception $e ) {
+    die("unable to remove user: ".$e->getMessage());
+}
+```
 
 
 ##Database roles security
@@ -592,19 +615,20 @@ The method **addDatabaseMemberrole($role)** adds a role in the members list of t
 
 Example - adding cowboy to the members of the database mydb
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    try {
-        $adm->addDatabaseMemberRole("cowboy");
-    } catch ( Exception $e ) {
-        die("unable to add role: ".$e->getMessage());
-    }
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
 
+try {
+    $adm->addDatabaseMemberRole("cowboy");
+} catch ( Exception $e ) {
+    die("unable to add role: ".$e->getMessage());
+}
+```
 
 ###addDatabaseAdminRole($role)
 
@@ -612,19 +636,20 @@ The method **addDatabaseAdminRole($role)** adds a role in the admins list of the
 
 Example - adding *cowboy* role to the *admins* of the database mydb
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    try {
-        $adm->addDatabaseAdminrole("cowboy");
-    } catch ( Exception $e ) {
-        die("unable to add role: ".$e->getMessage());
-    }
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
 
+try {
+    $adm->addDatabaseAdminrole("cowboy");
+} catch ( Exception $e ) {
+    die("unable to add role: ".$e->getMessage());
+}
+```
 
 ###getDatabaseMemberRoles()
 
@@ -632,21 +657,22 @@ The method **getDatabaseMemberRoles()** returns the list of roles belonging to t
 
 Example - getting all roles beeing *members* of the database mydb
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    try {
-        $roles = $adm->getDatabaseMemberRoles();
-    } catch ( Exception $e ) {
-        die("unable to list roles: ".$e->getMessage());
-    }
-    print_r($roles);
-    // will echo something like: Array ( "cowboy" , "indians" )
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
 
+try {
+    $roles = $adm->getDatabaseMemberRoles();
+} catch ( Exception $e ) {
+    die("unable to list roles: ".$e->getMessage());
+}
+print_r($roles);
+// will echo something like: Array ( "cowboy" , "indians" )
+```
 
 ###getDatabaseAdminRoles()
 
@@ -654,21 +680,22 @@ The method **getDatabaseAdminRoles()** returns the list of roles belonging to th
 
 Example - getting all roles beeing *admins* of the database mydb
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    try {
-        $roles = $adm->getDatabaseAdminRoles();
-    } catch ( Exception $e ) {
-        die("unable to list roles: ".$e->getMessage());
-    }
-    print_r($roles);
-    // will echo something like: Array ( "martians" )
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
 
+try {
+    $roles = $adm->getDatabaseAdminRoles();
+} catch ( Exception $e ) {
+    die("unable to list roles: ".$e->getMessage());
+}
+print_r($roles);
+// will echo something like: Array ( "martians" )
+```
 
 ###removeDatabaseMemberRole($role)
 
@@ -676,19 +703,20 @@ The method **removeDatabaseMemberRole($role)** removes a role from the members l
 
 Example - removing *cowboy* from the *members* of the database mydb
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    try {
-        $adm->removeDatabaseMemberRole("cowboy");
-    } catch ( Exception $e ) {
-        die("unable to remove role: ".$e->getMessage());
-    }
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
 
+try {
+    $adm->removeDatabaseMemberRole("cowboy");
+} catch ( Exception $e ) {
+    die("unable to remove role: ".$e->getMessage());
+}
+```
 
 ###removeDatabaseAdminRole($role)
 
@@ -696,19 +724,20 @@ The method **removeDatabaseAdminRole($role)** removes a role from the admins lis
 
 Example - removing *martians* from the admins of the database mydb
 
-    <?PHP
-   use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    try {
-        $adm->removeDatabaseAdminRole("martians");
-    } catch ( Exception $e ) {
-        die("unable to remove role: ".$e->getMessage());
-    }
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new couchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
 
+try {
+    $adm->removeDatabaseAdminRole("martians");
+} catch ( Exception $e ) {
+    die("unable to remove role: ".$e->getMessage());
+}
+```
 
 
 
@@ -716,16 +745,18 @@ Example - removing *martians* from the admins of the database mydb
 
 Each Couch database got a security object. The security object is made like :
 
-    {
-        "admins" : {
-            "names" : ["joe", "phil"],
-            "roles" : ["boss"]
-        },
-        "members" : {
-            "names" : ["dave"],
-            "roles" : ["producer", "consumer"]
-        }
+```json
+{
+    "admins" : {
+        "names" : ["joe", "phil"],
+        "roles" : ["boss"]
+    },
+    "members" : {
+        "names" : ["dave"],
+        "roles" : ["producer", "consumer"]
     }
+}
+```
 
 PHP on Couch provides methods to directly get and set the security object.
 
@@ -736,19 +767,20 @@ The method **getSecurity()** returns the security object of a CouchDB database.
 
 Example - getting the security object of the database mydb
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new couchAdmin($client);
-    
-    try {
-        $security = $adm->getSecurity();
-    } catch ( Exception $e ) {
-        die("unable to get security object: ".$e->getMessage());
-    }
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new couchAdmin($client);
 
+try {
+    $security = $adm->getSecurity();
+} catch ( Exception $e ) {
+    die("unable to get security object: ".$e->getMessage());
+}
+```
 
 ###setSecurity($security)
 
@@ -756,18 +788,20 @@ The method **setSecurity($security)** set the security object of a Couch databas
 
 Example - setting the security object of the database mydb
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client);
-    
-    try {
-        $adm->setSecurity($security);
-    } catch ( Exception $e ) {
-        die("unable to set security object: ".$e->getMessage());
-    }
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
+
+try {
+    $adm->setSecurity($security);
+} catch ( Exception $e ) {
+    die("unable to set security object: ".$e->getMessage());
+}
+```
 
 ##Database options
 
@@ -780,14 +814,14 @@ To create a couchAdmin instance and specify the name of the users database, use 
 
 Example - setting the couchdb users database name on couchAdmin object creation
 
-    <?PHP
-    use PHPOnCouch\Couch,
-        PHPOnCouch\CouchClient,
-        PHPOnCouch\CouchAdmin;
-    $client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
-    $adm = new CouchAdmin($client, array ("users_database"=> "theUsers") );
-    
-
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client, array ("users_database"=> "theUsers") );
+```
 
 ###setUserDatabase($name)
 

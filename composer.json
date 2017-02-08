@@ -1,5 +1,5 @@
 {
-    "name": "popojargo/php-on-couch",
+    "name": "php-on-couch/php-on-couch",
     "type": "library",
     "description": "CouchDB NoSQL database access in PHP",
     "keywords": [
@@ -10,13 +10,19 @@
         "nosql",
         "driver"
     ],
-    "homepage": "https://github.com/popojargo/PHP-on-Couch",
+    "homepage": "https://github.com/PHP-on-Couch/PHP-on-Couch",
     "license": "GPLv3",
     "authors": [
         {
             "name": "Michael Bailly",
             "email": "mickael.bailly@free.fr",
             "homepage": "https://github.com/dready92/",
+            "role": "Developer"
+        },
+        { 
+            "name": "Clemens Sahs",
+            "email": "clemens.sahs@slides-worker.org",
+            "homepage": "https://github.com/ClemensSahs",
             "role": "Developer"
         },
         {
@@ -34,15 +40,9 @@
     "require": {
         "php": ">=5.2.0"
     },
-    "repositories": [
-        {
-            "type":"vcs",
-            "url":"https://github.com/popojargo/phpcheckstyle"
-        }
-    ],  
     "require-dev": {
         "phpunit/phpunit": "5.5.*",
         "satooshi/php-coveralls": "*",
-        "phpcheckstyle/phpcheckstyle": "dev-master"
+        "phpcheckstyle/phpcheckstyle": "*"
     }
 }

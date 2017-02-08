@@ -176,7 +176,7 @@
 	<!-- Quotes -->
 	<!-- **************** -->
 	<test name="preferQuotes">
-		<property name="type" value="single" />
+		<property name="type" value="single" level="info" />
 	</test>
 
 	<!-- **************** -->

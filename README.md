@@ -16,12 +16,15 @@
         * [Database functionnalities](#database-functionnalities)
         * [Documents functionnalities](#documents-functionnalities)
         * [Views functionnalities](#views-functionnalities)
+        * [Mango Query](#mango-query)
     + [CouchDocument class](#couchdocument-class)
     + [CouchReplicator class](#couchreplicator-class)
     + [CouchAdmin class](#couchadmin-class)
 - [Quick-start guide](#quick-start-guide)
 - [Example](#example)
-- [Feedback](#feedback)
+- [Community](#community)
+    + [Contributions](#contributions)
+    + [Feedback](#feedback)
 
 ##Introduction
 
@@ -33,38 +36,16 @@ Due to the lack of support on the last repository, I forked it and I will make s
 
 With the new release of 2.0, the master branch will support only this version and the next one.
 
-###Devlopments
-If you want to get involved, feel free to fork this branch and make a pull request. We can discuss of the new feature together and split the works. Simply create an issue and we will discuss on it.
+To access PHP-on-Couch for CouchDB 1.6.1, please visit [this link](https://github.com/PHP-on-Couch/PHP-on-Couch/tree/1.6.1).
 
 
-To access PHP-on-Couch for CouchDB 1.6.1, please visit [this link](https://github.com/dready92/PHP-on-Couch/tree/1.6.1).
+##Recent changes
 
-
-##Changes
-
-Since I forked the origin branch, I updated the library a bit. We are now using Namespaces for the whole library. It's cleaner to use it with an autoloader. Please take a look to the updated examples for more details.
-
--------
-####[2.0]
-#####Added
-
-- CouchClient
-    + getMemberShip()
-    + getConfig($nodeName[,$section,$key])
-    + setConfig($nodeName,$section,$key,$value)
-    + deleteConfig($nodeName,$section,$key)
-- Composer installation now available
-
-####Updated
-- CouchAdmin($client,$options)
-- Updated few tests cases
-
-----
-
+For the complete change list, head over [here](changelist.md)
 
 ##Installation and testing
 
-Install the library using composer : `composer require PHP-on-Couch/php-on-couch`.
+Install the library using composer : `composer require php-on-couch/php-on-couch`.
 You can find more detailed informations about installation [here](INSTALL.md)
 
 Test instructions to be determined.
@@ -101,6 +82,11 @@ This class maps all the actions the application can do on the CouchDB server. Do
 #### [Views functionnalities](doc/couch_client-view.md)
 
 - Calling a view with query options : key, startkey, endkey, limit, stale, ...
+
+#### [Mango Query](doo/couch_client_mango.md)
+
+- Create and manage indexes
+- Make complex query with Mango Query
 
 ###CouchDocument class
 
@@ -200,7 +186,15 @@ $doc->name = "Brown"; // set document property "name" to "Brown" and store the u
 
 
        
-##Feedback
+##Community
+
+###Contributions
+
+Feel free to make any contributions. All contributions must follow the [code style](codestyle.md) and must also comes with valid and complete tests. 
+
+Help is really appreciated to complete add more tests.
+
+###Feedback
 
 [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/PHP-on-Couch/PHP-on-Couch)
 

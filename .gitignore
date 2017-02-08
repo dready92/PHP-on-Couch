@@ -2,6 +2,9 @@
 /nbproject/private/
 /nbproject
 
+#Checkstyle reports
+/style-report
+
 #Composer files
 composer.lock
 /vendor
