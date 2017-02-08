@@ -83,7 +83,7 @@ This class maps all the actions the application can do on the CouchDB server. Do
 
 - Calling a view with query options : key, startkey, endkey, limit, stale, ...
 
-#### [Mango Query](doo/couch_client_mango.md)
+#### [Mango Query](doc/couch_client_mango.md)
 
 - Create and manage indexes
 - Make complex query with Mango Query
