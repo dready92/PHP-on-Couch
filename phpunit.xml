@@ -10,6 +10,7 @@
             <file>./tests/CouchClientTest.php</file>
             <file>./tests/couchClientViewTest</file>
             <file>./tests/CouchAdminTest.php</file>
+            <file>./tests/Adapter/CouchHttpCurlTest.php</file>
         </testsuite>
     </testsuites>
     <logging>
