@@ -19,6 +19,8 @@
 
 namespace PHPOnCouch;
 
+
+
 use stdClass;
 use Exception;
 use InvalidArgumentException;

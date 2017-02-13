@@ -17,14 +17,16 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace PhpOnCouch\Adapter;
+namespace PHPOnCouch\Adapter;
+
+
 
 /**
  * Description of CouchAdapterCurl
  *
  * @author alexis
  */
-class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter {
+class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttpAdapterInterface {
 
     /**
      * We need a socket to use the continuous query.
@@ -103,14 +105,14 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter {
      * @throws Exception
      */
     public function query($method, $url, $parameters = [], $data = null, $contentType = null) {
-        if (!in_array($method, $this->_httpMethods))
+        if (!in_array($method, $this->httpMethods))
             throw new Exception("Bad HTTP method: $method");
 
         $url = $this->dsn . $url;
         if (is_array($parameters) && count($parameters))
             $url = $url . '?' . http_build_query($parameters);
-        $http = $this->curlBuildRequest($method, $url, $data, $contentType);
-        $this->curlAddCustomOptions($http);
+        $http = $this->buildRequest($method, $url, $data, $contentType);
+        $this->addCustomOptions($http);
         curl_setopt($http, CURLOPT_HEADER, true);
         curl_setopt($http, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($http, CURLOPT_FOLLOWLOCATION, true);
@@ -159,7 +161,7 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter {
         $fstream = fopen($file, 'r');
         curl_setopt($http, CURLOPT_INFILE, $fstream);
         curl_setopt($http, CURLOPT_INFILESIZE, filesize($file));
-        $this->curlAddCustomOptions($http);
+        $this->addCustomOptions($http);
         $response = curl_exec($http);
         fclose($fstream);
         curl_close($http);
@@ -200,7 +202,7 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter {
         curl_setopt($http, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($http, CURLOPT_FOLLOWLOCATION, true);
         curl_setopt($http, CURLOPT_POSTFIELDS, $data);
-        $this->curlAddCustomOptions($http);
+        $this->addCustomOptions($http);
         $response = curl_exec($http);
         curl_close($http);
         return $response;

@@ -1,3 +1,4 @@
+composer dump-autoload
 sudo docker stop $(sudo docker ps -a -q)
 sudo docker rm $(sudo docker ps -a -q)
 docker run -d -it -p 5984:5984 klaemo/couchdb:latest & sleep 5

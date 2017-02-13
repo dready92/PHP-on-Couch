@@ -20,6 +20,8 @@
 
 namespace PHPOnCouch;
 
+
+
 use Exception;
 use PHPOnCouch\Exceptions\CouchException;
 use InvalidArgumentException;

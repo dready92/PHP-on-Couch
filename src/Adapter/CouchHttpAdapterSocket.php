@@ -17,14 +17,16 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace PhpOnCouch\Adapter;
+namespace PHPOnCouch\Adapter;
+
+
 
 /**
  * Description of CouchAdapterSocket
  *
  * @author alexis
  */
-class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter {
+class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHttpAdapterInterface {
 
     protected $socket;
 
@@ -143,7 +145,7 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter {
      * @throws Exception
      */
     public function query($method, $url, $parameters = [], $data = null, $contentType = null) {
-        if (!in_array($method, $this->_httpMethods))
+        if (!in_array($method, $this->httpMethods))
             throw new Exception("Bad HTTP method: $method");
 
         if (is_array($parameters) && count($parameters))
@@ -184,7 +186,7 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter {
      * @throws Exception|InvalidArgumentException|CouchException|CouchNoResponseException
      */
     public function continuousQuery($callable, $method, $url, $parameters = [], $data = null) {
-        if (!in_array($method, $this->_httpMethods))
+        if (!in_array($method, $this->httpMethods))
             throw new Exception("Bad HTTP method: $method");
         if (!is_callable($callable))
             throw new InvalidArgumentException("callable argument have to success to is_callable PHP function");
@@ -254,7 +256,7 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter {
      *
      * @throws InvalidArgumentException
      */
-    protected function storeFile($url, $file, $contentType) {
+    public function storeFile($url, $file, $contentType) {
 
         if (!strlen($url))
             throw new InvalidArgumentException("Attachment URL can't be empty");
