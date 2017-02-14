@@ -1,5 +1,5 @@
 <?php
-
+require_once join(DIRECTORY_SEPARATOR,[dirname(dirname(__DIR__)),'src','autoload.php']);
 
 use PHPOnCouch\Exceptions;
 
