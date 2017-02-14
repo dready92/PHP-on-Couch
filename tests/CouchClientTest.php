@@ -628,7 +628,8 @@ EOT
         $doc->_id = "foo";
         $this->client->storeDoc($doc);
 
-        $update = $this->aclient->updateDocFullAPI("test", "test", array(
+        $update = $this->aclient->updateDocFullAPI("test", "test",
+                array(
             "data" => array("var1" => "val1/?\"", "var2" => "val2")
         ));
         $this->assertInternalType("object", $update);
@@ -675,7 +676,8 @@ EOT
         $cd->set(array(
             '_id' => 'somedoc2'
         ));
-        $back = $cd->storeAttachment(join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']), "text/plain", "file.txt");
+        $back = $cd->storeAttachment(join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']), "text/plain",
+                "file.txt");
         $fields = $cd->getFields();
 
         $this->assertInternalType("object", $back);
@@ -714,7 +716,8 @@ EOT
         $cd->set(array(
             '_id' => 'somedoc2'
         ));
-        $back = $cd->storeAttachment(join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']), "text/plain", "file.txt");
+        $back = $cd->storeAttachment(join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']), "text/plain",
+                "file.txt");
         $fields = $cd->getFields();
 
         $this->assertInternalType("object", $back);
@@ -865,7 +868,8 @@ EOT
             $this->assertObjectHasAttribute('value', $row);
         }
 
-        $test = $this->client->startkey(array('test'))->endkey(array('test', array()))->getList('test', 'list1', 'simple');
+        $test = $this->client->startkey(array('test'))->endkey(array('test', array()))->getList('test', 'list1',
+                'simple');
         $this->assertInternalType("array", $test);
         $this->assertEquals(count($test), 2);
         foreach ($test as $row) {
@@ -925,7 +929,8 @@ EOT
         );
         $doc->lists = $lists;
 
-        $test = $this->client->startkey(array('test2'))->endkey(array('test2', array()))->getForeignList('test2', 'list2', 'test', 'simple');
+        $test = $this->client->startkey(array('test2'))->endkey(array('test2', array()))->getForeignList('test2',
+                'list2', 'test', 'simple');
         $this->assertInternalType("array", $test);
         $this->assertEquals(1, count($test));
         foreach ($test as $row) {
@@ -1142,7 +1147,8 @@ EOT
      * @covers PHPOnCouch\CouchClient::find
      */
     public function testFind() {
-        $this->aclient->createIndex(['firstName', 'lastName', 'age', 'gender'], 'person');
+        $response = $this->aclient->createIndex(['firstName', 'age', 'lastName', 'gender'], 'person');
+        $this->assertObjectHasAttribute('id', $response);
         $docs = [
             [
                 'firstName' => 'John',
@@ -1165,7 +1171,7 @@ EOT
         ];
         $this->aclient->storedocs($docs);
 
-        $response1 = $this->aclient->find(['firstName' => ['$eq' => 'John']], ['age']);
+        $response1 = $this->aclient->fields(['age'])->find(['firstName' => ['$eq' => 'John']]);
         $this->assertCount(1, $response1);
         $this->assertEquals($response1[0]->age, 35);
         $this->assertFalse(isset($response1[0]->firstName));
@@ -1192,6 +1198,10 @@ EOT
         $this->assertCount(1, $response3);
         $response4 = $this->aclient->skip(1)->find($selector3);
         $this->assertCount(1, $response4);
+
+        $response5 = $this->aclient->limit(1)->sort([['firstName' => 'desc'], ['age' => 'desc']])->find(['firstName' => ['$gt' => null]]);
+        $this->assertObjectHasAttribute('age', $response5[0]);
+        $this->assertEquals(35, $response5[0]->age);
     }
 
     /**
@@ -1222,7 +1232,7 @@ EOT
         ];
         $this->aclient->storeDocs($docs);
 
-        $response = $this->aclient->explain(['firstName' => ['$eq' => 'John']], null, null, $indexObj->id);
+        $response = $this->aclient->explain(['firstName' => ['$eq' => 'John']], $indexObj->id);
         $this->assertObjectHasAttribute('dbname', $response);
         $this->assertObjectHasAttribute('index', $response);
         $this->assertObjectHasAttribute('selector', $response);

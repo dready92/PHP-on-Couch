@@ -77,6 +77,9 @@ class CouchClient extends Couch {
         'include_docs' => ['name' => 'include_docs', 'filter' => 'jsonEncodeBoolean'],
         'inclusive_end' => ['name' => 'inclusive_end', 'filter' => 'jsonEncodeBoolean'],
         'attachments' => ['name' => 'attachments', 'filter' => 'jsonEncodeBoolean'],
+        //Those parameter are only for MangoQuery (Could cause problems in the feature)
+        'sort' => ['name' => 'sort', 'filter' => null],
+        'fields' => ['name' => 'fields', 'filter' => 'ensureArray'],
     ];
 
     /**
@@ -1208,7 +1211,7 @@ class CouchClient extends Couch {
      * @param array|string $index  Optional. Let your determine a specific index to use for your query.
      * @returns array Returns an array of documents.
      */
-    public function find($selector, array $fields = null, $sort = null, $index = null) {
+    public function find($selector, $index = null) {
         $method = 'POST';
         $url = '/' . urlencode($this->dbname) . '/_find';
         $request = [
@@ -1216,10 +1219,19 @@ class CouchClient extends Couch {
         ];
 
         //Parameter validation
-        if (isset($fields))
-            $request['fields'] = $fields;
-        if (isset($sort))
+        if (isset($this->queryParameters['fields'])) {
+            $request['fields'] = $this->queryParameters['fields'];
+            unset($this->queryParameters['fields']);
+        }
+        if (isset($this->queryParameters['sort'])) {
+            //Handle both single array or arrays of sort
+            $sort = $this->queryParameters['sort'];
+            $firstElem = reset($sort);
+//            if (!is_array($firstElem))
+//                $sort = [$sort];
             $request['sort'] = $sort;
+            unset($this->queryParameters['sort']);
+        }
         if (isset($this->queryParameters['limit'])) {
             $request['limit'] = $this->queryParameters['limit'];
             unset($this->queryParameters['limit']);
@@ -1249,7 +1261,7 @@ class CouchClient extends Couch {
      * @param array|string $index  Optional. Let your determine a specific index to use for your query.
      * @returns object Returns an object that contains all the information about the query.
      */
-    public function explain($selector, array $fields = null, $sort = null, $index = null) {
+    public function explain($selector, $index = null) {
         $method = 'POST';
         $url = '/' . urlencode($this->dbname) . '/_explain';
         $request = [
@@ -1257,10 +1269,19 @@ class CouchClient extends Couch {
         ];
 
         //Parameter validation
-        if (isset($fields))
-            $request['fields'] = $fields;
-        if (isset($sort))
+        if (isset($this->queryParameters['fields'])) {
+            $request['fields'] = $this->queryParameters['fields'];
+            unset($this->queryParameters['fields']);
+        }
+        if (isset($this->queryParameters['sort'])) {
+            //Handle both single array or arrays of sort
+            $sort = $this->queryParameters['sort'];
+            $firstElem = reset($sort);
+            if (!is_array($firstElem))
+                $sort = [$sort];
             $request['sort'] = $sort;
+            unset($this->queryParameters['sort']);
+        }
         if (isset($this->queryParameters['limit'])) {
             $request['limit'] = $this->queryParameters['limit'];
             unset($this->queryParameters['limit']);
