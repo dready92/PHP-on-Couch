@@ -3,6 +3,7 @@
 // error_reporting(E_STRICT);
 error_reporting(E_ALL);
 
+
 use PHPOnCouch\CouchClient,
 	PHPOnCouch\CouchDocument,
 	PHPOnCouch\CouchAdmin,
@@ -10,11 +11,13 @@ use PHPOnCouch\CouchClient,
 
 require_once join(DIRECTORY_SEPARATOR,[__DIR__,'_config','config.php']);
 
+
 class couchClientViewTest extends PHPUnit_Framework_TestCase
 {
 
 	private $host = 'localhost';
 	private $port = '5984';
+
 
 	public function setUp()
 	{
@@ -36,6 +39,7 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 		$this->client = null;
 		$this->aclient = null;
 	}
+
 
 	protected function _makeView()
 	{
