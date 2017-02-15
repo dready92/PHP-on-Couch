@@ -31,12 +31,14 @@ This section details the available methods to work with documents
 The method **getAllDocs()** retrieve all documents from the database. In fact it only retrieve document IDs, unless you specify the server to include the documents using the [View query parameters syntax](couch_client-view.md).
 
 Example :
-    
-    $all_docs = $client->getAllDocs();
-    echo "Database got ".$all_docs->total_rows." documents.<BR>\n";
-    foreach ( $all_docs->rows as $row ) {
-        echo "Document ".$row->id."<BR>\n";
-    }
+
+```php
+$all_docs = $client->getAllDocs();
+echo "Database got ".$all_docs->total_rows." documents.<BR>\n";
+foreach ( $all_docs->rows as $row ) {
+    echo "Document ".$row->id."<BR>\n";
+}
+```
 
 ###getDoc($id)
 
@@ -46,15 +48,17 @@ The document is sent back as an HTTP object of class [stdClass](http://fr3.php.n
 
 Example :
 
-    try {
-        $doc = $client->getDoc("some_doc_id");
-    } catch ( Exception $e ) {
-        if ( $e->getCode() == 404 ) {
-           echo "Document some_doc_id does not exist !";
-	        }
-        exit(1);
-    }
-    echo $doc->_id.' revision '.$doc->_rev;
+```php
+try {
+    $doc = $client->getDoc("some_doc_id");
+} catch ( Exception $e ) {
+    if ( $e->getCode() == 404 ) {
+       echo "Document some_doc_id does not exist !";
+        }
+    exit(1);
+}
+echo $doc->_id.' revision '.$doc->_rev;
+```
 
 ###Chainable methods to use with getDoc()
 
@@ -64,16 +68,17 @@ The chainable **rev($value)** method specify the document revision to fetch.
 
 Example :
 
-    try {
-        $doc = $client->rev("1-849aff6ad4a38b1225c80a2119dc31cb")->getDoc("some_doc_id");
-    } catch ( Exception $e ) {
-        if ( $e->getCode() == 404 ) {
-           echo "Document some_doc_id or revision 1-849aff6ad4a38b1225c80a2119dc31cb does not exist !";
-        }
-        exit(1);
+```php
+try {
+    $doc = $client->rev("1-849aff6ad4a38b1225c80a2119dc31cb")->getDoc("some_doc_id");
+} catch ( Exception $e ) {
+    if ( $e->getCode() == 404 ) {
+       echo "Document some_doc_id or revision 1-849aff6ad4a38b1225c80a2119dc31cb does not exist !";
     }
-    echo $doc->_rev ; // should echo 1-849aff6ad4a38b1225c80a2119dc31cb
-
+    exit(1);
+}
+echo $doc->_rev ; // should echo 1-849aff6ad4a38b1225c80a2119dc31cb
+```
 
 ####asCouchDocuments()
 
@@ -81,16 +86,17 @@ The **getDoc($id)** method returns a PHP stdClass object. You can however get ba
 
 Example :
 
-    try {
-        $doc = $client->asCouchDocuments()->getDoc("some_doc_id");
-    } catch ( Exception $e ) {
-        if ( $e->getCode() == 404 ) {
-           echo "Document some_doc_id does not exist !";
-        }
-        exit(1);
+```php
+try {
+    $doc = $client->asCouchDocuments()->getDoc("some_doc_id");
+} catch ( Exception $e ) {
+    if ( $e->getCode() == 404 ) {
+       echo "Document some_doc_id does not exist !";
     }
-    echo get_class($doc); // should echo "CouchDocument"
-
+    exit(1);
+}
+echo get_class($doc); // should echo "CouchDocument"
+```
 
 ####conflicts()
 
@@ -98,18 +104,19 @@ The chainable method **conflicts()** asks CouchDB to add to the document a prope
 
 Example :
 
-    try {
-        $doc = $client->conflicts()->getDoc("some_doc_id");
-    } catch ( Exception $e ) {
-        if ( $e->getCode() == 404 ) {
-           echo "Document some_doc_id does not exist !";
-        }
-        exit(1);
+```php
+try {
+    $doc = $client->conflicts()->getDoc("some_doc_id");
+} catch ( Exception $e ) {
+    if ( $e->getCode() == 404 ) {
+       echo "Document some_doc_id does not exist !";
     }
-    if ( $doc->_conflicts ) {
-        print_r($doc->_conflicts);
-    }
-    
+    exit(1);
+}
+if ( $doc->_conflicts ) {
+    print_r($doc->_conflicts);
+}
+```
 
 ####revs()
 
@@ -117,15 +124,17 @@ The chainable method **revs()** asks CouchDB to add to the document a property *
 
 Example :
 
-    try {
-        $doc = $client->revs()->getDoc("some_doc_id");
-    } catch ( Exception $e ) {
-        if ( $e->getCode() == 404 ) {
-           echo "Document some_doc_id does not exist !";
-        }
-        exit(1);
+```php
+try {
+    $doc = $client->revs()->getDoc("some_doc_id");
+} catch ( Exception $e ) {
+    if ( $e->getCode() == 404 ) {
+       echo "Document some_doc_id does not exist !";
     }
-    print_r($doc->_revisions);
+    exit(1);
+}
+print_r($doc->_revisions);
+```
 
 ####revs_info()
 
@@ -133,16 +142,17 @@ The chainable method **revs_info()** asks CouchDB to add to the document a prope
 
 Example :
 
-    try {
-        $doc = $client->revs_info()->getDoc("some_doc_id");
-    } catch ( Exception $e ) {
-        if ( $e->getCode() == 404 ) {
-           echo "Document some_doc_id does not exist !";
-        }
-        exit(1);
+```php
+try {
+    $doc = $client->revs_info()->getDoc("some_doc_id");
+} catch ( Exception $e ) {
+    if ( $e->getCode() == 404 ) {
+       echo "Document some_doc_id does not exist !";
     }
-    print_r($doc->_revs_info);
-
+    exit(1);
+}
+print_r($doc->_revs_info);
+```
 
 ####open_revs($value)
 
@@ -152,30 +162,34 @@ Using the **open_revs($value)** method, CouchDB returns an array of objects.
 
 Example :
 
-    try {
-        $doc = $client->open_revs( array("1-fbd8a6da4d669ae4b909fcdb42bb2bfd", "2-5bc3c6319edf62d4c624277fdd0ae191") )->getDoc("some_doc_id");
-    } catch ( Exception $e ) {
-        if ( $e->getCode() == 404 ) {
-           echo "Document some_doc_id does not exist !";
-        }
-        exit(1);
+```php
+try {
+    $doc = $client->open_revs( array("1-fbd8a6da4d669ae4b909fcdb42bb2bfd", "2-5bc3c6319edf62d4c624277fdd0ae191") )->getDoc("some_doc_id");
+} catch ( Exception $e ) {
+    if ( $e->getCode() == 404 ) {
+       echo "Document some_doc_id does not exist !";
     }
-    print_r($doc->_revs_info);
+    exit(1);
+}
+print_r($doc->_revs_info);
+```
 
 Which should return something similar to :
 
-    array (
-        stdClass(
-            "missing" => "1-fbd8a6da4d669ae4b909fcdb42bb2bfd"
-        ),
-        stdClass(
-            "ok" => stdClass(
-                "_id"  => "some_doc_id",
-                "_rev" => "2-5bc3c6319edf62d4c624277fdd0ae191",
-                "hello"=> "foo"
-            )
+```php
+array (
+    stdClass(
+        "missing" => "1-fbd8a6da4d669ae4b909fcdb42bb2bfd"
+    ),
+    stdClass(
+        "ok" => stdClass(
+            "_id"  => "some_doc_id",
+            "_rev" => "2-5bc3c6319edf62d4c624277fdd0ae191",
+            "hello"=> "foo"
         )
     )
+)
+```
 
 ###storeDoc($doc)
 
@@ -183,54 +197,62 @@ The method **storeDoc($doc)** store a document on the CouchDB server. $doc shoul
 
 The response of this method is the CouchDB server response. In other words if the request ends successfully the returned object should be :
 
-    stdClass ( "ok" => true, "id" => "some_doc_id" , "rev" => "3-23423423476" )
+```php
+stdClass ( "ok" => true, "id" => "some_doc_id" , "rev" => "3-23423423476" )
+```
 
 Example : creating a document without specifying id
 
-    $new_doc = new stdClass();
-    $new_doc->title = "Some content";
-    try {
-        $response = $client->storeDoc($new_doc);
-    } catch (Exception $e) {
-        echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
-    }
-    echo "Doc recorded. id = ".$response->id." and revision = ".$response->rev."<br>\n";
-    // Doc recorded. id = 0162ff06747761f6d868c05b7aa8500f and revision = 1-249007504
+```php
+$new_doc = new stdClass();
+$new_doc->title = "Some content";
+try {
+    $response = $client->storeDoc($new_doc);
+} catch (Exception $e) {
+    echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
+}
+echo "Doc recorded. id = ".$response->id." and revision = ".$response->rev."<br>\n";
+// Doc recorded. id = 0162ff06747761f6d868c05b7aa8500f and revision = 1-249007504
+```
 
 Example : creating a document specifying the id
 
-    $new_doc = new stdClass();
-    $new_doc->title = "Some content";
-    $new_doc->_id = "BlogPost6576";
-    try {
-        $response = $client->storeDoc($new_doc);
-    } catch (Exception $e) {
-        echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
-    }
-    echo "Doc recorded. id = ".$response->id." and revision = ".$response->rev."<br>\n";
-    // Doc recorded. id = BlogPost6576 and revision = 1-249004576
+```php
+$new_doc = new stdClass();
+$new_doc->title = "Some content";
+$new_doc->_id = "BlogPost6576";
+try {
+    $response = $client->storeDoc($new_doc);
+} catch (Exception $e) {
+    echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
+}
+echo "Doc recorded. id = ".$response->id." and revision = ".$response->rev."<br>\n";
+// Doc recorded. id = BlogPost6576 and revision = 1-249004576
+```
 
 Example : updating an existing document :
 
-    // get the document
-    try {
-        $doc = $client->getDoc('BlogPost6576');
-    } catch (Exception $e) {
-        echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
-    }
+```php
+// get the document
+try {
+    $doc = $client->getDoc('BlogPost6576');
+} catch (Exception $e) {
+    echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
+}
 
-    // make changes
-    $doc->title = 'Some smart content';
-    $doc->tags = array('twitter','facebook','msn');
+// make changes
+$doc->title = 'Some smart content';
+$doc->tags = array('twitter','facebook','msn');
 
-    // update the document on CouchDB server
-    try {
-        $response = $client->storeDoc($doc);
-    } catch (Exception $e) {
-        echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
-    }
-    echo "Doc recorded. id = ".$response->id." and revision = ".$response->rev."<br>\n";
-    // Doc recorded. id = BlogPost6576 and revision = 2-456769086
+// update the document on CouchDB server
+try {
+    $response = $client->storeDoc($doc);
+} catch (Exception $e) {
+    echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
+}
+echo "Doc recorded. id = ".$response->id." and revision = ".$response->rev."<br>\n";
+// Doc recorded. id = BlogPost6576 and revision = 2-456769086
+```
 
 ##Updating a document
 
@@ -244,20 +266,23 @@ Example : incrementing a document counter
 
 Let's say we have a design document _design/myapp containing :
 
-    "updates": {
-        "bump-counter" : "function(doc, req) {
-            if ( !doc ) return [null, {\"code\": 404, \"body\": \"Document not found / not specified\"}]
-            if (!doc.counter) doc.counter = 0;
-            doc.counter += 1;
-            var message = \"<h1>bumped it!</h1>\";
-            return [doc, message];
-        }",
-    }
+```
+"updates": {
+    "bump-counter" : "function(doc, req) {
+        if ( !doc ) return [null, {\"code\": 404, \"body\": \"Document not found / not specified\"}]
+        if (!doc.counter) doc.counter = 0;
+        doc.counter += 1;
+        var message = \"<h1>bumped it!</h1>\";
+        return [doc, message];
+    }",
+}
+```
 
 To bump the counter of the document "some_doc" , use :
 
-    $client->updateDoc("myapp","bump-counter",array(),"some_doc");
-
+```php
+$client->updateDoc("myapp","bump-counter",array(),"some_doc");
+```
 
 ###updateDocFullAPI($ddoc_id, $handler_name, $options)
 
@@ -271,8 +296,9 @@ $options is an array of optionnal query modifiers :
 
 Example :
 
-    $client->updateDocFullAPI("myapp","bump-counter",array( "data" => array("Something"=>"is set") ) );
-
+```php
+$client->updateDocFullAPI("myapp","bump-counter",array( "data" => array("Something"=>"is set") ) );
+```
 
 
 ###deleteDoc($doc)
@@ -281,19 +307,20 @@ The method **deleteDoc($doc)** permanently removes $doc from the CouchDB server.
 
 Example :
 
-    // get the document
-    try {
-        $doc = $client->getDoc('BlogPost6576');
-    } catch (Exception $e) {
-        echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
-    }
-    // permanently remove the document
-    try {
-        $client->deleteDoc($doc);
-    } catch (Exception $e) {
-        echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
-    }
-
+```php
+// get the document
+try {
+    $doc = $client->getDoc('BlogPost6576');
+} catch (Exception $e) {
+    echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
+}
+// permanently remove the document
+try {
+    $client->deleteDoc($doc);
+} catch (Exception $e) {
+    echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
+}
+```
 
 ###copyDoc($id, $new_id)
 
@@ -301,15 +328,19 @@ The **copyDoc($id, $new_id)** method provides an handy way to copy a document. $
 
 Upon success, this method returns the CouchDB server response, which has the main form than a document storage :
 
-    stdClass ( "ok" => true, "id" => "new_id" , "rev" => "1-23423423476" )
+```php
+stdClass ( "ok" => true, "id" => "new_id" , "rev" => "1-23423423476" )
+```
 
 Example :
 
-    try {
-        $response = $client->copyDoc('BlogPost6576','CopyOfBlogPost6576');
-    } catch (Exception $e) {
-        echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
-    }
+```php
+try {
+    $response = $client->copyDoc('BlogPost6576','CopyOfBlogPost6576');
+} catch (Exception $e) {
+    echo "ERROR: ".$e->getMessage()." (".$e->getCode().")<br>\n";
+}
+```
 
 ##Attachments
 
@@ -326,10 +357,12 @@ The method **storeAttachment($doc,$file,$content_type = 'application/octet-strea
 
 Example :
 
-    $doc = $client->getDoc('BlogPost5676');
-    $ok = $client->storeAttachment($doc,'/etc/resolv.conf','text/plain', 'my-resolv.conf');
-    print_r($ok);
-    // stdClass ( "ok" => true, "id" => "BlogPost5676" , "rev" => "5-2342345476" )
+```php
+$doc = $client->getDoc('BlogPost5676');
+$ok = $client->storeAttachment($doc,'/etc/resolv.conf','text/plain', 'my-resolv.conf');
+print_r($ok);
+// stdClass ( "ok" => true, "id" => "BlogPost5676" , "rev" => "5-2342345476" )
+```
 
 ###storeAsAttachment($doc,$data,$filename,$content_type = 'application/octet-stream')
 
@@ -342,11 +375,13 @@ The method **storeAsAttachment($doc,$data,$filename,$content_type = 'application
 
 Example :
 
-    $doc = $client->getDoc('BlogPost5676');
-    $google_home=file_get_contents('http://www.google.com/');
-    $ok = $client->storeAsAttachment($doc,$google_home,'GoogleHomepage.html','text/html');
-    print_r($ok);
-    // stdClass ( "ok" => true, "id" => "BlogPost5676" , "rev" => "5-2342345476" )
+```php
+$doc = $client->getDoc('BlogPost5676');
+$google_home=file_get_contents('http://www.google.com/');
+$ok = $client->storeAsAttachment($doc,$google_home,'GoogleHomepage.html','text/html');
+print_r($ok);
+// stdClass ( "ok" => true, "id" => "BlogPost5676" , "rev" => "5-2342345476" )
+```
 
 ###deleteAttachment($doc,$attachment_name)
 
@@ -354,8 +389,10 @@ the method **deleteAttachment($doc,$attachment_name)** delete an attachment from
 
 Example :
 
-    $doc = $client->getDoc('BlogPost5676');
-    $ok = $client->deleteAttachment($doc,'GoogleHomepage.html');
+```php
+$doc = $client->getDoc('BlogPost5676');
+$ok = $client->deleteAttachment($doc,'GoogleHomepage.html');
+```
 
 ###getShow($design_id, $name, $doc_id = null, $additionnal_parameters = array())
 
@@ -363,7 +400,9 @@ The method **getShow($design_id, $name, $doc_id = null, $additionnal_parameters 
 
 Example :
 
-    $output = $client->getShow('blogs','html','BlogPost5676');
+```php
+$output = $client->getShow('blogs','html','BlogPost5676');
+```
 
 More infos on CouchDB show formatting [here](http://wiki.apache.org/couchdb/Formatting_with_Show_and_List)
 
@@ -377,10 +416,12 @@ To retrieve several documents in one go, knowing their IDs, select documents usi
 
 Example :
 
-    $view = $client->include_docs(true)->keys( array('BlogPost5676','BlogComments5676') )->getAllDocs();
-    foreach ( $view->rows as $row ) {
-      echo "doc id :".$row->doc->_id."\n";
-    }
+```php
+$view = $client->include_docs(true)->keys( array('BlogPost5676','BlogComments5676') )->getAllDocs();
+foreach ( $view->rows as $row ) {
+  echo "doc id :".$row->doc->_id."\n";
+}
+```
 
 ###storeDocs($docs, $new_edits)
 
@@ -397,27 +438,29 @@ Example :
 
 which should give you something like :
 
-    Array
-    (
-        [0] => stdClass Object
-            (
-                [id] => 8d7bebddc9828ed2edd052773968826b
-                [rev] => 1-3988163576
-            )
-    
-        [1] => stdClass Object
-            (
-                [id] => 37bcfd7d9e94c67617982527c67efe44
-                [rev] => 1-1750264873
-            )
-    
-        [2] => stdClass Object
-            (
-                [id] => 704a51a0b6448326152f8ffb8c3ea6be
-                [rev] => 1-2477909627
-            )
-    
-    )
+```php
+Array
+(
+    [0] => stdClass Object
+        (
+            [id] => 8d7bebddc9828ed2edd052773968826b
+            [rev] => 1-3988163576
+        )
+
+    [1] => stdClass Object
+        (
+            [id] => 37bcfd7d9e94c67617982527c67efe44
+            [rev] => 1-1750264873
+        )
+
+    [2] => stdClass Object
+        (
+            [id] => 704a51a0b6448326152f8ffb8c3ea6be
+            [rev] => 1-2477909627
+        )
+
+)
+```
 
 This method also works to update documents.
 
@@ -435,39 +478,44 @@ Take for example the following JSON object :
 
 This can be converted into a PHP object :
 
-    stdClass Object
-    (
-        [blog] => true
-        [comments] => stdClass Object
-            (
-                [title] => "cool"
-            )
-    )
-
+```php
+stdClass Object
+(
+    [blog] => true
+    [comments] => stdClass Object
+        (
+            [title] => "cool"
+        )
+)
+```
 
 OR into a PHP array :
 
-    Array
-    (
-        [blog] => true
-        [comments] => Array
-            (
-                [title] => "cool"
-            )
-    )
-
+```php
+Array
+(
+    [blog] => true
+    [comments] => Array
+        (
+            [title] => "cool"
+        )
+)
+```
 
 Using the defaults, JSON objects are mapped to PHP objects. The **asArray()** method can be used to map JSON objects to PHP arrays.
 
 Example:
 
-    $doc = $client->asArray()->getDoc('BlogPost5676');
-    print_r($doc);
+```php
+$doc = $client->asArray()->getDoc('BlogPost5676');
+print_r($doc);
+```
 
 should print :
 
-    Array (
-        [id] => "BlogPost5676"
-    )
-
+```php
+Array (
+    [id] => "BlogPost5676"
+)
+```
 

@@ -42,27 +42,34 @@ To use PHP on Couch client, you have to create a couchClient instance, setting t
 
 Example : connect to the couchDB server at http://my.server.com on port 5984 and on database mydb :
 
-    $client = new CouchClient("http://my.server.com:5984/","mydb");
+```php
+$client = new CouchClient("http://my.server.com:5984/","mydb");
+```
 
 If you want to authenticate to the server using a username & password, just set it in the URL.
 
 Example : connect to the couchDB server at http://my.server.com on port 5984 using the username "couchAdmin", the password "secret" and on database mydb :
 
-    $client = new CouchClient("http://couchAdmin:secret@my.server.com:5984/","mydb");
+```php
+$client = new CouchClient("http://couchAdmin:secret@my.server.com:5984/","mydb");
+```
 
-You can also tell couchClient to use cookie based authentification, by passing an additional flag "cookie_auth" set to TRUE in the options array, as the third parameter of the couchClient constructor.
+You can also tell couchClient to use cookie based authentification, by passing an additional flag "cookie_auth" set to true in the options array, as the third parameter of the couchClient constructor.
 
 Example : as the previous one, but using cookie based authentification
 
-    $client = new CouchClient("http://couchAdmin:secret@my.server.com:5984/","mydb", array("cookie_auth"=>TRUE) );
+```php
+$client = new CouchClient("http://couchAdmin:secret@my.server.com:5984/","mydb", array("cookie_auth"=>true) );
+```
 
 You can also manually set the session cookie.
 
 Example : manually setting the session cookie :
 
-    $client = new CouchClient("http://my.server.com:5984/","mydb");
-    $client->setSessionCookie("AuthSession=Y291Y2g6NENGNDgzNzY6Gk0NjM-UKxhpX_IyiH-C-9yXY44");
-
+```php
+$client = new CouchClient("http://my.server.com:5984/","mydb");
+$client->setSessionCookie("AuthSession=Y291Y2g6NENGNDgzNzY6Gk0NjM-UKxhpX_IyiH-C-9yXY44");
+```
 
 ##General
 
@@ -72,8 +79,10 @@ The method **dsn()** returns the DSN of the server. Database is not included in 
 
 Example :
 
-    $client = new CouchClient("http://couch.server.com:5984/","hello");
-    echo $client->dsn(); // will echo : http://couch.server.com:5984
+```php
+$client = new CouchClient("http://couch.server.com:5984/","hello");
+echo $client->dsn(); // will echo : http://couch.server.com:5984
+```
 
 ###isValidDatabaseName()
 
@@ -83,12 +92,14 @@ Note: to allow access to system databases (_users, _replicator), those names add
 
 Example :
 
-    $my_database = "user311(public)";
-    if ( CouchClient::isValidDatabaseName($my_database) ) {
-        $client = new CouchClient("http://couch.server.com:5984/",$my_database);
-    } else {
-        die("Invalid database name");
-    }
+```php
+$my_database = "user311(public)";
+if ( CouchClient::isValidDatabaseName($my_database) ) {
+    $client = new CouchClient("http://couch.server.com:5984/",$my_database);
+} else {
+    die("Invalid database name");
+}
+```
 
 ###listDatabases()
 
@@ -96,9 +107,10 @@ The method **listDatabases()** lists the available databases on the CouchDB serv
 
 Example :
 
-    $dbs = $client->listDatabases();
-    print_r($dbs); // array ('first_database','another_database')
-
+```php
+$dbs = $client->listDatabases();
+print_r($dbs); // array ('first_database','another_database')
+```
 
 ###createDatabase()
 
@@ -106,8 +118,9 @@ The method **createDatabase()** will try to create the database according to the
 
 Example :
 
-    $client->createDatabase();
-
+```php
+$client->createDatabase();
+```
 
 ###deleteDatabase()
 
@@ -115,8 +128,9 @@ The method **deleteDatabase()** permanently remove from the server the database 
 
 Example :
 
-    $client->deleteDatabase();
-
+```php
+$client->deleteDatabase();
+```
 
 ###databaseExists()
 
@@ -124,10 +138,11 @@ The method **databaseExists()** test if the database already exist on the server
 
 Example :
 
-    if ( !$client->databaseExists() ) {
-        $client->createDatabase();
-    }
-
+```php
+if ( !$client->databaseExists() ) {
+    $client->createDatabase();
+}
+```
 
 ###getDatabaseInfos()
 
@@ -135,19 +150,20 @@ The method **getDatabaseInfos()** sends back informations about the database. In
 
 Example :
 
-    print_r($client->getDatabaseInfos());
-    /*
-    array("db_name" => "testdb",
-          "doc_count" => 2, 
-          "doc_del_count" => 0, 
-          "update_seq" => 6,
-          "purge_seq" => 0, 
-          "compact_running" => false, 
-          "disk_size" => 277707, 
-          "instance_start_time" => "1246277543362647"
-     )
-     */
-
+```php
+print_r($client->getDatabaseInfos());
+/*
+array("db_name" => "testdb",
+      "doc_count" => 2, 
+      "doc_del_count" => 0, 
+      "update_seq" => 6,
+      "purge_seq" => 0, 
+      "compact_running" => false, 
+      "disk_size" => 277707, 
+      "instance_start_time" => "1246277543362647"
+ )
+ */
+```
 
 ###getDatabaseUri()
 
@@ -155,11 +171,12 @@ The method **getDatabaseUri()** sends back a string giving the HTTP connection U
 
 Example :
 
-    echo $client->getDatabaseUri();
-    /*
-    http://db.example.com:5984/testdb
-    */
-
+```php
+echo $client->getDatabaseUri();
+/*
+http://db.example.com:5984/testdb
+*/
+```
 
 ###getUuids($count = 1)
 
@@ -167,15 +184,16 @@ The method **getUuids($count = 1)** sends back an array of universally unique id
 
 Example :
 
-    print_r($client->getUuids(5));
-    /*
-        array ( 0 => "65a8f6d272b3e5e62ee9de8eacc083a5",
-                1 => "e43b04e44233d72b353c1cd8915b886d",
-                2 => "7498fb296f19ebc2554a4812f3d9ae12",
-                3 => "f3f855a15eb90e9fcdbda5e017b9f2cd",
-                4 => "9d9a8214762d06cdf0158d7f6697cac9" )
-    */
-
+```php
+print_r($client->getUuids(5));
+/*
+    array ( 0 => "65a8f6d272b3e5e62ee9de8eacc083a5",
+            1 => "e43b04e44233d72b353c1cd8915b886d",
+            2 => "7498fb296f19ebc2554a4812f3d9ae12",
+            3 => "f3f855a15eb90e9fcdbda5e017b9f2cd",
+            4 => "9d9a8214762d06cdf0158d7f6697cac9" )
+*/
+```
 
 ###useDatabase($dbName)
 
@@ -183,17 +201,20 @@ The method **useDatabase($dbname)** changes the working database on the CouchDB 
 
 Example :
 
-    $client = new CouchClient("http://localhost:5984", "db1");
-    $all_docs_db1 = $client->getAllDocs(); //retrieve all docs of database db1
-    $client->useDatabase("db2");           //switch to "db2" database
-    $all_docs_db2 = $client->getAllDocs(); //retrieve all docs of database db2
+```php
+$client = new CouchClient("http://localhost:5984", "db1");
+$all_docs_db1 = $client->getAllDocs(); //retrieve all docs of database db1
+$client->useDatabase("db2");           //switch to "db2" database
+$all_docs_db2 = $client->getAllDocs(); //retrieve all docs of database db2
+```
 
 ###getMembership()
 
 
 With the new Cluster infrastructure in CouchDB 2.0, you now have to configure each nodes. To do so, you need to get the information about them. The `_membership`endpoint allow you to get all the nodes that the current nodes knows and all the nodes that are in the same cluster. The method **getMembership()** returns an object like this :
 
-```
+
+```json
 {
   "all_nodes": [],
   "cluster_nodes": []
@@ -212,7 +233,7 @@ Examples :
 **getConfig("couchdb@localhost")**
 
 Returns a JSON object with the whole configuration
-```
+```json
 {
     "attachments":{
 
@@ -227,7 +248,7 @@ Returns a JSON object with the whole configuration
 *Note : It will return a CouchNotFoundException is the section is not present*.
 Returns  a JSON object that represent the desired section
 
-```
+```json
 {
     "allow_jsonp": "false",
     "authentication_handlers": "{couch_httpd_oauth, oauth_authentication_handler}, {couch_httpd_auth, cookie_authentication_handler}, {couch_httpd_auth, default_authentication_handler}",
@@ -294,49 +315,50 @@ The method **getChanges()** sends back a CouchDB changes object.
 
 Example :
 
-    print_r($client->getChanges());
-    /*
-        stdClass Object
-        (              
-            [results] => Array
-                (             
-                    [0] => stdClass Object
-                        (                 
-                            [seq] => 'example-last-update-sequence'
-                            [id] => 482fa0bed0473fd651239597d1080f03
-                            [changes] => Array
-                                (
-                                    [0] => stdClass Object
-                                        (
-                                            [rev] => 3-58cae2758cea3e82105e1090d81a9e02
-                                        )
-        
-                                )
-        
-                            [deleted] => 1
-                        )
-        
-                    [1] => stdClass Object
-                        (
-                            [seq] => 'example-last-update-sequence'
-                            [id] => 2f3f913f34d60e473fad4334c13a24ed
-                            [changes] => Array
-                                (
-                                    [0] => stdClass Object
-                                        (
-                                            [rev] => 1-4c6114c65e295552ab1019e2b046b10e
-                                        )
-        
-                                )
-        
-                        )
-        
-                )
-        
-            [last_seq] => 4
-        )
-    */
-
+```php
+print_r($client->getChanges());
+/*
+    stdClass Object
+    (              
+        [results] => Array
+            (             
+                [0] => stdClass Object
+                    (                 
+                        [seq] => 'example-last-update-sequence'
+                        [id] => 482fa0bed0473fd651239597d1080f03
+                        [changes] => Array
+                            (
+                                [0] => stdClass Object
+                                    (
+                                        [rev] => 3-58cae2758cea3e82105e1090d81a9e02
+                                    )
+    
+                            )
+    
+                        [deleted] => 1
+                    )
+    
+                [1] => stdClass Object
+                    (
+                        [seq] => 'example-last-update-sequence'
+                        [id] => 2f3f913f34d60e473fad4334c13a24ed
+                        [changes] => Array
+                            (
+                                [0] => stdClass Object
+                                    (
+                                        [rev] => 1-4c6114c65e295552ab1019e2b046b10e
+                                    )
+    
+                            )
+    
+                    )
+    
+            )
+    
+        [last_seq] => 4
+    )
+*/
+```
 
 ##Chainable methods to use before getChanges()
 
@@ -362,26 +384,30 @@ Changes display style, use "all_docs" to switch to verbose
 
 Example :
 
-    // fetching changes since sequence 'example-last-update-sequence' using filter "messages/incoming"
-    $changes = $client->since('example-last-update-sequence')->filter("messages/incoming")->getChanges();
+```php
+// fetching changes since sequence 'example-last-update-sequence' using filter "messages/incoming"
+$changes = $client->since('example-last-update-sequence')->filter("messages/incoming")->getChanges();
+```
 
 Example - Continuous changes with a callback function
 
-    function index_doc($change,$couch) {
-    	if( $change->deleted == true ) {
-    		// won't index a deleted file
-    		return ;
-    	}
-    	echo "indexing ".$change->id."\n";
-    	$doc = $couch->getDoc($change->id);
-    	unset($doc->_rev);
-    	$id = $doc->_id;
-    	unset($doc->_id);
-    	my_super_fulltext_search_appliance::index($id, $doc);
-    }
-    	
-    $client->feed('continuous','index_doc')->getChanges();
-    // will return when index_doc returns false or on socket error
+```php
+function index_doc($change,$couch) {
+	if( $change->deleted == true ) {
+		// won't index a deleted file
+		return ;
+	}
+	echo "indexing ".$change->id."\n";
+	$doc = $couch->getDoc($change->id);
+	unset($doc->_rev);
+	$id = $doc->_id;
+	unset($doc->_id);
+	my_super_fulltext_search_appliance::index($id, $doc);
+}
+	
+$client->feed('continuous','index_doc')->getChanges();
+// will return when index_doc returns false or on socket error
+```
 
 ###ensureFullCommit()
 
@@ -389,16 +415,17 @@ The method **ensureFullCommit()** tells couchDB to commit any recent changes to 
 
 Example :
 
-    $response = $client->ensureFullCommit();
-    print_r($response); 
-    /* should print something like : 
-     stdClass Object
-    	(
-    		[ok] => 1,
-    		[instance_start_time] => "1288186189373361"
-    	)
-    */
-
+```php
+$response = $client->ensureFullCommit();
+print_r($response); 
+/* should print something like : 
+ stdClass Object
+	(
+		[ok] => 1,
+		[instance_start_time] => "1288186189373361"
+	)
+*/
+```
 
 ###Maintenance
 
@@ -410,37 +437,37 @@ CouchDB database file is an append only : during any modification on database do
 
 Example :
 
-    // asking the server to start a database compact operation
-    $response = $client->compactDatabase(); // should return stdClass ( "ok" => true )
-
+```php
+// asking the server to start a database compact operation
+$response = $client->compactDatabase(); // should return stdClass ( "ok" => true )
+```
 ###compactAllViews()
 
 Just as documents files, view files are also append-only files. To compact all view files of all design documents, use the **compactAllViews()** method.
 
 Example :
 
-    // asking the server to start a view compact operation on all design documents
-    $response = $client->compactAllViews(); // return nothing
-
+```php
+// asking the server to start a view compact operation on all design documents
+$response = $client->compactAllViews(); // return nothing
+```
 ###compactViews($id)
 
 To compact only views from a specific design document, use the **compactViews( $id )** method.
 
 Example :
 
-    // asking the server to start a database compact operation on the design document _design/example
-    $response = $client->compactViews( "example" ); // should return stdClass ( "ok" => true )
-
+```php
+// asking the server to start a database compact operation on the design document _design/example
+$response = $client->compactViews( "example" ); // should return stdClass ( "ok" => true )
+```
 
 ###cleanupDatabaseViews()
 
 This operation will delete all unused view files. Use the **cleanupDatabaseViews()** method to initiate a cleanup operation on old view files
 Example :
 
-    // asking the server to start a database view files cleanup operation
-    $response = $client->cleanupDatabaseViews(); // should return stdClass ( "ok" => true )
-
-
-
-
-
+```php
+// asking the server to start a database view files cleanup operation
+$response = $client->cleanupDatabaseViews(); // should return stdClass ( "ok" => true )
+```

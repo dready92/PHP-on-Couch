@@ -18,12 +18,14 @@ This section describes how to use PHP on Couch to retrieve views results from a 
 
 Example
 
-    $view_fn="function(doc) { emit(doc.timestamp,null); }";
-    $design_doc = new stdClass();
-    $design_doc->_id = '_design/all';
-    $design_doc->language = 'javascript';
-    $design_doc->views = array ( 'by_date'=> array ('map' => $view_fn ) );
-    $client->storeDoc($design_doc);
+```php
+$view_fn="function(doc) { emit(doc.timestamp,null); }";
+$design_doc = new stdClass();
+$design_doc->_id = '_design/all';
+$design_doc->language = 'javascript';
+$design_doc->views = array ( 'by_date'=> array ('map' => $view_fn ) );
+$client->storeDoc($design_doc);
+```
 
 ###getView($id, $name)
 
@@ -33,8 +35,9 @@ The method **getView($id, $name)** sends back the CouchDB response of a view.
 * **$name** is the view name
 
 Example :
-
-    $result = $client->getView('all','by_date');
+```php
+$result = $client->getView('all','by_date');
+```
 
 ##View response
 
@@ -74,22 +77,27 @@ PHP on Couch implements chainable methods to add query parameters. The method na
 
 Example querying a view with a startkey, a limit and include_docs
 
-    $response = $client->startkey(100000000)->limit(100)->include_docs(TRUE)->getView('all','by_date');
+```php
+$response = $client->startkey(100000000)->limit(100)->include_docs(true)->getView('all','by_date');
+```
 
 Which is the same as :
 
-    $client->startkey(100000000);
-    $client->limit(100);
-    $client->include_docs(TRUE);
-    $response = $client->getView('all','by_date');
+```php
+$client->startkey(100000000);
+$client->limit(100);
+$client->include_docs(true);
+$response = $client->getView('all','by_date');
+```
 
 ###setQueryParameters($params)
 
 You also can set query parameters with a PHP array, using the **setQueryParameters** method :
 
-    $opts = array ( "include_docs" => TRUE, "limit" => 10, "descending" => true );
-    $response = $client->setQueryParameters(opts)->getView("all","by_date");
-
+```php
+$opts = array ( "include_docs" => true, "limit" => 10, "descending" => true );
+$response = $client->setQueryParameters(opts)->getView("all","by_date");
+```
 
 ###asArray()
 
@@ -100,33 +108,37 @@ Take for example the following JSON object :
 
 This can be converted into a PHP object :
 
-    stdClass Object
-    (
-        [blog] => true
-        [comments] => stdClass Object
-            (
-                [title] => "cool"
-            )
-    )
-
+```php
+stdClass Object
+(
+    [blog] => true
+    [comments] => stdClass Object
+        (
+            [title] => "cool"
+        )
+)
+```
 
 OR into a PHP array :
 
-    Array
-    (
-        [blog] => true
-        [comments] => Array
-            (
-                [title] => "cool"
-            )
-    )
-
+```php
+Array
+(
+    [blog] => true
+    [comments] => Array
+        (
+            [title] => "cool"
+        )
+)
+```
 
 Using the defaults, JSON objects are mapped to PHP objects. The **asArray()** method can be used to map JSON objects to PHP arrays.
 
 Example :
 
-    $response = $client->startkey(100000000)->limit(100)->include_docs(TRUE)->asArray()->getView('all','by_date');
+```php
+$response = $client->startkey(100000000)->limit(100)->include_docs(true)->asArray()->getView('all','by_date');
+```
 
 Format a view with CouchDB list formatting feature
 ==================================================
@@ -139,9 +151,11 @@ The method **getList($design_id, $name, $view_name, $additionnal_parameters = ar
 
 Example :
 
-    $response = $client->limit(100)->include_docs(TRUE)->getList('all','html','by_date');
-    // will run the view declared in _design/all and named *by_date*, and then
-    // pass it through the list declared in _design/all and named *html*.
+```php
+$response = $client->limit(100)->include_docs(true)->getList('all','html','by_date');
+// will run the view declared in _design/all and named *by_date*, and then
+// pass it through the list declared in _design/all and named *html*.
+```
 
 ###getForeignList($list_design_id, $name, $view_design_id, $view_name, $additionnal_parameters = array())
 
@@ -151,10 +165,11 @@ defined in the document *_design/$view_design_id* and then format it using the a
 
 Example :
 
-    $response = $client->limit(100)->getForeignList('display','html','posts','by_date');
-    // will run the view declared in _design/posts and named *by_date*, and then
-    // pass it through the list declared in _design/display and named *html*.
-
+```php
+$response = $client->limit(100)->getForeignList('display','html','posts','by_date');
+// will run the view declared in _design/posts and named *by_date*, and then
+// pass it through the list declared in _design/display and named *html*.
+```
 
 
 ###getViewInfos($design_id)
@@ -165,6 +180,6 @@ The method **getViewInfos($design_id)** sends back some useful informations abou
 
 Example :
 
-    $response = $client->getViewInfos("mydesigndoc");
-
-
+```php
+$response = $client->getViewInfos("mydesigndoc");
+```

@@ -19,8 +19,8 @@ From this information, it is up to you to choose the right version. By default, 
 ###Composer installation
 
 Once you have composer installed, you are very close to have PHP-on-Couch installed. You simply need to do :
-- Add the root of your project, in a command shell, execute the following command : `composer require popojargo/php-on-couch`. *Note: You can specify the desired version adding :2.0.0 at the end of php-on-couch.*
-- After that, you have the files in `vendor/popojargo/phponcouch/`. To start using them, you need to either require them or use an autoloader. Thanks to composer which comes with a autoloader. Simply add this following line to import the files : `require 'path/to/vendor/autload.php';`
+- Add the root of your project, in a command shell, execute the following command : `composer require php-on-couch/php-on-couch`. *Note: You can specify the desired version adding :2.0.0 at the end of php-on-couch.*
+- After that, you have the files in `vendor/php-on-couch/phponcouch/`. To start using them, you need to either require them or use an autoloader. Thanks to composer which comes with a autoloader. Simply add this following line to import the files : `require 'path/to/vendor/autload.php';`
 
 ###Manual installation
 

@@ -24,7 +24,6 @@ namespace PHPOnCouch\Exceptions;
  *
  * @author Alexis
  */
-class CouchExpectationException extends CouchException
-{
-	//put your code here
+class CouchExpectationException extends CouchException {
+    //put your code here
 }

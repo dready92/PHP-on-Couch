@@ -1,47 +1,49 @@
 {
     "name": "php-on-couch/php-on-couch",
-  "type": "library",
-  "description": "CouchDB NoSQL database access in PHP",
-  "keywords": [
-    "couchdb",
-    "couch",
-    "db",
-    "apache",
-    "nosql",
-    "driver"
-  ],
-  "homepage": "https://github.com/popojargo/PHP-on-Couch",
-  "license": "GPLv3",
-  "authors": [
-    {
-      "name": "Michael Bailly",
-      "email": "mickael.bailly@free.fr",
-      "homepage": "https://github.com/dready92/",
-      "role": "Developer"
-    },
-    { 
+    "type": "library",
+    "description": "CouchDB NoSQL database access in PHP",
+    "keywords": [
+        "couchdb",
+        "couch",
+        "db",
+        "apache",
+        "nosql",
+        "driver"
+    ],
+    "homepage": "https://github.com/PHP-on-Couch/PHP-on-Couch",
+    "license": "GPLv3",
+    "authors": [
+        {
+            "name": "Michael Bailly",
+            "email": "mickael.bailly@free.fr",
+            "homepage": "https://github.com/dready92/",
+            "role": "Developer"
+        },
+        { 
             "name": "Clemens Sahs",
             "email": "clemens.sahs@slides-worker.org",
             "homepage": "https://github.com/ClemensSahs",
             "role": "Developer"
         },
-    {
-      "name": "Alexis Côté",
-      "email": "alexiscote19@hotmail.com",
-      "homepage": "https://popojargo.github.io/",
-      "role": "Developer"
+        {
+            "name": "Alexis Côté",
+            "email": "alexiscote19@hotmail.com",
+            "homepage": "https://popojargo.github.io/",
+            "role": "Developer"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "PHPOnCouch\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=5.2.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "5.5.*",
+        "satooshi/php-coveralls": "*",
+        "phpcheckstyle/phpcheckstyle": "*"
     }
-  ],
-  "autoload": {
-    "psr-4": {
-      "PHPOnCouch\\": "src/"
-    }
-  },
-  "require": {
-    "php": ">=5.2.0"
-  },
-  "require-dev": {
-    "phpunit/phpunit": "5.5.*",
-    "satooshi/php-coveralls": "*"
-  }
+
 }
