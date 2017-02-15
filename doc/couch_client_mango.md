@@ -168,7 +168,7 @@ Example :
 $selector = [
 'year'=>['$gt'=>2010]
 ];
-$details = $client->skip(0)->limit(2)->find(selector,['_id','_rev','year','title'],['year'=>'asc']);
+$details = $client->skip(0)->limit(2)->fields(['_id','_rev','year','title'])->sort(['year'=>'asc'])->find($selector);
 ```
 
 The $details values would be the equivalent in JSON :
