@@ -129,8 +129,8 @@ class CouchClient extends Couch {
         if (array_key_exists('cookie_auth', $options) && $options['cookie_auth'] == 'true') {
             $queryParams = http_build_query(['name' => $user, 'password' => $pass]);
             $rawData = $this->query('POST', '/_session', null, $queryParams, 'application/x-www-form-urlencoded');
-            list($headers, $body) = explode('\r\n\r\n', $rawData, 2);
-            $headersArray = explode('\n', $headers);
+            list($headers, $body) = explode("\r\n\r\n", $rawData, 2);
+            $headersArray = explode("\r\n", $headers);
             foreach ($headersArray as $line) {
                 if (strpos($line, 'Set-Cookie: ') === 0) {
                     $line = substr($line, 12);
