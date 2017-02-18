@@ -74,6 +74,14 @@ EOT
         $this->client = null;
         $this->aclient = null;
     }
+    
+    public function testContructor(){
+        $options = ['cookie_auth'=>true];
+        $client = new CouchClient($this->aUrl,'couchclienttest',$options);
+        
+        $cookie = $client->getSessionCookie();
+        $this->assertNotEmpty($cookie);
+    }
 
     /**
      * 
