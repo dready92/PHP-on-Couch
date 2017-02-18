@@ -115,6 +115,14 @@ class Couch {
     }
 
     /**
+     * Returns the session cookie
+     * @return string The cookie
+     */
+    public function getSessionCookie() {
+        return $this->sessioncookie;
+    }
+
+    /**
      * return a part of the data source name
      *
      * if $part parameter is empty, returns dns array

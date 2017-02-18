@@ -5,6 +5,8 @@ This section give details on actions on the CouchDB server through PHP on Couch.
 - [Getting started](#getting-started)
 - [General](#general)
     + [dsn()](#dsn)
+    + [getSessionCookie()](#getsessioncookie)
+    + [setSessionCookie($cookie)](#setsessioncookiecookie)
     + [isValidDatabaseName($name)](#isvaliddatabasename)
     + [listDatabases()](#listdatabases)
     + [createDatabase()](#createdatabase)
@@ -82,6 +84,26 @@ Example :
 ```php
 $client = new CouchClient("http://couch.server.com:5984/","hello");
 echo $client->dsn(); // will echo : http://couch.server.com:5984
+```
+
+###getSessionCookie()
+
+This method returns the current session cookie if set.
+
+Example :
+
+```php
+$cookie = $client->getSessionCookie();
+```
+
+###setSessionCookie($cookie)
+
+This method set the cookie and is chainable.
+
+Example :
+
+```php
+$cookie = $client->setSessionCookie("AuthSession=Y291Y2g6NENGNDgzNz")->getSessionCookie();
 ```
 
 ###isValidDatabaseName()

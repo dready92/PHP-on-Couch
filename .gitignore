@@ -11,3 +11,6 @@ composer.lock
 
 #Test config
 /tests/_config/_users.php
+
+#Misc
+setup.sh

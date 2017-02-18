@@ -113,7 +113,7 @@ class CouchClient extends Couch {
      */
     public function __construct($dsn, $dbname, $options = []) {
         // in the case of a cookie based authentification we have to remove user and password infos from the DSN
-        if (array_key_exists('cookie_auth', $options) && $options['cookie_auth'] == 'true') {
+        if (array_key_exists('cookie_auth', $options) && $options['cookie_auth']) {
             $parts = parse_url($dsn);
             if (!array_key_exists('user', $parts) || !array_key_exists('pass', $parts)) {
                 throw new Exception('You should provide a user and a password to use cookie based authentification');
@@ -126,7 +126,7 @@ class CouchClient extends Couch {
         }
         $this->useDatabase($dbname);
         parent::__construct($dsn, $options);
-        if (array_key_exists('cookie_auth', $options) && $options['cookie_auth'] == 'true') {
+        if (array_key_exists('cookie_auth', $options) && $options['cookie_auth']) {
             $queryParams = http_build_query(['name' => $user, 'password' => $pass]);
             $rawData = $this->query('POST', '/_session', null, $queryParams, 'application/x-www-form-urlencoded');
             list($headers, $body) = explode("\r\n\r\n", $rawData, 2);
