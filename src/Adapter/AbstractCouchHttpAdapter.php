@@ -27,6 +27,11 @@ namespace PHPOnCouch\Adapter;
 abstract class AbstractCouchHttpAdapter implements CouchHttpAdapterInterface {
 
     protected $dsn = null;
+
+    /**
+     * @var array database source name parsed
+     */
+    protected $dsnParsed = null;
     protected $options = null;
 
     /**
@@ -63,8 +68,14 @@ abstract class AbstractCouchHttpAdapter implements CouchHttpAdapterInterface {
         return $this->options;
     }
 
-    public function __construct($options) {
+    public function __construct($dsn, $options = []) {
         $this->setOptions($options);
+        $this->dsn = preg_replace('@/+$@', '', $dsn);
+        $this->dsnParsed = parse_url($this->dsn);
+
+        if (!isset($this->dsnParsed['port'])) {
+            $this->dsnParsed['port'] = 80;
+        }
     }
 
     /**
@@ -96,6 +107,23 @@ abstract class AbstractCouchHttpAdapter implements CouchHttpAdapterInterface {
      */
     public function hasSessionCookie() {
         return (bool) $this->sessioncookie;
+    }
+
+    /**
+     * return a part of the data source name
+     *
+     * if $part parameter is empty, returns dns array
+     *
+     * @param string $part part to return
+     * @return string DSN part
+     */
+    protected function dsnPart($part = null) {
+        if (!$part) {
+            return $this->getDsn();
+        }
+        if (isset($this->dsnParsed[$part])) {
+            return $this->dsnParsed[$part];
+        }
     }
 
     abstract public function query($method, $url, $parameters = [], $data = null, $contentType = null);

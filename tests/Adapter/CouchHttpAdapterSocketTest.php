@@ -1,8 +1,13 @@
 <?php
 
+namespace PHPOnCouch\Adapter;
+
 require_once join(DIRECTORY_SEPARATOR, [dirname(dirname(__DIR__)), 'src', 'autoload.php']);
 
-use PHPOnCouch\Exceptions;
+use InvalidArgumentException,
+    PHPOnCouch\Exceptions,
+    PHPUnit_Framework_TestCase,
+    stdClass;
 
 require_once join(DIRECTORY_SEPARATOR, [dirname(__DIR__), '_config', 'config.php']);
 
@@ -35,18 +40,18 @@ class CouchHttpAdapterSocketTest extends PHPUnit_Framework_TestCase {
      */
     protected function setUp() {
         $config = \config::getInstance();
-        $url = $config->getUrl($this->host, $this->port, null);
-        $aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
-        $this->client = new CouchClient($url, 'couchclienttest');
-        $this->aclient = new CouchClient($aUrl, 'couchclienttest');
-        try {
-            $this->aclient->deleteDatabase();
-        } catch (Exception $e) {
-            
-        }
-        $this->aclient->createDatabase();
-        $this->adapter = new \PHPOnCouch\Adapter\CouchHttpAdapterCurl([]);
-        $this->adapter->setDsn($admin_config['uri']);
+//        $url = $config->getUrl($this->host, $this->port, null);
+        $this->aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
+        //$this->client = new CouchClient($url, 'couchclienttest');
+//        $this->aclient = new CouchClient($aUrl, 'couchclienttest');
+//        try {
+//            $this->aclient->deleteDatabase();
+//        } catch (Exception $e) {
+//            
+//        }
+//        $this->aclient->createDatabase();
+        $this->adapter = new \PHPOnCouch\Adapter\CouchHttpAdapterSocket("http://localhost:5984",[]);
+        $this->adapter->setDsn($this->aUrl);
     }
 
     /**
@@ -54,30 +59,9 @@ class CouchHttpAdapterSocketTest extends PHPUnit_Framework_TestCase {
      * This method is called after a test is executed.
      */
     protected function tearDown() {
-        $this->client = null;
-        $this->aclient = null;
+//        $this->client = null;
+//        $this->aclient = null;
         $this->adapter = null;
-    }
-
-    public function testAdapterSendToClient() {
-        $adapter = $this->adapter;
-        $id = 'testid';
-        $data = [
-            'foo' => 'bar',
-        ];
-        $response = $adapter->query($adapter::METHODE_PUT, $id, [], $data);
-    }
-
-    public function testCustomCurlOptions() {
-        $adapter = $this->adapter;
-        $adapterOptions = ['curl' => [CURLOPT_URL => 'http://www.example.com/']];
-        $addCustomOptions = new \ReflectionMethod($adapter, 'addCustomOptions');
-        $addCustomOptions->setAccessible(true);
-        $curlHandle = curl_init();
-        $adapter->setOptions($adapterOptions);
-        $addCustomOptions->invoke($adapter, $curlHandle);
-        $info = curl_getinfo($curlHandle);
-        $this->assertEquals($adapterOptions['curl'][CURLOPT_URL], $info['url']);
     }
 
     public function testBuildRequestSendCookie() {
@@ -88,36 +72,31 @@ class CouchHttpAdapterSocketTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals($sessionCookie, $adapter->getSessionCookie());
         $buildRequest = new \ReflectionMethod($adapter, 'buildRequest');
         $buildRequest->setAccessible(true);
-        $curlHandle = $buildRequest->invokeArgs($adapter,
+        $httpReq = $buildRequest->invokeArgs($adapter,
                 [
             'COPY',
             'localhost:8080/_files/return_header.php',
             ['foo' => 'bar'],
             null
         ]);
-        curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
-        $header = json_decode(curl_exec($curlHandle), true);
-        $this->assertArrayHasKey('Cookie', $header);
-        $this->assertEquals($sessionCookie, $header['Cookie']);
-        $this->assertEquals($adapter->getSessionCookie(), $header['Cookie']);
+        $this->assertNotFalse(strpos($httpReq, "Cookie: $sessionCookie"));
+        $this->assertNotFalse(strpos($httpReq, "Cookie: " . $adapter->getSessionCookie()));
     }
 
     public function testBuildRequestSendCustomContentType() {
         $contentType = "foo/bar";
+        $data = ['foo' => 'bar'];
         $adapter = $this->adapter;
         $buildRequest = new \ReflectionMethod($adapter, 'buildRequest');
         $buildRequest->setAccessible(true);
-        $curlHandle = $buildRequest->invokeArgs($adapter,
+        $httpReq = $buildRequest->invokeArgs($adapter,
                 [
             'COPY',
             'localhost:8080/_files/return_header.php',
-            ['foo' => 'bar'],
-            $contentType
+            $data,
+                    
         ]);
-        curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
-        $header = json_decode(curl_exec($curlHandle), true);
-        $this->assertArrayHasKey('Content-Type', $header);
-        $this->assertEquals($contentType, $header['Content-Type']);
+        $this->assertNotFalse(strpos($httpReq, "Destination: " . json_encode($data)));
     }
 
     public function testBuildRequestSendDefaultContentType() {
@@ -125,17 +104,24 @@ class CouchHttpAdapterSocketTest extends PHPUnit_Framework_TestCase {
         $adapter = $this->adapter;
         $buildRequest = new \ReflectionMethod($adapter, 'buildRequest');
         $buildRequest->setAccessible(true);
-        $curlHandle = $buildRequest->invokeArgs($adapter,
+        $httpRequest = $buildRequest->invokeArgs($adapter,
                 [
-            'COPY',
+            'POST',
             'localhost:8080/_files/return_header.php',
             ['foo' => 'bar'],
             null
         ]);
-        curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
-        $header = json_decode(curl_exec($curlHandle), true);
-        $this->assertArrayHasKey('Content-Type', $header);
-        $this->assertEquals($defaultContentType, $header['Content-Type']);
+        $this->assertNotFalse(strpos($httpRequest, 'application/json'));
+        $contentLenght = 'Content-Length: ' . strlen(json_encode(['foo' => 'bar']));
+        $this->assertNotFalse(strpos($httpRequest, $contentLenght));
+    }
+    
+    public function testQuery(){
+        $response = $this->adapter->query('GET',$this->aUrl+"/_all_docs?limit=5");
+        
+        
+        $this->expectException("\Exception");
+        $this->adapter->query("NOEXISTING","something");
     }
 
 }

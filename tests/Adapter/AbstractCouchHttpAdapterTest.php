@@ -1,6 +1,6 @@
 <?php
 
-require_once join(DIRECTORY_SEPARATOR,[dirname(dirname(__DIR__)),'src','autoload.php']);
+require_once join(DIRECTORY_SEPARATOR, [dirname(dirname(__DIR__)), 'src', 'autoload.php']);
 
 use PHPOnCouch\Exceptions;
 use PHPOnCouch\Adapter\CouchHttpAdapterCurl;
@@ -20,7 +20,7 @@ class AbstractCouchHttpAdapterTest extends PHPUnit_Framework_TestCase {
      * This method is called before a test is executed.
      */
     protected function setUp() {
-        $this->adapter = new CouchHttpAdapterCurl([]);
+        $this->adapter = new CouchHttpAdapterCurl("localhost", []);
     }
 
     /**
@@ -37,8 +37,10 @@ class AbstractCouchHttpAdapterTest extends PHPUnit_Framework_TestCase {
      */
     public function testDsnAccessors() {
         $adapter = $this->adapter;
-        $adapter->setDsn('localhost');
         $this->assertEquals('localhost', $adapter->getDsn());
+        $newDsn = '127.0.0.1';
+        $adapter->setDsn($newDsn);
+        $this->assertEquals($newDsn, $adapter->getDsn());
     }
 
     /**

@@ -27,6 +27,7 @@ use PHPOnCouch\Exceptions\NotFoundException;
 use PHPOnCouch\Exceptions\UnauthorizedException;
 use PHPOnCouch\Exceptions\ExpectationException;
 use InvalidArgumentException;
+use PHPOnCouch\Adapter\CouchHttpAdapterInterface;
 use PHPOnCouch\Adapter\CouchHttpAdapterCurl;
 use PHPOnCouch\Adapter\CouchHttpAdapterSocket;
 
@@ -66,9 +67,6 @@ class Couch {
         if (!isset($this->dsnParsed['port'])) {
             $this->dsnParsed['port'] = 80;
         }
-        if (function_exists('curl_init')) {
-            $this->curl = true;
-        }
     }
 
     /**
@@ -99,10 +97,9 @@ class Couch {
         if (!isset($options))
             $options = $this->options;
         if (function_exists('curl_init'))
-            $adapter = new CouchHttpAdapterCurl($options);
+            $adapter = new CouchHttpAdapterCurl($this->dsn, $options);
         else
-            $adapter = new CouchHttpAdapterSocket($options);
-        $adapter->setDsn($this->dsn());
+            $adapter = new CouchHttpAdapterSocket($this->dsn, $options);
         $this->adapter = $adapter;
         return $adapter;
     }

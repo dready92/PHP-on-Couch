@@ -19,7 +19,8 @@
 
 namespace PHPOnCouch\Adapter;
 
-
+use InvalidException;
+use Exception;
 
 /**
  * Description of CouchAdapterSocket
@@ -35,7 +36,12 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
      *
      * This function can throw an Exception if it fails
      *
-     * @return boolean Weither the connection is successful
+     * @return boolean Weither the connecti
+     * 
+     * 
+     * ooopp        terminal
+   sudo reboot
+     * on is successful
      *
      * @throws Exception
      */
@@ -107,14 +113,14 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
      *
      * @param string $method HTTP method to use
      * @param string $url the request URL
-     * @param string|object|array $data the request body. If it's an array || an object, $data is json_encode()d
+     * @param string|object|array $data the request body. If it's an array || an object, $data is json_encode()
      * @param string $contentType the content type of the sent data (defaults to application/json)
      * @return string HTTP request
      */
-    protected function buildRequest($method, $url, $data, $contentType) {
+    protected function buildRequest($method, $url, $data, $contentType = null) {
         if (is_object($data) || is_array($data))
             $data = json_encode($data);
-        $req = $this->socketStartRequestHeaders($method, $url);
+        $req = $this->startRequestHeaders($method, $url);
         if ($contentType) {
             $req .= 'Content-Type: ' . $contentType . "\r\n";
         } else {
@@ -130,6 +136,8 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
         }
         return $req;
     }
+
+
 
     /**
      * send a query to the CouchDB server
@@ -151,7 +159,7 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
         if (is_array($parameters) && count($parameters))
             $url = $url . '?' . http_build_query($parameters);
 
-        $request = $this->socketBuildRequest($method, $url, $data, $contentType);
+        $request = $this->buildRequest($method, $url, $data, $contentType);
         if (!$this->connect())
             return false;
 // 		echo "DEBUG: Request ------------------ \n$request\n";
@@ -193,7 +201,7 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
         if (is_array($parameters) && count($parameters))
             $url = $url . '?' . http_build_query($parameters);
         //Send the request to the socket
-        $request = $this->socketBuildRequest($method, $url, $data, null);
+        $request = $this->buildRequest($method, $url, $data, null);
         if (!$this->connect())
             return false;
 

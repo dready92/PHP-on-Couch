@@ -1,7 +1,14 @@
 <?php
-require_once join(DIRECTORY_SEPARATOR,[dirname(dirname(__DIR__)),'src','autoload.php']);
 
-use PHPOnCouch\Exceptions;
+namespace PHPOnCouch\Adapter;
+
+require_once join(DIRECTORY_SEPARATOR, [dirname(dirname(__DIR__)), 'src', 'autoload.php']);
+
+use InvalidArgumentException,
+    PHPOnCouch\Exceptions,
+    PHPOnCouch\CouchClient,
+    PHPUnit_Framework_TestCase,
+    stdClass;
 
 require_once join(DIRECTORY_SEPARATOR, [dirname(__DIR__), '_config', 'config.php']);
 
@@ -34,18 +41,18 @@ class CouchHttpAdapterCurlTest extends PHPUnit_Framework_TestCase {
      */
     protected function setUp() {
         $config = \config::getInstance();
-        $url = $config->getUrl($this->host, $this->port, null);
-        $aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
-        $this->client = new CouchClient($url, 'couchclienttest');
-        $this->aclient = new CouchClient($aUrl, 'couchclienttest');
+//        $url = $config->getUrl($this->host, $this->port, null);
+        $this->aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
+        $this->aclient = new CouchClient($this->aUrl, 'couchclienttest');
+//        $this->aclient = new CouchClient($aUrl, 'couchclienttest');
         try {
             $this->aclient->deleteDatabase();
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             
         }
         $this->aclient->createDatabase();
-        $this->adapter = new \PHPOnCouch\Adapter\CouchHttpAdapterCurl([]);
-        $this->adapter->setDsn($admin_config['uri']);
+        $this->adapter = new \PHPOnCouch\Adapter\CouchHttpAdapterCurl("localhost", []);
+        $this->adapter->setDsn($this->aUrl);
     }
 
     /**
@@ -53,18 +60,15 @@ class CouchHttpAdapterCurlTest extends PHPUnit_Framework_TestCase {
      * This method is called after a test is executed.
      */
     protected function tearDown() {
-        $this->client = null;
+//        $this->client = null;
         $this->aclient = null;
         $this->adapter = null;
     }
 
-    public function testAdapterSendToClient() {
-        $adapter = $this->adapter;
-        $id = 'testid';
-        $data = [
-            'foo' => 'bar',
-        ];
-        $response = $adapter->query($adapter::METHODE_PUT, $id, [], $data);
+    private function addDefaultDoc() {
+        $docId = 'default_doc';
+        $this->aclient->storeDoc((object) ['_id' => $docId, 'name' => 'Default document']);
+        return $docId;
     }
 
     public function testCustomCurlOptions() {
@@ -80,6 +84,9 @@ class CouchHttpAdapterCurlTest extends PHPUnit_Framework_TestCase {
     }
 
     public function testBuildRequestSendCookie() {
+        //Add document for the copy function
+        $id = $this->addDefaultDoc();
+
         $sessionCookie = "foo=bar";
         $adapter = $this->adapter;
         $adapter->setSessionCookie($sessionCookie);
@@ -87,29 +94,32 @@ class CouchHttpAdapterCurlTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals($sessionCookie, $adapter->getSessionCookie());
         $buildRequest = new \ReflectionMethod($adapter, 'buildRequest');
         $buildRequest->setAccessible(true);
-        $curlHandle = $buildRequest->invokeArgs($adapter,
-                [
+        $curlHandle = $buildRequest->invokeArgs($adapter, [
             'COPY',
-            'localhost:8080/_files/return_header.php',
-            ['foo' => 'bar'],
+            $this->aclient->getDatabaseUri() . "/$id",
+            "new_doc",
             null
         ]);
-        curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
-        $header = json_decode(curl_exec($curlHandle), true);
+        curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER,true);
+        curl_setopt($curlHandle, CURLOPT_VERBOSE, true);
+        curl_setopt($curlHandle, CURLINFO_HEADER_OUT, true);
+        $header = curl_getinfo($curlHandle);
+        
         $this->assertArrayHasKey('Cookie', $header);
         $this->assertEquals($sessionCookie, $header['Cookie']);
         $this->assertEquals($adapter->getSessionCookie(), $header['Cookie']);
     }
 
     public function testBuildRequestSendCustomContentType() {
+        //Add document for the copy function
+        $id = $this->addDefaultDoc();
         $contentType = "foo/bar";
         $adapter = $this->adapter;
         $buildRequest = new \ReflectionMethod($adapter, 'buildRequest');
         $buildRequest->setAccessible(true);
-        $curlHandle = $buildRequest->invokeArgs($adapter,
-                [
+        $curlHandle = $buildRequest->invokeArgs($adapter, [
             'COPY',
-            'localhost:8080/_files/return_header.php',
+            $this->aclient->getDatabaseUri() . "/$id",
             ['foo' => 'bar'],
             $contentType
         ]);
@@ -120,14 +130,15 @@ class CouchHttpAdapterCurlTest extends PHPUnit_Framework_TestCase {
     }
 
     public function testBuildRequestSendDefaultContentType() {
+        //Add document for the copy function
+        $id = $this->addDefaultDoc();
         $defaultContentType = "application/json";
         $adapter = $this->adapter;
         $buildRequest = new \ReflectionMethod($adapter, 'buildRequest');
         $buildRequest->setAccessible(true);
-        $curlHandle = $buildRequest->invokeArgs($adapter,
-                [
+        $curlHandle = $buildRequest->invokeArgs($adapter, [
             'COPY',
-            'localhost:8080/_files/return_header.php',
+            $this->aclient->getDatabaseUri() . "/$id",
             ['foo' => 'bar'],
             null
         ]);

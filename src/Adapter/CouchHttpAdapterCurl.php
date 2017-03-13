@@ -19,8 +19,6 @@
 
 namespace PHPOnCouch\Adapter;
 
-
-
 /**
  * Description of CouchAdapterCurl
  *
@@ -35,7 +33,7 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttp
     protected $socketAdapter;
 
     protected function initSocketAdapter() {
-        $this->socketAdapter = new CouchHttpAdapterSocket($this->getOptions());
+        $this->socketAdapter = new CouchHttpAdapterSocket($this->getDsn(), $this->getOptions());
     }
 
     public function continuousQuery($callable, $method, $url, $parameters = [], $data = null) {

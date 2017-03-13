@@ -6,11 +6,18 @@
         <testsuite name="Admin">
             <file>./tests/couchClientAdminTest.php</file>
         </testsuite>
-        <testsuite name="Ordered">
+        <testsuite name="Onrdered">
+            <file>./tests/CouchTest.php</file>
             <file>./tests/CouchClientTest.php</file>
-            <file>./tests/couchClientViewTest</file>
+            <file>./tests/CouchClientViewTest</file>
             <file>./tests/CouchAdminTest.php</file>
             <file>./tests/Adapter/CouchHttpCurlTest.php</file>
+            <file>./tests/Adapter/CouchHttpSocketTest.php</file>
+        </testsuite>
+        <testsuite name="Ordered">
+            <file>./tests/Adapter/AbstractCouchHttpAdapterTest.php</file>
+            <file>./tests/Adapter/CouchHttpAdapterCurlTest.php</file>
+            <file>./tests/Adapter/CouchHttpAdapterSocketTest.php</file>
         </testsuite>
     </testsuites>
     <logging>
