@@ -1,8 +1,8 @@
-#Changelist
+# Changelist
 
 ---
-####[2.0.1]
-#####Added
+#### [2.0.1]
+##### Added
 
 - CouchClient
     + getIndexes()
@@ -17,20 +17,20 @@
 - changelist.md
 - codestyle.md
 
-#####Updated
+##### Updated
 
 - Refactored all the code to follow our code style
 - Travis config to run CheckStyle 
 - Code example to correct syntax
 
-#####Fixed
+##### Fixed
 
 - Allow to use \_users and \_replicator databases directly
 
 
 ---
-####[2.0]
-#####Added
+#### [2.0]
+##### Added
 
 - CouchClient
     + getMemberShip()
@@ -39,7 +39,7 @@
     + deleteConfig($nodeName,$section,$key)
 - Composer installation now available
 
-####Updated
+#### Updated
 - CouchAdmin($client,$options)
 - Updated few tests cases
 
