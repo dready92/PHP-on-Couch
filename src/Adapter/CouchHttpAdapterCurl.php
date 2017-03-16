@@ -19,6 +19,9 @@
 
 namespace PHPOnCouch\Adapter;
 
+use Exception;
+use InvalidArgumentException;
+
 /**
  * Description of CouchAdapterCurl
  *
