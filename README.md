@@ -1,10 +1,7 @@
-[![Build Status](https://travis-ci.org/PHP-on-Couch/PHP-on-Couch.svg?branch=master)](https://travis-ci.org/PHP-on-Couch/PHP-on-Couch)
-[![Coverage Status](https://coveralls.io/repos/github/PHP-on-Couch/PHP-on-Couch/badge.svg?branch=master)](https://coveralls.io/github/PHP-on-Couch/PHP-on-Couch?branch=master)
+[![Latest Stable Version](https://poser.pugx.org/php-on-couch/php-on-couch/version)](https://packagist.org/packages/php-on-couch/php-on-couch)[![Latest Unstable Version](https://poser.pugx.org/php-on-couch/php-on-couch/v/unstable)](//packagist.org/packages/php-on-couch/php-on-couch)[![Build Status](https://travis-ci.org/PHP-on-Couch/PHP-on-Couch.svg?branch=master)](https://travis-ci.org/PHP-on-Couch/PHP-on-Couch)[![Coverage Status](https://coveralls.io/repos/github/PHP-on-Couch/PHP-on-Couch/badge.svg?branch=master)](https://coveralls.io/github/PHP-on-Couch/PHP-on-Couch?branch=master)[![License](https://poser.pugx.org/php-on-couch/php-on-couch/license)](https://packagist.org/packages/php-on-couch/php-on-couch)
 
-## Dev status
 
 [![Stories in Ready](https://badge.waffle.io/PHP-on-Couch/PHP-on-Couch.png?label=ready&title=Ready)](https://waffle.io/PHP-on-Couch/PHP-on-Couch)
-
 ## Table of content
 - [Introduction](#introduction)
 - [What's new](#whats-new)
@@ -56,6 +53,9 @@ This library has four main classes and a custom [Exception](http://php.net/manua
 
 ### Couch class
 This is the most basic of the three classes, and is responsible for the low level dialog between PHP and the CouchDB server. There should be no need of using it directly.
+
+From version **2.0.2**, you are able to change the HTTP adapter used by the Couch class. For more details, click [here](doc/couch.md).
+
 
 ### CouchClient class
 

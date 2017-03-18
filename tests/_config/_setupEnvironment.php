@@ -75,7 +75,7 @@ function _getUserDoc($user, $password)
 function _request($url, $data, $method)
 {
 //	$datasize = strlen($data);
-	echo $url . PHP_EOL;
+//	echo $url . PHP_EOL;
 //	var_dump($data);
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_URL, $url);
@@ -84,6 +84,6 @@ function _request($url, $data, $method)
 	curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
 	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Content-Length: ' . strlen($data)));
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	echo curl_exec($ch) . PHP_EOL;
+	curl_exec($ch) . PHP_EOL;
 	curl_close($ch);
 }

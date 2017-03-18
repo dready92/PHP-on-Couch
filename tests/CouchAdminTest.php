@@ -3,7 +3,6 @@
 use PHPOnCouch\CouchClient;
 use PHPOnCouch\CouchAdmin;
 use PHPOnCouch\Exceptions;
-use Exception;
 
 require_once join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'config.php']);
 

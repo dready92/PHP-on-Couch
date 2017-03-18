@@ -9,5 +9,8 @@
 composer.lock
 /vendor
 
+#logs
+/tests/logs/
+
 #Test config
 /tests/_config/_users.php

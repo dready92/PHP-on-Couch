@@ -1,6 +1,24 @@
 # Changelist
 
 ---
+#### [2.0.2]
+##### Added
+- Couch
+    + getAdapter()
+    + setAdapter(CouchHttpAdapterInterface $adapter)
+    + initAdapter($opts)
+- Adapters
+    + CouchHttpAdaterCurl
+    + CouchHttpAdapterSocket
+- doc/couch.md
+- changelist.md
+
+##### Fixed
+- Removed echoes that were causing unexpected output
+- Fixed some classes import
+- Fixed Cookie parsing
+
+---
 #### [2.0.1]
 ##### Added
 
@@ -26,7 +44,6 @@
 ##### Fixed
 
 - Allow to use \_users and \_replicator databases directly
-
 
 ---
 #### [2.0]
