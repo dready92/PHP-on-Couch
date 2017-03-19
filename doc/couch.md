@@ -7,14 +7,14 @@
     + [**dsn()**](#dsn)
     + [**options()**](#options)
     + [**getSessionCookie()**](#getsessioncookie)
-    + [**setSessionCookie(#cookie)**](#setsessioncookiecookie)
+    + [**setSessionCookie($cookie)**](#setsessioncookiecookie)
     + [**query($method, $url, $parameters = [], $data = null, $contentType = null)**](#querymethod-url-parameters---data--null-contenttype--null)
     + [**continuousQuery($callable, $method, $url, $parameters = [], $data = null)**](#continuousquerycallable-method-url-parameters---data--null)
     + [**storeFile($url, $file, $contentType)**](#storefileurl-file-contenttype)
     + [**storeAsFile($url, $data, $contentType)**](#storeasfileurl-data-contenttype)
     
 - [**Adapters**](#adapters)
-    + [**initAdapter($options()**](#initadapteroptions)
+    + [**initAdapter($options())**](#initadapteroptions)
     + [**getAdapter()**](#getadapter)
     + [**setAdapter(CouchHttpAdapterInterface $adapter)**](#setadaptercouchhttpadapterinterface-adapter)
 
