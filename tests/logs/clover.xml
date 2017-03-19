@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1489867804">
-  <project timestamp="1489867804">
+<coverage generated="1489948245">
+  <project timestamp="1489948245">
     <package name="PHPOnCouch\Adapter">
       <file name="D:\Users\alexi\Documents\Alexis\Repositories\popojargo\PHP-on-Couch\src/Adapter/AbstractCouchHttpAdapter.php">
         <class name="AbstractCouchHttpAdapter" namespace="PHPOnCouch\Adapter">
