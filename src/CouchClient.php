@@ -141,7 +141,7 @@ class CouchClient extends Couch
 					break;
 				}
 			}
-			if (!$this->sessioncookie) {
+			if (empty($this->getSessionCookie())) {
 				throw new Exception('Cookie authentification failed');
 			}
 		}
