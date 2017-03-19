@@ -19,6 +19,8 @@
 
 namespace PHPOnCouch;
 
+
+
 use stdClass;
 use Exception;
 use InvalidArgumentException;
@@ -325,7 +327,7 @@ class CouchDocument {
      * @throws InvalidArgumentException
      */
     public function replicateTo($url, $createTarget = false) {
-        echo 'replicateTo : ' . $this->_id . ", $url\n";
+        //DEBUG : echo 'replicateTo : ' . $this->_id . ", $url\n";
         if (!isset($this->_id)) {
             throw new InvalidArgumentException("Can't replicate a document without id");
         }
@@ -353,7 +355,7 @@ class CouchDocument {
      * @return boolean tell if document replication succeded
      */
     public function replicateFrom($id, $url, $createTarget = false) {
-        echo "replicateFrom : $id, $url\n";
+        //DEBUG : echo "replicateFrom : $id, $url\n";
         if (!class_exists('couchReplicator')) {
             return false;
         }

@@ -1,11 +1,8 @@
-[![Build Status](https://travis-ci.org/PHP-on-Couch/PHP-on-Couch.svg?branch=master)](https://travis-ci.org/PHP-on-Couch/PHP-on-Couch)
-[![Coverage Status](https://coveralls.io/repos/github/PHP-on-Couch/PHP-on-Couch/badge.svg?branch=master)](https://coveralls.io/github/PHP-on-Couch/PHP-on-Couch?branch=master)
+[![Latest Stable Version](https://poser.pugx.org/php-on-couch/php-on-couch/version)](https://packagist.org/packages/php-on-couch/php-on-couch)[![Latest Unstable Version](https://poser.pugx.org/php-on-couch/php-on-couch/v/unstable)](//packagist.org/packages/php-on-couch/php-on-couch)[![Build Status](https://travis-ci.org/PHP-on-Couch/PHP-on-Couch.svg?branch=master)](https://travis-ci.org/PHP-on-Couch/PHP-on-Couch)[![Coverage Status](https://coveralls.io/repos/github/PHP-on-Couch/PHP-on-Couch/badge.svg?branch=master)](https://coveralls.io/github/PHP-on-Couch/PHP-on-Couch?branch=master)[![License](https://poser.pugx.org/php-on-couch/php-on-couch/license)](https://packagist.org/packages/php-on-couch/php-on-couch)
 
-##Dev status
 
 [![Stories in Ready](https://badge.waffle.io/PHP-on-Couch/PHP-on-Couch.png?label=ready&title=Ready)](https://waffle.io/PHP-on-Couch/PHP-on-Couch)
-
-##Table of content
+## Table of content
 - [Introduction](#introduction)
 - [What's new](#whats-new)
 - [Changes](#changes)
@@ -26,11 +23,11 @@
     + [Contributions](#contributions)
     + [Feedback](#feedback)
 
-##Introduction
+## Introduction
 
 [PHP On Couch](http://github.com/PHP-on-Couch/PHP-on-Couch/) tries to provide an easy way to work with your [CouchDB](http://couchdb.apache.org) [documents](http://docs.couchdb.org/) with [PHP](http://php.net). 
 
-##What's new
+## What's new
 
 Due to the lack of support on the last repository, I forked it and I will make sure it's kept active. Feel free to post any issue or feature request. I'm open for further developments but I don't have a lot of time. 
 
@@ -39,25 +36,28 @@ With the new release of 2.0, the master branch will support only this version an
 To access PHP-on-Couch for CouchDB 1.6.1, please visit [this link](https://github.com/PHP-on-Couch/PHP-on-Couch/tree/1.6.1).
 
 
-##Recent changes
+## Recent changes
 
 For the complete change list, head over [here](changelist.md)
 
-##Installation and testing
+## Installation and testing
 
 Install the library using composer : `composer require php-on-couch/php-on-couch`.
 You can find more detailed informations about installation [here](INSTALL.md)
 
 Test instructions to be determined.
 
-##Components and documentation
+## Components and documentation
 
 This library has four main classes and a custom [Exception](http://php.net/manual/en/language.exceptions.php) class.
 
-###Couch class
+### Couch class
 This is the most basic of the three classes, and is responsible for the low level dialog between PHP and the CouchDB server. There should be no need of using it directly.
 
-###CouchClient class
+From version **2.0.2**, you are able to change the HTTP adapter used by the Couch class. For more details, click [here](doc/couch.md).
+
+
+### CouchClient class
 
 This class maps all the actions the application can do on the CouchDB server. Documentation is split in three main topics :
 
@@ -88,19 +88,19 @@ This class maps all the actions the application can do on the CouchDB server. Do
 - Create and manage indexes
 - Make complex query with Mango Query
 
-###CouchDocument class
+### CouchDocument class
 
 Easing the manipulation of documents, the CouchDocument class uses PHP magic getters and setters. Documentation available [here](doc/couch_document.md).
 
-###CouchReplicator class
+### CouchReplicator class
 
 A dedicated class to manage replications over different instances of CouchDB databases. Documentation available [here](doc/couch_replicator.md).
 
-###CouchAdmin class
+### CouchAdmin class
 
 A class to manage users and database/users associations. Documentation available [here](doc/couch_admin.md).
 
-##Quick-start guide
+## Quick-start guide
   
 1. Import those classes whenever you need to access CouchDB server :
 
@@ -132,7 +132,7 @@ If you need to use replication features, also use the couchReplicator definition
         $view = $client->limit(10)->descending(true)->getView('some_design_doc','viewname');
 
 
-##Example
+## Example
 
 Some code first :
 
@@ -186,15 +186,15 @@ $doc->name = "Brown"; // set document property "name" to "Brown" and store the u
 
 
        
-##Community
+## Community
 
-###Contributions
+### Contributions
 
 Feel free to make any contributions. All contributions must follow the [code style](codestyle.md) and must also comes with valid and complete tests. 
 
 Help is really appreciated to complete add more tests.
 
-###Feedback
+### Feedback
 
 [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/PHP-on-Couch/PHP-on-Couch)
 

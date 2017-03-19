@@ -1,6 +1,6 @@
 This section describes how to use PHP on Couch to retrieve views results from a CouchDB server.
 
-##Table of content
+## Table of content
 - [Creating views](#creating-views)
 - [getView($id, $name)](#getviewid-name)
 - [View response](#view-response)
@@ -11,7 +11,7 @@ This section describes how to use PHP on Couch to retrieve views results from a 
 - [getForeignList($list_design_id, $name, $view_design_id, $view_name, $additionnal_parameters = array()) ](#getforeignlistlist_design_id-name-view_design_id-view_name-additionnal_parameters--array)
 - [getViewInfos($design_id)](#getviewinfosdesign_id)
 
-###Creating views
+### Creating views
 
 
 [As said in the documentation](http://wiki.apache.org/couchdb/HTTP_view_API) , views are stored in CouchDB documents called "design documents". So to create a view, you have to create a design document.
@@ -27,7 +27,7 @@ $design_doc->views = array ( 'by_date'=> array ('map' => $view_fn ) );
 $client->storeDoc($design_doc);
 ```
 
-###getView($id, $name)
+### getView($id, $name)
 
 The method **getView($id, $name)** sends back the CouchDB response of a view.
  
@@ -39,7 +39,7 @@ Example :
 $result = $client->getView('all','by_date');
 ```
 
-##View response
+## View response
 
 The CouchDB response of a view is an object containing :
 
@@ -54,7 +54,7 @@ Each object in **rows** contains the properties :
 * **value** : the emited value
 * **doc** : the document object, if query parameter include_docs is set (read on for that).
 
-##Query parameters
+## Query parameters
 
 PHP on Couch implements chainable methods to add query parameters. The method names are mapped on their CouchDB counterparts :
 
@@ -90,7 +90,7 @@ $client->include_docs(true);
 $response = $client->getView('all','by_date');
 ```
 
-###setQueryParameters($params)
+### setQueryParameters($params)
 
 You also can set query parameters with a PHP array, using the **setQueryParameters** method :
 
@@ -99,7 +99,7 @@ $opts = array ( "include_docs" => true, "limit" => 10, "descending" => true );
 $response = $client->setQueryParameters(opts)->getView("all","by_date");
 ```
 
-###asArray()
+### asArray()
 
 When converting a JSON object to PHP, we can choose the type of the value returned from a CouchClient query.
 
@@ -145,7 +145,7 @@ Format a view with CouchDB list formatting feature
 
 More infos on CouchDB lists [here](http://wiki.apache.org/couchdb/Formatting_with_Show_and_List).
 
-###getList($design_id, $name, $view_name, $additionnal_parameters = array())
+### getList($design_id, $name, $view_name, $additionnal_parameters = array())
 
 The method **getList($design_id, $name, $view_name, $additionnal_parameters = array() )** retrive a view and then format it using the algorithm of the $name list.
 
@@ -157,7 +157,7 @@ $response = $client->limit(100)->include_docs(true)->getList('all','html','by_da
 // pass it through the list declared in _design/all and named *html*.
 ```
 
-###getForeignList($list_design_id, $name, $view_design_id, $view_name, $additionnal_parameters = array())
+### getForeignList($list_design_id, $name, $view_design_id, $view_name, $additionnal_parameters = array())
 
 The method **getForeignList($list_design_id, $name, $view_design_id, $view_name, $additionnal_parameters = array() )** retrive a view 
 defined in the document *_design/$view_design_id* and then format it using the algorithm of the list defined in the design document 
@@ -172,9 +172,9 @@ $response = $client->limit(100)->getForeignList('display','html','posts','by_dat
 ```
 
 
-###getViewInfos($design_id)
+### getViewInfos($design_id)
 
-More info on view informations [here](http://wiki.apache.org/couchdb/HTTP_view_API#Getting_Information_about_Design_Documents_.28and_their_Views.29)
+More info on view informations [here](http://wiki.apache.org/couchdb/HTTP_view_API# Getting_Information_about_Design_Documents_.28and_their_Views.29)
 
 The method **getViewInfos($design_id)** sends back some useful informations about a particular design document.
 
