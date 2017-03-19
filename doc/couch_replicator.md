@@ -1,5 +1,5 @@
 This section give details on using the CouchReplicator object.
-##Table of content
+## Table of content
 - [Getting started](#getting-started)
 - [Replication Basics](#replication-basics)
     + [to()](#to)
@@ -15,7 +15,7 @@ This section give details on using the CouchReplicator object.
 - [Replication of individual CouchDocuments](#replication-of-individual-couchdocuments)
 
 
-##Getting started
+## Getting started
 
 CouchDB supports replicating a database on other CouchDB databases. Think of replication as a copy-paste operation on databases.
 
@@ -35,10 +35,10 @@ $client = new CouchClient ("http://localhost:5984/","mydb" );
 $replicator = new CouchReplicator($client);
 ```
 
-##Replication Basics
+## Replication Basics
 
 
-###to()
+### to()
 To replicate a database to another existing database, use the **to()** method.
 
 Example :
@@ -58,7 +58,7 @@ $response = $replicator->to("mydb_backup");
 // database http://localhost:5984/mydb will be replicated to http://localhost:5984/mydb_backup
 ```
 
-###from()
+### from()
 
 To replicate from a database to an existing database, use the **from()** method.
 
@@ -70,7 +70,7 @@ $response = $replicator->from("http://another.server.com:5984/mydb");
 Please note that CouchDB developpers hardly suggest to use the Pull replication mode : that means to prefer the "from()" method.
 
 
-###create_target()
+### create_target()
 
 
 The **create_target()** chainable method enables CouchDB to automatically create the target database, in case it doesn't exist.
@@ -89,7 +89,7 @@ Which is equivalent to :
 ```
 If the target database already exist, the create_target() method has no use.
 
-###doc_ids()
+### doc_ids()
 
 To replicate only some documents, pass their ids to the **doc_ids()** chainable method.
 
@@ -101,11 +101,11 @@ $replicator->doc_ids( array ("some_doc", "some_other_doc") )->from("http://anoth
 
 This code will replicate documents "some_doc" and "some_other_doc" of database "http://another.server.com:5984/mydb" to database "http://localhost:5984/mydb"
 
-##Continuous replication
+## Continuous replication
 
 A continuous replication is a replication that is permanent : once set, any change to the source database will be automatically propagated to the destination database. 
 
-###continuous()
+### continuous()
 
 
 To setup a continuous replication, use the **continuous()** chainable method.
@@ -130,7 +130,7 @@ echo $doc->type;
 ```
 
 
-###cancel()
+### cancel()
 
 To cancel a previously setup continuous replication, use the **cancel()** chainable method.
 
@@ -143,9 +143,9 @@ $replicator->continuous()->from("http://another.server.com:5984/mydb");
 // remove the continuous replication
 $replicator->cancel()->from("http://another.server.com:5984/mydb");
 ```
-##Chainable methods
+## Chainable methods
 
-###filter()
+### filter()
 
 To have a full control over which document should be replicated, setup a filter definition on the source database. Then use the **filter()** chainable method to filter replicated documents.
 
@@ -179,7 +179,7 @@ $replicator = new CouchReplicator($target_client);
 $replicator->filter('replication_rules/no_design_doc')->from($source_client->getDatabaseUri());
 ```
 
-###query_params()
+### query_params()
 
 
 Filters can have a query parameters. This allows more generic filter codes.
@@ -216,7 +216,7 @@ $params = array ("needle"=>"_design");
 $replicator->query_params($params)->filter('replication_rules/no_str_in_doc')->from($source_client->getDatabaseUri());
 ```
 
-##Replication of individual CouchDocuments
+## Replication of individual CouchDocuments
 
 Please read the CouchDocument documentation to learn how to simply replicate a document to or from a database to another
 

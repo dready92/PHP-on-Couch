@@ -1,11 +1,8 @@
 <?php
 
-namespace PHPOnCouch;
-
-use InvalidArgumentException,
-    PHPOnCouch\Exceptions,
-    PHPUnit_Framework_TestCase,
-    stdClass;
+use PHPOnCouch\CouchClient;
+use PHPOnCouch\CouchDocument;
+use PHPOnCouch\Exceptions;
 
 require_once join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'config.php']);
 
@@ -106,7 +103,7 @@ EOT
      * @todo   Implement testSetQueryParameters().
      */
     public function testSetQueryParameters() {
-        // Remove the following lines when you implement this test.
+// Remove the following lines when you implement this test.
         $this->markTestIncomplete(
                 'This test has not been implemented yet.'
         );
@@ -117,7 +114,7 @@ EOT
      * @todo   Implement testUseDatabase().
      */
     public function testUseDatabase() {
-        // Remove the following lines when you implement this test.
+// Remove the following lines when you implement this test.
         $this->markTestIncomplete(
                 'This test has not been implemented yet.'
         );
@@ -145,7 +142,7 @@ EOT
      * @todo   Implement testListDatabases().
      */
     public function testListDatabases() {
-        // Remove the following lines when you implement this test.
+// Remove the following lines when you implement this test.
         $this->markTestIncomplete(
                 'This test has not been implemented yet.'
         );
@@ -156,7 +153,7 @@ EOT
      * @todo   Implement testCreateDatabase().
      */
     public function testCreateDatabase() {
-        // Remove the following lines when you implement this test.
+// Remove the following lines when you implement this test.
         $this->markTestIncomplete(
                 'This test has not been implemented yet.'
         );
@@ -234,7 +231,7 @@ EOT
      * @todo   Implement testCompactDatabase().
      */
     public function testCompactDatabase() {
-        // Remove the following lines when you implement this test.
+// Remove the following lines when you implement this test.
         $this->markTestIncomplete(
                 'This test has not been implemented yet.'
         );
@@ -249,11 +246,11 @@ EOT
         $this->assertObjectHasAttribute('all_nodes', $memberShip);
         $this->assertObjectHasAttribute('cluster_nodes', $memberShip);
 
-        //Must know itself
+//Must know itself
         $this->assertInternalType('array', $memberShip->all_nodes);
         $this->assertGreaterThanOrEqual(1, sizeof($memberShip->all_nodes));
 
-        //Must have itself
+//Must have itself
         $this->assertInternalType('array', $memberShip->cluster_nodes);
         $this->assertGreaterThanOrEqual(1, sizeof($memberShip->cluster_nodes));
     }
@@ -288,10 +285,10 @@ EOT
         $firstNode = $memberShip->all_nodes[0];
         $config1 = $this->aclient->getConfig($firstNode);
 
-        //Returns a JSON object
+//Returns a JSON object
         $this->assertInternalType("object", $config1);
 
-        //Tests based on basic configuration
+//Tests based on basic configuration
         $this->assertObjectHasAttribute('log', $config1);
         $this->assertObjectHasAttribute('level', $config1->log);
         $this->assertEquals('info', $config1->log->level);
@@ -344,7 +341,7 @@ EOT
         $currValue = $this->aclient->getConfig($node, 'log', 'level');
         $this->assertEquals('debug', $currValue);
 
-        //Undo changes
+//Undo changes
         $oldValue2 = $this->aclient->setConfig($node, 'log', 'level', 'info');
         $this->assertEquals('debug', $oldValue2);
 
@@ -383,7 +380,7 @@ EOT
      * @depends testDeleteConfigExceptions
      */
     public function testDeleteConfig() {
-        //We add a random config entry
+//We add a random config entry
         $node = $this->aclient->getMemberShip()->all_nodes[0];
 
         $this->aclient->setConfig($node, 'testing', 'stuff', 'here');
@@ -400,7 +397,7 @@ EOT
      * @todo   Implement testCleanupDatabaseViews().
      */
     public function testCleanupDatabaseViews() {
-        // Remove the following lines when you implement this test.
+// Remove the following lines when you implement this test.
         $this->markTestIncomplete(
                 'This test has not been implemented yet.'
         );
@@ -411,7 +408,7 @@ EOT
      * @todo   Implement testFeed().
      */
     public function testFeed() {
-        // Remove the following lines when you implement this test.
+// Remove the following lines when you implement this test.
         $this->markTestIncomplete(
                 'This test has not been implemented yet.'
         );
@@ -422,7 +419,7 @@ EOT
      * @todo   Implement testFilter().
      */
     public function testFilter() {
-        // Remove the following lines when you implement this test.
+// Remove the following lines when you implement this test.
         $this->markTestIncomplete(
                 'This test has not been implemented yet.'
         );
@@ -433,7 +430,7 @@ EOT
      * @todo   Implement testGetChanges().
      */
     public function testGetChanges() {
-        // Remove the following lines when you implement this test.
+// Remove the following lines when you implement this test.
         $this->markTestIncomplete(
                 'This test has not been implemented yet.'
         );
@@ -444,7 +441,7 @@ EOT
      * @todo   Implement testOpen_revs().
      */
     public function testOpen_revs() {
-        // Remove the following lines when you implement this test.
+// Remove the following lines when you implement this test.
         $this->markTestIncomplete(
                 'This test has not been implemented yet.'
         );
@@ -455,7 +452,7 @@ EOT
      * @todo   Implement testGetDoc().
      */
     public function testGetDoc() {
-        // Remove the following lines when you implement this test.
+// Remove the following lines when you implement this test.
         $this->markTestIncomplete(
                 'This test has not been implemented yet.'
         );
@@ -466,19 +463,19 @@ EOT
      */
     public function testStoreDoc() {
 
-        //Test 1
+//Test 1
         $test1 = array("_id" => "great", "type" => "array");
         $this->expectException(InvalidArgumentException::class);
         $this->client->storeDoc($test1);
 
-        //Test 2
+//Test 2
         $test2 = new \stdclass();
         $test2->_id = "great";
         $test2->_type = "object";
         $this->expectException(InvalidArgumentException::class);
         $this->client->storeDoc($test2);
 
-        //Test 3
+//Test 3
         $infos = $this->client->getDatabaseInfos();
         $test3 = new \stdclass();
         $test3->_id = "great";
@@ -538,7 +535,7 @@ EOT
         $doc = $this->client->conflicts()->getDoc("test2");
         $this->assertObjectNotHasAttribute("_conflicts", $doc);
 
-        //Part 2
+//Part 2
 
         $data = array(
             new \stdclass(),
@@ -579,7 +576,7 @@ EOT
      * @todo   Implement testDeleteDocs().
      */
     public function testDeleteDocs() {
-        // Remove the following lines when you implement this test.
+// Remove the following lines when you implement this test.
         $this->markTestIncomplete(
                 'This test has not been implemented yet.'
         );
@@ -657,7 +654,7 @@ EOT
      * @todo   Implement testCopyDoc().
      */
     public function testCopyDoc() {
-        // Remove the following lines when you implement this test.
+// Remove the following lines when you implement this test.
         $this->markTestIncomplete(
                 'This test has not been implemented yet.'
         );
@@ -748,7 +745,7 @@ EOT
      * @todo   Implement testDeleteAttachment().
      */
     public function testDeleteAttachment() {
-        // Remove the following lines when you implement this test.
+// Remove the following lines when you implement this test.
         $this->markTestIncomplete(
                 'This test has not been implemented yet.'
         );
@@ -794,7 +791,7 @@ EOT
      * @todo   Implement testAsCouchDocuments().
      */
     public function testAsCouchDocuments() {
-        // Remove the following lines when you implement this test.
+// Remove the following lines when you implement this test.
         $this->markTestIncomplete(
                 'This test has not been implemented yet.'
         );
@@ -1118,7 +1115,7 @@ EOT
         $this->assertNotEmpty($response1->name);
         $this->assertNotEmpty($response1->id);
 
-        //Create index without a valid ddoc
+//Create index without a valid ddoc
         $ddocId = 'indexes';
         $expectedName = 'globalIdx';
         $response2 = $this->aclient->createIndex(['firstName', 'birthDate', 'lastName'], $expectedName, $ddocId);
@@ -1144,7 +1141,7 @@ EOT
         }
 
         $indexes = $this->aclient->getIndexes();
-        //_id index + the new one
+//_id index + the new one
         $this->assertCount(6, $indexes);
         foreach ($indexes as $val) {
             $this->assertContains($val->name, $indexNames);
@@ -1198,7 +1195,7 @@ EOT
         $this->assertObjectHasAttribute('gender', $response2[0]);
         $this->assertEquals('Jenny', $response2[0]->firstName);
 
-        //Test limit and skip options
+//Test limit and skip options
         $selector3 = [
             'age' => ['$gt' => 16]
         ];

@@ -1,11 +1,11 @@
 This section give details on using CouchDocument data mapper
 
-##CouchDocuments to simplify the code
+## CouchDocuments to simplify the code
 
 CouchDB embed a simple JSON/REST HTTP API. You can simplify even more your PHP code using couch documents.
 Couch Documents take care of revision numbers, and automatically propagate updates on database.
 
-##Table of content
+## Table of content
 
 - [Creating a new document](#creating-a-new-document)
 - [set($key, $value = null)](#setkey-value--null)
@@ -26,7 +26,7 @@ Couch Documents take care of revision numbers, and automatically propagate updat
 - [show($id, $name, $additionnal_parameters = array())](#replicatefromid-url-create_target--false)
 - [update($id, $name, $additionnal_params = array())](#updateid-name-additionnal_params--array-)
 
-##Creating a new document
+## Creating a new document
 
 
 To create an empty CouchDocument, simply instanciate the **CouchDocument** class, passing the CouchClient object as the constructor argument.
@@ -58,7 +58,7 @@ echo $doc->id();
 // some_doc
 ```
 
-###set($key, $value = null)
+### set($key, $value = null)
 
 As we just saw, just set the property on the $doc object and it'll be recorded in the database. There are 2 ways to do it. You can either use the **set($key, $value)** method or simply use the setter **$obj->key = $value**.
 
@@ -71,7 +71,7 @@ $doc->type = "page";
 $doc->title = "Introduction";
 ```
 
-###set($params)
+### set($params)
 
 It's always possible to set several properties in one query using the **set($params)** method
 
@@ -100,7 +100,7 @@ $doc = new CouchDocument($client);
 $doc->set ( $prop );
 ```
 
-###setAutocommit(boolean $autoCommit)
+### setAutocommit(boolean $autoCommit)
 
 If, for some reason, you need to disable the auto-commit feature, use the **setAutocommit()** method. In this case, you'll have to explicitely call the **record()** method to store your changes on the database.
 
@@ -115,7 +115,7 @@ $doc->title = "Introduction";
 $doc->record();
 ```
 
-###record()
+### record()
 
 When the auto-commit feature is off, you need to apply changes manually. Calling the method **record()** apply the changes.
 
@@ -130,12 +130,12 @@ $doc->title = "Introduction";
 $doc->record();
 ```
 
-###getAutocommit()
+### getAutocommit()
 
 To know if the auto-commit feature is activated, use the **getAutocommit()** method : it returns a boolean.
 
 
-###remove($key)
+### remove($key)
 
 To unset a property, just use the **unset** PHP function, as you'll do for a PHP object. You can also use the **remove($key)** function which is normally called when you du a **unset**.
 
@@ -153,7 +153,7 @@ unset($doc->title);
 echo $doc->title ; // won't echo anything
 ```
 
-###getInstance( CouchClient $client, $docId )
+### getInstance( CouchClient $client, $docId )
 
 The static method **getInstance( CouchClient $client, $docId )** returns a CouchDocument when the specified id exists :
 
@@ -165,7 +165,7 @@ echo $doc->_rev."\n";
 echo $doc->type;
 ```
 
-###getUri()
+### getUri()
 
 The method **getUri()** sends back a string giving the current document URI.
 
@@ -178,7 +178,7 @@ db.example.com:5984/testdb/dome_doc_id
 */
 ```
 
-###getFields()
+### getFields()
 
 To get the Couch document fields from a CouchDocument object, use the **getFields()** method
 
@@ -198,7 +198,7 @@ print_r($doc->getFields());
 */
 ```
 
-###storeAttachment($file, $content_type = 'application/octet-stream', $filename = null)
+### storeAttachment($file, $content_type = 'application/octet-stream', $filename = null)
 
 *When the attachment is a file on-disk*
 
@@ -215,7 +215,7 @@ try {
 }
 ```
 
-###storeAsAttachment($data, $filename, $content_type = 'application/octet-stream')
+### storeAsAttachment($data, $filename, $content_type = 'application/octet-stream')
 
 The method **storeAsAttachment($data, $filename, $content_type = 'application/octet-stream')** adds a new attachment, or update the attachment if it already exists. The attachment contents is contained in a PHP variable.
 
@@ -230,7 +230,7 @@ try {
 }
 ```
 
-###deleteAttachment($name)
+### deleteAttachment($name)
 
 The method **deleteAttachment($name)** permanently removes an attachment from a document.
     
@@ -245,7 +245,7 @@ try {
 }
 ```
 
-###getAttachmentUri($name)
+### getAttachmentUri($name)
 
 The method **getAttachmentUri($name)** returns the URI of an attachment.
 
@@ -266,7 +266,7 @@ try {
 }
 ```
 
-###replicateTo($url, $create_target = false)
+### replicateTo($url, $create_target = false)
 
 The CouchDocuments instance provides an easy way to replicate a document to, or from, another database. Think about replication like a copy-paste operation of the document to CouchDB databases.
 
@@ -287,7 +287,7 @@ $doc->replicateTo("http://another.server.com:5984/mydb/");
 The replicateTo can have another argument, a boolean one. If true, the database will be created on the destination server if it doesn't exist.
 
 
-###replicateFrom($id, $url, $create_target = false)
+### replicateFrom($id, $url, $create_target = false)
 
 Use the **replicateFrom($id, $url, $create_target = false)** method to replicate a CouchDocument from another CouchDB database, and then load it into the CouchDocument instance.
 
@@ -309,7 +309,7 @@ $doc->replicateTo("http://another.server.com:5984/mydb/");
 
 The replicateFrom can have another argument, a boolean one. If true, the database will be created on the destination server if it doesn't exist.
 
-###show($id, $name, $additionnal_parameters = array())
+### show($id, $name, $additionnal_parameters = array())
 
 The **show($id,$name,$additionnal_parameters)** method parses the current document through a CouchDB show function.
 
@@ -341,7 +341,7 @@ $html = $doc->show("clean","html");
 
 The show method is a proxy method to the **getShow()** method of **CouchClient**.
 
-###update($id, $name, $additionnal_params = array())
+### update($id, $name, $additionnal_params = array())
 
 The **update($id,$name,$additionnal_params)** method allows to use the CouchDB [update handlers](http://wiki.apache.org/couchdb/Document_Update_Handlers) feature to update an existing document.
 The CouchDocument object shouldd have an id for this to work ! Please see **CouchClient** *updateDoc* method for more infos.

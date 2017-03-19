@@ -17,6 +17,8 @@
 
 namespace PHPOnCouch;
 
+
+
 use PHPOnCouch\Exceptions\CouchException;
 
 /**

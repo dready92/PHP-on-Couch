@@ -1,6 +1,6 @@
 # Mango Query
 
-##Table of content
+## Table of content
 
 - [**Summary**](#summary)
 - [**PHPonCouch and Mango**](#phponcouch-and-mango)
@@ -10,7 +10,7 @@
     + [**find($selector, $index = null)**](#findselector-index--null)
     + [**explain($selector, $index = null)**](#explainselector-index--null)
 
-##Summary
+## Summary
 
 With the new release of CouchDB 2.0, Apache brough us the Mango Query. It's an adapted version of Cloudant Query for CouchDB. It's very similar to MongoDB Query syntax.
 
@@ -20,7 +20,7 @@ It lets you create index and perform query with more ease that map/reduce. For m
 - [Cloudant Query](https://developer.ibm.com/clouddataservices/docs/cloudant/get-started/use-cloudant-query/)
 - [Mango source code](https://github.com/cloudant/mango)
 
-##PHPonCouch and Mango
+## PHPonCouch and Mango
 
 With recently added new available function to let you use the new Mango Query. This is very minimalist for the moment but feel free to suggest any ameliorations.
 
@@ -29,9 +29,9 @@ The Mango Query functionalities have been implemented directly in the CouchClien
 
 
 
-##Functions
+## Functions
 
-###getIndexes()
+### getIndexes()
 
 This function returns you an array of indexes. Each index will have those properties :
 
@@ -67,7 +67,7 @@ $indexes = $client->getIndexes();
 
 ```
 
-###createIndex(array $fields, $name = null, $ddoc = null, $type = 'json')
+### createIndex(array $fields, $name = null, $ddoc = null, $type = 'json')
 
 
 This function create a index. 
@@ -102,7 +102,7 @@ $index should give :
 ```
 
 
-###find($selector, $index = null)
+### find($selector, $index = null)
 
 The new **find()** function let you query the database by using the new Mango Query.  You can provide a selector query multiple fields and use conditional queries. You can sort your query and also determine which fields you want to retreive. CouchDB will automatically select the most efficient index for your query but it's preferred to specify the index for faster results.
 
@@ -142,7 +142,7 @@ $docs = $client->skip(10)->limit(30)->sort(["age"])->fields(['firstName'])->find
 ```
 
 
-###explain($selector, $index = null)
+### explain($selector, $index = null)
 
 The **explain()** function let you perform a query like if you were using the [**find()**](#findselector-array-fields--null-sort--null-index--null) function. Therefore, the explain will not returns any documents. Instead, it will give you all the details about the query. For example, it could tell you which index has been automatically selected.
 
