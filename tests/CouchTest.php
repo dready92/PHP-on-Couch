@@ -96,4 +96,10 @@ class CouchTest extends PHPUnit_Framework_TestCase
 		$this->assertEquals($opts, $couch->options());
 	}
 
+	public function testSessionAccessors()
+	{
+		$session = "Y291Y2g6NENGNDgzNz ";
+		$this->couch->setSessionCookie($session);
+		$this->assertEquals($session, $this->couch->getSessionCookie());
+	}
 }

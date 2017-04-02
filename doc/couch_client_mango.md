@@ -7,8 +7,8 @@
 - [**Functions**](#functions)
     + [**getIndexes()**](#getindexes)
     + [**createIndex(array $fields, $name = null, $ddoc = null, $type = 'json')**](#createindexarray-fields-name--null-ddoc--null-type--json)
-    + [**find($selector, array $fields = null, $sort = null, $index = null)**](#findselector-array-fields--null-sort--null-index--null)
-    + [**explain($selector, array $fields = null, $sort = null, $index = null)**](#explainselector-array-fields--null-sort--null-index--null)
+    + [**find($selector, $index = null)**](#findselector-index--null)
+    + [**explain($selector, $index = null)**](#explainselector-index--null)
 
 ## Summary
 
@@ -102,7 +102,7 @@ $index should give :
 ```
 
 
-### find($selector, array $fields = null, $sort = null, $index = null)
+### find($selector, $index = null)
 
 The new **find()** function let you query the database by using the new Mango Query.  You can provide a selector query multiple fields and use conditional queries. You can sort your query and also determine which fields you want to retreive. CouchDB will automatically select the most efficient index for your query but it's preferred to specify the index for faster results.
 
@@ -114,13 +114,13 @@ You can use the following query parameters :
 
 - limit(number) : Limit  the number of documents that will be returned.
 - skip(n) : Skip n documents and return the documents following.
+- sort(sortSyntax) : Array or values that follow the [sort syntax](http://docs.couchdb.org/en/2.0.0/api/database/find.html#find-sort)
+- fields(fieldsArray) : An array of fields that you want to return from the documents. If null, all the fields will be returned.
 
 **@parameters**
 
-- $selector : A selector object or array that follows the Mango query [documentation](http://docs.couchdb.org/en/2.0.0/api/database/find.html# selector-syntax)
-- $fields : An array of fields that you want to return from the documents. If null, all the fields will be returned.
-- $sort : Array or values that follow the [sort syntax](http://docs.couchdb.org/en/2.0.0/api/database/find.html# find-sort)
-- $index : The name of the index to use. Otherwise automatically choosen
+- $selector : A selector object or array that follows the Mango query [documentation](http://docs.couchdb.org/en/2.0.0/api/database/find.html#selector-syntax)
+- $index : The name of the index to use("<design_document>" or ["<design_document>", "<index_name>"]). Otherwise automatically choosen.
 
 **@returns**
 
@@ -137,12 +137,12 @@ $selector = [
         ['gender' => ['$eq' => 'Female']]
     ]
 ];
-$docs = $client->skip(10)->limit(30)->find($selector,null,['age']);
+$docs = $client->skip(10)->limit(30)->sort(["age"])->fields(['firstName'])->find($selector);
 
 ```
 
 
-### explain($selector, array $fields = null, $sort = null, $index = null)
+### explain($selector, $index = null)
 
 The **explain()** function let you perform a query like if you were using the [**find()**](#findselector-array-fields--null-sort--null-index--null) function. Therefore, the explain will not returns any documents. Instead, it will give you all the details about the query. For example, it could tell you which index has been automatically selected.
 
@@ -168,7 +168,7 @@ Example :
 $selector = [
 'year'=>['$gt'=>2010]
 ];
-$details = $client->skip(0)->limit(2)->find(selector,['_id','_rev','year','title'],['year'=>'asc']);
+$details = $client->skip(0)->limit(2)->fields(['_id','_rev','year','title'])->sort(['year'=>'asc'])->find($selector);
 ```
 
 The $details values would be the equivalent in JSON :

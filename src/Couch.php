@@ -20,13 +20,13 @@
 namespace PHPOnCouch;
 
 use Exception;
+use InvalidArgumentException;
 use PHPOnCouch\Exceptions\CouchException;
 use PHPOnCouch\Exceptions\ConflictException;
 use PHPOnCouch\Exceptions\ForbiddenException;
 use PHPOnCouch\Exceptions\NotFoundException;
 use PHPOnCouch\Exceptions\UnauthorizedException;
 use PHPOnCouch\Exceptions\ExpectationException;
-use InvalidArgumentException;
 use PHPOnCouch\Adapter\CouchHttpAdapterInterface;
 use PHPOnCouch\Adapter\CouchHttpAdapterCurl;
 use PHPOnCouch\Adapter\CouchHttpAdapterSocket;

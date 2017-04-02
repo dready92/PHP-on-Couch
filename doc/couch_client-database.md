@@ -5,6 +5,8 @@ This section give details on actions on the CouchDB server through PHP on Couch.
 - [Getting started](#getting-started)
 - [General](#general)
     + [dsn()](#dsn)
+    + [getSessionCookie()](#getsessioncookie)
+    + [setSessionCookie($cookie)](#setsessioncookiecookie)
     + [isValidDatabaseName($name)](#isvaliddatabasename)
     + [listDatabases()](#listdatabases)
     + [createDatabase()](#createdatabase)
@@ -84,9 +86,31 @@ $client = new CouchClient("http://couch.server.com:5984/","hello");
 echo $client->dsn(); // will echo : http://couch.server.com:5984
 ```
 
+### getSessionCookie()
+
+This method returns the current session cookie if set.
+
+Example :
+
+```php
+$cookie = $client->getSessionCookie();
+```
+
+### setSessionCookie($cookie)
+
+This method set the cookie and is chainable.
+
+Example :
+
+```php
+$cookie = $client->setSessionCookie("AuthSession=Y291Y2g6NENGNDgzNz")->getSessionCookie();
+```
+
 ### isValidDatabaseName()
 
-Database names on CouchDB have restrictions : only lowercase characters (a-z), digits (0-9), and any of the characters _, $, (, ), +, -, and / are allowed. To test if a given database name is valid, use the static **isValidDatabaseName()** couchClient method.
+Database names on CouchDB have restrictions : only lowercase characters (a-z), digits (0-9), and any of the characters _, $, (, ), +, -, and / are allowed. The name has to start with a lowercase letter (a-z). To test if a given database name is valid, use the static **isValidDatabaseName()** couchClient method.
+
+Note: to allow access to system databases (_users, _replicator), those names added to special list and will return `true`.
 
 Example :
 

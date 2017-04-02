@@ -72,6 +72,14 @@ EOT
         $this->aclient = null;
     }
 
+    public function testContructor() {
+        $options = ['cookie_auth' => true];
+        $client = new CouchClient($this->aUrl, 'couchclienttest', $options);
+
+        $cookie = $client->getSessionCookie();
+        $this->assertNotEmpty($cookie);
+    }
+
     /**
      * 
      */
@@ -1144,7 +1152,8 @@ EOT
      * @covers PHPOnCouch\CouchClient::find
      */
     public function testFind() {
-        $this->aclient->createIndex(['firstName', 'lastName', 'age', 'gender'], 'person');
+        $response = $this->aclient->createIndex(['firstName', 'age', 'lastName', 'gender'], 'person');
+        $this->assertObjectHasAttribute('id', $response);
         $docs = [
             [
                 'firstName' => 'John',
@@ -1167,7 +1176,7 @@ EOT
         ];
         $this->aclient->storedocs($docs);
 
-        $response1 = $this->aclient->find(['firstName' => ['$eq' => 'John']], ['age']);
+        $response1 = $this->aclient->fields(['age'])->find(['firstName' => ['$eq' => 'John']]);
         $this->assertCount(1, $response1);
         $this->assertEquals($response1[0]->age, 35);
         $this->assertFalse(isset($response1[0]->firstName));
@@ -1194,6 +1203,10 @@ EOT
         $this->assertCount(1, $response3);
         $response4 = $this->aclient->skip(1)->find($selector3);
         $this->assertCount(1, $response4);
+
+        $response5 = $this->aclient->limit(1)->sort([['firstName' => 'desc'], ['age' => 'desc']])->find(['firstName' => ['$gt' => null]]);
+        $this->assertObjectHasAttribute('age', $response5[0]);
+        $this->assertEquals(35, $response5[0]->age);
     }
 
     /**
@@ -1224,7 +1237,7 @@ EOT
         ];
         $this->aclient->storeDocs($docs);
 
-        $response = $this->aclient->explain(['firstName' => ['$eq' => 'John']], null, null, $indexObj->id);
+        $response = $this->aclient->explain(['firstName' => ['$eq' => 'John']], $indexObj->id);
         $this->assertObjectHasAttribute('dbname', $response);
         $this->assertObjectHasAttribute('index', $response);
         $this->assertObjectHasAttribute('selector', $response);
