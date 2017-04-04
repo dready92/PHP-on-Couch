@@ -258,6 +258,33 @@ class CouchAdmin {
     }
 
     /**
+     * Set roles to a user document
+     *
+     * @param string|stdClass $user the user login (as a string) or the user document ( fetched by getUser() method )
+     * @param array          $roles the roles list to set to the user, other roles will be erased
+     *
+     * @return boolean true
+     * @throws InvalidArgumentException
+     */
+    public function setRolesToUser($user, $roles = array())
+    {
+        if (is_string($user)) {
+            $user = $this->getUser($user);
+        } elseif (!property_exists($user, "_id") || !property_exists($user, "roles")) {
+            throw new InvalidArgumentException("user parameter should be the login or a user document");
+        }
+        if (is_array($roles)) {
+            $user->roles = $roles;
+            $client = clone($this->client);
+            $client->useDatabase($this->usersdb);
+            $client->storeDoc($user);
+        } else {
+            throw new InvalidArgumentException("roles should be an array");
+        }
+        return true;
+    }
+  
+    /**
      * Add a role to a user document
      *
      * @param string|stdClass $user the user login (as a string) or the user document ( fetched by getUser() method )
