@@ -14,6 +14,7 @@
 			<file>./tests/CouchClientTest.php</file>
 			<file>./tests/CouchClientViewTest</file>
 			<file>./tests/CouchAdminTest.php</file>
+			<file>./tests/Exceptions/CouchExceptionTest.php</file>
 		</testsuite>
 	</testsuites>
 	<logging>

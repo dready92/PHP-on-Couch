@@ -42,7 +42,7 @@ class CouchAdminTest extends PHPUnit_Framework_TestCase
 		$this->aclient = new CouchClient($aUrl, 'couchclienttest');
 		try {
 			$this->aclient->deleteDatabase();
-		} catch (Exception $e) {
+		} catch (\Exception $e) {
 			
 		}
 		$this->aclient->createDatabase();
