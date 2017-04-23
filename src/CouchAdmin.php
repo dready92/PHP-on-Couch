@@ -63,8 +63,14 @@ class CouchAdmin
 			if (isset($options['node']))
 				$this->node = $options['node'];
 		}
-		if (empty($this->node))
-			$this->node = $client->getMemberShip()->cluster_nodes[0];
+
+		if (empty($this->node)) {
+			try {
+				$this->node = $client->getMemberShip()->cluster_nodes[0];
+			} catch (\PHPOnCouch\Exceptions\CouchUnauthorizedException $ex) {
+				//You need to be an admin to get the nodes
+			}
+		}
 	}
 
 	/**
@@ -88,6 +94,11 @@ class CouchAdmin
 		return $this->usersdb;
 	}
 
+	/**
+	 * Build the url from the the parsed url
+	 * @param array $parts URL parts
+	 * @return string	The builded url
+	 */
 	private function _buildUrl($parts)
 	{
 		$back = $parts["scheme"] . "://";
@@ -102,10 +113,11 @@ class CouchAdmin
 		if (!empty($parts["port"])) {
 			$back .= ":" . $parts["port"];
 		}
-		$back .= "/";
+
 		if (!empty($parts["path"])) {
 			$back .= $parts["path"];
-		}
+		} else
+			$back .= "/";
 		return $back;
 	}
 
@@ -176,14 +188,18 @@ class CouchAdmin
 			if ($e->getCode() !== 404)
 				throw $e;
 		}
-
-		$url = '/_node/' . urlencode($this->node) . '/_config/admins/' . urlencode($encodedLogin);
-		$raw = $this->client->query(
-				"DELETE", $url
-		);
-		$resp = Couch::parseRawResponse($raw);
-		if ($resp['status_code'] != 200) {
-			throw new CouchException($raw);
+		try {
+			$url = '/_node/' . urlencode($this->node) . '/_config/admins/' . urlencode($encodedLogin);
+			$raw = $this->client->query(
+					"DELETE", $url
+			);
+			$resp = Couch::parseRawResponse($raw);
+			if ($resp['status_code'] != 200) {
+				throw new CouchException($raw);
+			}
+		} catch (CouchException $e) {
+			if ($e->getCode() !== 404)
+				throw $e;
 		}
 		return $resp["body"];
 	}
@@ -292,21 +308,56 @@ class CouchAdmin
 	 * @param string|stdClass $user the user login (as a string) or the user document ( fetched by getUser() method )
 	 * @param string $role the role to add in the list of roles the user belongs to
 	 * @return boolean true if the user $user now belongs to the role $role
-	 * @throws InvalidArgumentException
+	 * @throws InvalidArgumentException if role is not a string or if the user is not valid.
 	 */
 	public function addRoleToUser($user, $role)
+	{
+		if (!is_string($role))
+			throw new InvalidArgumentException("The role parameter must be a non-string");
+		return $this->_addRolesToUser($user, [$role]);
+	}
+
+	/**
+	 * Add roles to a user document
+	 *
+	 * @param string|stdClass $user the user login (as a string) or the user document ( fetched by getUser() method )
+	 * @param array $roles the role to add in the list of roles the user belongs to
+	 * @return boolean true if the user $user now belongs to the role $role
+	 * @throws InvalidArgumentException if the user document is not valid.
+	 */
+	public function addRolesToUser($user, array $roles)
+	{
+		return $this->_addRolesToUser($user, $roles);
+	}
+
+	/**
+	 * Add roles to a user document
+	 *
+	 * @param string|stdClass $user the user login (as a string) or the user document ( fetched by getUser() method )
+	 * @param array $roles the role to add in the list of roles the user belongs to
+	 * @return boolean true if the user $user now belongs to the role $role
+	 * @throws InvalidArgumentException if user is not valid.
+	 */
+	private function _addRolesToUser($user, array $roles)
 	{
 		if (is_string($user)) {
 			$user = $this->getUser($user);
 		} elseif (!property_exists($user, "_id") || !property_exists($user, "roles")) {
 			throw new InvalidArgumentException("user parameter should be the login or a user document");
 		}
-		if (!in_array($role, $user->roles)) {
-			$user->roles[] = $role;
+		$rolesToAdd = [];
+
+		foreach ($roles as $role)
+			if (!empty($role) && !in_array($role, $user->roles))
+				$rolesToAdd[] = $role;
+
+		if (!empty($rolesToAdd)) {
+			$user->roles = array_merge($user->roles, $rolesToAdd);
 			$client = clone($this->client);
 			$client->useDatabase($this->usersdb);
 			$client->storeDoc($user);
 		}
+
 		return true;
 	}
 
