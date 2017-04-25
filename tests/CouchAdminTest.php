@@ -40,12 +40,18 @@ class CouchAdminTest extends PHPUnit_Framework_TestCase
 		$aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
 		$this->client = new CouchClient($url, 'couchclienttest');
 		$this->aclient = new CouchClient($aUrl, 'couchclienttest');
+		$this->setupClient($this->aclient);
+		
+		
+	}
+	
+	protected function setupClient($client){
 		try {
-			$this->aclient->deleteDatabase();
-		} catch (\Exception $e) {
+			$client->deleteDatabase();
+		} catch (Exceptions\CouchNotFoundException $e) {
 			
 		}
-		$this->aclient->createDatabase();
+		$client->createDatabase();
 	}
 
 	/**

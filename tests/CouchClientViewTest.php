@@ -28,7 +28,7 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 		$this->aclient = new CouchClient($aUrl, 'couchclienttest');
 		try {
 			$this->aclient->deleteDatabase();
-		} catch (\Exception $e) {
+		} catch (Exceptions\CouchNotFoundException $e) {
 			
 		}
 		$this->aclient->createDatabase();
