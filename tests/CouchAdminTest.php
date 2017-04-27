@@ -61,6 +61,11 @@ class CouchAdminTest extends PHPUnit_Framework_TestCase
 	protected function tearDown()
 	{
 		$this->client = null;
+		try {
+			$this->aclient->deleteDatabase();
+		} catch (Exceptions\CouchNotFoundException $e) {
+			
+		}
 		$this->aclient = null;
 	}
 

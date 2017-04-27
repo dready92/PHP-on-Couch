@@ -17,6 +17,7 @@ class CouchTest extends PHPUnit_Framework_TestCase
 
 	private $host = 'localhost';
 	private $port = '5984';
+	private $dbname = 'couchclienttest';
 
 	/**
 	 *
@@ -35,6 +36,13 @@ class CouchTest extends PHPUnit_Framework_TestCase
 		$this->couch_server = 'http://' . $this->host . ':' . $this->port . '/';
 
 		$this->couch = new Couch($this->aUrl);
+		$this->aclient = new CouchClient($this->aUrl, $this->dbname);
+		try {
+			$this->aclient->deleteDatabase();
+		} catch (\Exception $e) {
+			
+		}
+		$this->aclient->createDatabase();
 	}
 
 	/**
@@ -44,6 +52,15 @@ class CouchTest extends PHPUnit_Framework_TestCase
 	protected function tearDown()
 	{
 		$this->couch = null;
+	}
+
+	/**
+	 * @covers PHPOnCouch\Couch::__construct
+	 */
+	public function testCouchConstructor()
+	{
+		$couch = new Couch('http://something.com');
+		$this->assertEquals(80, $couch->dsnPart('port'));
 	}
 
 	/**
@@ -102,4 +119,68 @@ class CouchTest extends PHPUnit_Framework_TestCase
 		$this->couch->setSessionCookie($session);
 		$this->assertEquals($session, $this->couch->getSessionCookie());
 	}
+
+	/**
+	 * @covers PHPOnCouch\Couch::dsnPart
+	 */
+	public function testDsnPart()
+	{
+		$config = \config::getInstance();
+		$admin = $config->getFirstAdmin();
+		$expectedParts = [
+			'scheme' => 'http',
+			'host' => $this->host,
+			'port' => $this->port,
+			'user' => $admin['username'],
+			'pass' => $admin['password']
+		];
+		$parts = $this->couch->dsnPart();
+		$this->assertEquals($expectedParts, $parts);
+
+		//Test for certain part
+		$this->assertEquals($this->host, $this->couch->dsnPart('host'));
+	}
+
+	public function testStoreFile()
+	{
+		$doc = (object) ['_id' => 'couch_test_store_as_file'];
+
+		$file = join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']);
+		$filename = 'couch_GoogleHomepage.html';
+		$contentType = 'text/html';
+
+		$url = '/' . $this->dbname . '/' . urlencode($doc->_id) . '/' . urlencode($filename);
+
+		$rawResponse = $this->couch->storeFile($url, $file, $contentType);
+		$parsedResponse = \PhpOnCouch\Couch::parseRawResponse($rawResponse);
+		$this->assertArrayHasKey('status_code', $parsedResponse);
+		$this->assertArrayHasKey('status_message', $parsedResponse);
+		$this->assertEquals('201', $parsedResponse['status_code']);
+		$this->assertEquals('Created', $parsedResponse['status_message']);
+
+		$this->expectException("\Exception");
+		$this->couch->storeFile("NOEXISTING", "something", "");
+	}
+
+	public function testStoreAsFile()
+	{
+		$doc = (object) ['_id' => 'couch_test_store_as_file'];
+
+		$data = file_get_contents('http://www.google.com/');
+		$filename = 'couch_GoogleHomepage.html';
+		$contentType = 'text/html';
+
+		$url = '/' . $this->dbname . '/' . urlencode($doc->_id) . '/' . urlencode($filename);
+
+		$rawResponse = $this->couch->storeAsFile($url, $data, $contentType);
+		$parsedResponse = \PhpOnCouch\Couch::parseRawResponse($rawResponse);
+		$this->assertArrayHasKey('status_code', $parsedResponse);
+		$this->assertArrayHasKey('status_message', $parsedResponse);
+		$this->assertEquals('201', $parsedResponse['status_code']);
+		$this->assertEquals('Created', $parsedResponse['status_message']);
+
+		$this->expectException("\Exception");
+		$this->couch->storeAsFile("NOEXISTING", "something", "");
+	}
+
 }

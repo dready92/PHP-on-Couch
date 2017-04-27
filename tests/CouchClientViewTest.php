@@ -203,7 +203,7 @@ class CouchClientViewTest extends PHPUnit_Framework_TestCase
 		$this->assertObjectHasAttribute("total_rows", $test);
 		$this->assertEquals($test->total_rows, 5);
 		$this->assertObjectHasAttribute("offset", $test);
-		$this->assertEquals($test->offset, 0);
+		$this->assertEquals($test->offset, 2);
 		$this->assertObjectHasAttribute("rows", $test);
 		$this->assertInternalType("array", $test->rows);
 		$this->assertEquals(count($test->rows), 3);
