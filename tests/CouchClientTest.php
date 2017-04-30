@@ -3,6 +3,7 @@
 use PHPOnCouch\CouchClient;
 use PHPOnCouch\CouchDocument;
 use PHPOnCouch\Exceptions;
+use PHPOnCouch\CouchAdmin;
 
 require_once join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'config.php']);
 
@@ -14,6 +15,7 @@ class CouchClientTest extends PHPUnit_Framework_TestCase
 
 	private $host = 'localhost';
 	private $port = '5984';
+	private $dbname = 'couchclienttest';
 	private $updateFn = <<<EOT
 function(doc,req) {
 	var resp = {query:null,form:null};
@@ -55,8 +57,8 @@ EOT
 		$this->aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
 		$this->couch_server = 'http://' . $this->host . ':' . $this->port . '/';
 
-		$this->client = new CouchClient($this->url, 'couchclienttest');
-		$this->aclient = new CouchClient($this->aUrl, 'couchclienttest');
+		$this->client = new CouchClient($this->url, $this->dbname);
+		$this->aclient = new CouchClient($this->aUrl, $this->dbname);
 		$this->setupClient($this->aclient);
 	}
 
@@ -76,6 +78,11 @@ EOT
 	 */
 	protected function tearDown()
 	{
+		try {
+			$this->aclient->deleteDatabase();
+		} catch (\Exception $e) {
+			
+		}
 		$this->client = null;
 		$this->aclient = null;
 	}
@@ -122,14 +129,11 @@ EOT
 
 	/**
 	 * @covers PHPOnCouch\CouchClient::useDatabase
-	 * @todo   Implement testUseDatabase().
 	 */
 	public function testUseDatabase()
 	{
-// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-				'This test has not been implemented yet.'
-		);
+		$this->expectException(InvalidArgumentException::class);
+		$this->aclient->useDatabase('_THIS_IS_INVALID');
 	}
 
 	/**
@@ -152,26 +156,25 @@ EOT
 
 	/**
 	 * @covers PHPOnCouch\CouchClient::listDatabases
-	 * @todo   Implement testListDatabases().
 	 */
 	public function testListDatabases()
 	{
-// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-				'This test has not been implemented yet.'
-		);
+		$expectedDBS = ['_users', $this->dbname, '_replicator', '_global_changes'];
+		$dbs = $this->aclient->listDatabases();
+		foreach ($expectedDBS as $val) {
+			$this->assertContains($val, $dbs);
+		}
 	}
 
 	/**
 	 * @covers PHPOnCouch\CouchClient::createDatabase
-	 * @todo   Implement testCreateDatabase().
 	 */
 	public function testCreateDatabase()
 	{
-// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-				'This test has not been implemented yet.'
-		);
+		$this->aclient->useDatabase('testcreatedb');
+		$this->assertFalse($this->aclient->databaseExists());
+		$this->aclient->createDatabase();
+		$this->assertTrue($this->aclient->databaseExists());
 	}
 
 	/**
@@ -220,7 +223,6 @@ EOT
 
 	/**
 	 * @covers PHPOnCouch\CouchClient::getDatabaseName
-	 * @todo   Implement testGetDatabaseName().
 	 */
 	public function testGetDatabaseName()
 	{
@@ -233,6 +235,9 @@ EOT
 	public function testGetServerUri()
 	{
 		$this->assertEquals($this->couch_server . "couchclienttest", $this->client->getDatabaseUri());
+		$expected = trim($this->aUrl, '/');
+		$actual = $this->aclient->getServerUri();
+		$this->assertEquals($actual, $expected);
 	}
 
 	/**
@@ -245,18 +250,21 @@ EOT
 
 		$client = new CouchClient($this->couch_server, "foofoofooidontexist");
 		$this->assertFalse($client->databaseExists(), "testing against a non-existing database");
+
+
+		$adm = new CouchAdmin($this->aclient);
+		$adm->addDatabaseMemberUser('admin');
+		$this->expectException(\Exception::class);
+		$this->client->databaseExists();
 	}
 
 	/**
 	 * @covers PHPOnCouch\CouchClient::compactDatabase
-	 * @todo   Implement testCompactDatabase().
 	 */
 	public function testCompactDatabase()
 	{
-// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-				'This test has not been implemented yet.'
-		);
+		$resp = $this->aclient->compactDatabase();
+		$this->assertTrue($resp->ok);
 	}
 
 	/**
@@ -426,14 +434,11 @@ EOT
 
 	/**
 	 * @covers PHPOnCouch\CouchClient::cleanupDatabaseViews
-	 * @todo   Implement testCleanupDatabaseViews().
 	 */
 	public function testCleanupDatabaseViews()
 	{
-// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-				'This test has not been implemented yet.'
-		);
+		$resp = $this->aclient->cleanupDatabaseViews();
+		$this->assertTrue($resp->ok);
 	}
 
 	/**
@@ -477,18 +482,6 @@ EOT
 	 * @todo   Implement testOpen_revs().
 	 */
 	public function testOpen_revs()
-	{
-// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-				'This test has not been implemented yet.'
-		);
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchClient::getDoc
-	 * @todo   Implement testGetDoc().
-	 */
-	public function testGetDoc()
 	{
 // Remove the following lines when you implement this test.
 		$this->markTestIncomplete(
@@ -613,14 +606,21 @@ EOT
 
 	/**
 	 * @covers PHPOnCouch\CouchClient::deleteDocs
-	 * @todo   Implement testDeleteDocs().
 	 */
 	public function testDeleteDocs()
 	{
-// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-				'This test has not been implemented yet.'
-		);
+		$docs = [(object) ['_id' => 'doc_1'], (object) ['_id' => 'doc_2']];
+
+		//Add docs
+		$this->assertEquals(0, $this->aclient->getAllDocs()->total_rows);
+		$response = $this->aclient->storeDocs($docs);
+		$this->assertEquals(2, $this->aclient->getAllDocs()->total_rows);
+		for ($i = 0; $i < 2; $i++)
+			$docs[$i]->_rev = $response[$i]->rev;
+
+		//Delete them
+		$this->aclient->deleteDocs($docs);
+		$this->assertEquals(0, $this->aclient->getAllDocs()->total_rows);
 	}
 
 	/**
@@ -693,14 +693,36 @@ EOT
 
 	/**
 	 * @covers PHPOnCouch\CouchClient::copyDoc
-	 * @todo   Implement testCopyDoc().
 	 */
 	public function testCopyDoc()
 	{
-// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-				'This test has not been implemented yet.'
-		);
+		$doc = (object) ['_id' => 'doc_1', 'name' => 'copy_me'];
+		$this->aclient->storeDoc($doc);
+		$newId = 'doc_2';
+		$response = $this->aclient->copyDoc($doc->_id, $newId);
+		$this->assertTrue($response->ok);
+
+		$copiedDoc = $this->aclient->getDoc($newId);
+		$this->assertNotNull($copiedDoc);
+		$this->assertEquals($doc->name, $copiedDoc->name);
+	}
+
+	/**
+	 * @covers PHPOnCouch\CouchClient::copyDoc
+	 */
+	public function testCopyDocNoDocId()
+	{
+		$this->expectException(InvalidArgumentException::class);
+		$this->aclient->copyDoc('', 'valid_id');
+	}
+
+	/**
+	 * @covers PHPOnCouch\CouchClient::copyDoc
+	 */
+	public function testCopyDocNoNewId()
+	{
+		$this->expectException(InvalidArgumentException::class);
+		$this->aclient->copyDoc('valid_id', '');
 	}
 
 	/**
@@ -746,6 +768,25 @@ EOT
 	/**
 	 * @covers PHPOnCouch\CouchClient::storeAttachment
 	 */
+	public function testStoreAttachmentInvalidDoc()
+	{
+		$this->expectException(InvalidArgumentException::class);
+		$this->aclient->storeAsAttachment(null, 'asdasdasd', 'asdsad');
+	}
+
+	/**
+	 * @covers PHPOnCouch\CouchClient::storeAttachment
+	 */
+	public function testStoreAttachmentInvalidDocId()
+	{
+		$this->expectException(InvalidArgumentException::class);
+		$doc = (object) ['name' => 'no_id'];
+		$this->aclient->storeAsAttachment($doc, 'asdasdasd', 'asdsad');
+	}
+
+	/**
+	 * @covers PHPOnCouch\CouchClient::storeAttachment
+	 */
 	public function testStoreAttachment()
 	{
 		$cd = new CouchDocument($this->aclient);
@@ -785,14 +826,37 @@ EOT
 
 	/**
 	 * @covers PHPOnCouch\CouchClient::deleteAttachment
-	 * @todo   Implement testDeleteAttachment().
 	 */
 	public function testDeleteAttachment()
 	{
-// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-				'This test has not been implemented yet.'
-		);
+		$doc = (object) ['_id' => 'somedoc2'];
+		$resp = $this->aclient->storeDoc($doc);
+		$doc->_rev = $resp->rev;
+		$docName = 'file.txt';
+		$storeResponse = $this->aclient->storeAttachment($doc, join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']), "text/plain", $docName);
+		$doc->_rev = $storeResponse->rev;
+		$this->assertNotNull($this->aclient->getAttachment($doc, $docName));
+		//We delete it
+		$deleteResp = $this->aclient->deleteAttachment($doc, $docName);
+		$this->assertTrue($deleteResp->ok);
+		$doc->_rev = $deleteResp->rev;
+		$this->expectException(Exceptions\CouchNotFoundException::class);
+		$this->aclient->getAttachment($doc, $docName);
+	}
+
+	public function testGetAttachment()
+	{
+		$doc = (object) ['_id' => 'somedoc2'];
+		$resp = $this->aclient->storeDoc($doc);
+		$doc->_rev = $resp->rev;
+		$docName = 'file.txt';
+		$attFilename = join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']);
+		$resp1 = $this->aclient->storeAttachment($doc, $attFilename, "text/plain", $docName);
+		$doc->_rev = $resp1->rev;
+		$file = $this->aclient->getAttachment($doc, $docName);
+		$content = file_get_contents($attFilename);
+
+		$this->assertEquals($file, $content);
 	}
 
 	/**
@@ -834,14 +898,54 @@ EOT
 
 	/**
 	 * @covers PHPOnCouch\CouchClient::asCouchDocuments
-	 * @todo   Implement testAsCouchDocuments().
 	 */
 	public function testAsCouchDocuments()
 	{
-// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-				'This test has not been implemented yet.'
-		);
+		$reflectedClass = new \ReflectionClass(CouchClient::class);
+		$resultAsCD = $reflectedClass->getProperty('resultsAsCouchDocs');
+		$resultAsCD->setAccessible(true);
+
+		$resultAsArr = $reflectedClass->getProperty('resultAsArray');
+		$resultAsArr->setAccessible(true);
+
+		$this->assertEquals($this->aclient, $this->aclient->asCouchDocuments());
+
+		$this->assertFalse($resultAsArr->getValue($this->aclient));
+		$this->assertTrue($resultAsCD->getValue($this->aclient));
+	}
+
+	/**
+	 * @covers PHPOnCouch\CouchClient::resultsToCouchDocuments
+	 */
+	public function testResultsToCouchDocuments()
+	{
+		$names = ['alexis', 'johnny'];
+
+		$indexedDocs = [];
+		$len = count($names);
+		for ($i = 0; $i < $len; $i++)
+			$indexedDocs[$names[$i]] = (object) ['_id' => 'doc_' . ($i + 1), 'name' => $names[$i]];
+
+
+		$dd = (object) ['_id' => '_design/test', 'type' => 'javascript', 'views' => (object) []];
+		$view = (object) ['map' => "function(doc){if(doc.name)emit(doc.name);}"];
+		$dd->views->byname = $view;
+
+		$docs = [$dd];
+		$docs = array_merge($docs, array_values($indexedDocs));
+		$this->aclient->storeDocs($docs);
+
+
+		$result = $this->aclient->asCouchDocuments()->include_docs()->getView('test', 'byname');
+		$this->assertCount(2, $result);
+
+		foreach ($result as $key => $val) {
+			$this->assertArrayHasKey($key, $indexedDocs);
+			$tmp = $indexedDocs[$key];
+			$this->assertEquals($tmp->name, $val->name);
+			$this->assertEquals($tmp->_id, $val->_id);
+			$this->assertInstanceOf(CouchDocument::class, $val);
+		}
 	}
 
 	/**
@@ -897,8 +1001,9 @@ EOT
 			"list2" => "function (head, req) {
 				var back = [];
 				var row;
+				var stopVal = req.query.stop;
 				while ( row = getRow() ) {
-					row.value='test2';
+					row.value=stopVal;
 					back.push(row);
 				}
 				send(JSON.stringify(back));
@@ -912,7 +1017,7 @@ EOT
 			array('_id' => 'third', 'type' => 'test', 'param' => 'hello3')
 		);
 		$this->client->storeDocs($docs);
-		$test = $this->client->getList('test', 'list1', 'simple');
+		$test = $this->client->getList('test', 'list1', 'simple', ['stop' => 'test2']);
 		$this->assertInternalType("array", $test);
 		$this->assertEquals(count($test), 3);
 		foreach ($test as $row) {
@@ -974,8 +1079,9 @@ EOT
 			"list2" => "function (head, req) {
 				var back = [];
 				var row;
+				var stopVal = req.query.stop;
 				while ( row = getRow() ) {
-					row.value='test2';
+					row.value=stopVal;
 					back.push(row);
 				}
 				send(JSON.stringify(back));
@@ -983,7 +1089,7 @@ EOT
 		);
 		$doc->lists = $lists;
 
-		$test = $this->client->startkey(array('test2'))->endkey(array('test2', array()))->getForeignList('test2', 'list2', 'test', 'simple');
+		$test = $this->client->startkey(array('test2'))->endkey(array('test2', array()))->getForeignList('test2', 'list2', 'test', 'simple', ['stop' => 'test2']);
 		$this->assertInternalType("array", $test);
 		$this->assertEquals(1, count($test));
 		foreach ($test as $row) {
@@ -998,7 +1104,7 @@ EOT
 				->startkey(array('test2'))
 				->endkey(array('test2', array()))
 				->include_docs(true)
-				->getForeignList('test2', 'list2', 'test', 'simple');
+				->getForeignList('test2', 'list2', 'test', 'simple', ['stop' => 'test2']);
 		$this->assertInternalType("array", $test);
 		$this->assertEquals(count($test), 1);
 		foreach ($test as $row) {
@@ -1205,6 +1311,18 @@ EOT
 		}
 	}
 
+	public function testDeleteIndex()
+	{
+		$indexName = 'my_super_index';
+		$initialIndexCnt = count($this->aclient->getIndexes());
+		$dd = (object) ['_id' => 'delete', 'type' => 'javascript'];
+		$this->aclient->storeDoc($dd);
+
+		$this->aclient->createIndex(["firstName", "lastName"], $indexName, $dd->_id);
+		$this->aclient->deleteIndex($dd->_id, $indexName);
+		$this->assertCount($initialIndexCnt, $this->aclient->getIndexes());
+	}
+
 	/**
 	 * @covers PHPOnCouch\CouchClient::find
 	 */
@@ -1272,7 +1390,7 @@ EOT
 	 */
 	public function testExplain()
 	{
-		$this->aclient->createIndex(['firstName', 'lastName', 'age', 'gender'], 'person');
+		$fullIdx = $this->aclient->createIndex(['firstName', 'age', 'lastName', 'gender'], 'person');
 		$indexObj = $this->aclient->createIndex(['firstName'], 'firstName');
 		$docs = [
 			[
@@ -1296,7 +1414,7 @@ EOT
 		];
 		$this->aclient->storeDocs($docs);
 
-		$response = $this->aclient->explain(['firstName' => ['$eq' => 'John']], $indexObj->id);
+		$response = $this->aclient->limit(1)->sort([['firstName' => 'desc'], ['age' => 'desc']])->explain(['firstName' => ['$gt' => null]], $fullIdx->id);
 		$this->assertObjectHasAttribute('dbname', $response);
 		$this->assertObjectHasAttribute('index', $response);
 		$this->assertObjectHasAttribute('selector', $response);
@@ -1306,7 +1424,7 @@ EOT
 		$this->assertObjectHasAttribute('fields', $response);
 		$this->assertObjectHasAttribute('range', $response);
 		$this->assertObjectHasAttribute('name', $response->index);
-		$this->assertEquals('firstName', $response->index->name);
+		$this->assertEquals('person', $response->index->name);
 		$this->assertEquals($this->aclient->getDatabaseName(), $response->dbname);
 	}
 

@@ -619,15 +619,12 @@ class CouchClient extends Couch
 	 * @param array $docs array of documents to store
 	 * @param boolean $newEdits	Default to true. If false, prevents the database from assigning them new revision IDs.
 	 * @return object CouchDB bulk document storage response
-	 * @throws InvalidArgumentException
 	 */
-	public function storeDocs($docs, $newEdits = true)
+	public function storeDocs(array $docs, $newEdits = true)
 	{
-		if (!is_array($docs))
-			throw new InvalidArgumentException('docs parameter should be an array');
 		/*
 		  create the query content
-		 */
+		 */	
 		$request = ['docs' => []];
 		foreach ($docs as $doc) {
 			if ($doc instanceof CouchDocument) {
@@ -651,12 +648,9 @@ class CouchClient extends Couch
 	 * @param array $docs array of documents to delete.
 	 * @param boolean $newEdits	Default to true. If false, prevents the database from assigning them new revision IDs.
 	 * @return object CouchDB bulk document storage response
-	 * @throws InvalidArgumentException
 	 */
-	public function deleteDocs($docs, $newEdits = true)
+	public function deleteDocs(array $docs, $newEdits = true)
 	{
-		if (!is_array($docs))
-			throw new InvalidArgumentException('docs parameter should be an array');
 		/*
 		  create the query content
 		 */
@@ -794,7 +788,7 @@ class CouchClient extends Couch
 	{
 		if (!is_object($doc))
 			throw new InvalidArgumentException('Document should be an object');
-		if (!$doc->_id)
+		if (!isset($doc->_id))
 			throw new InvalidArgumentException('Document should have an ID');
 		$url = '/' . urlencode($this->dbname) . '/' . urlencode($doc->_id) . '/' . urlencode($filename);
 		if ($doc->_rev)
@@ -803,6 +797,24 @@ class CouchClient extends Couch
 		$response = $this->parseRawResponse($raw, $this->resultAsArray);
 		$this->resultAsArray = false;
 		return $response['body'];
+	}
+	
+	/**
+	 * Get an attachment file from a document.
+	 * @param object $doc	The document do get the attachment from. The document must has an _id and/or _rev.
+	 * @param string $attName	The attachment name
+	 * @return string	Returns the raw content from the attachment.
+	 * @throws InvalidArgumentException if arguments are not valid.
+	 */
+	public function getAttachment($doc,$attName){
+		if (!is_object($doc))
+			throw new InvalidArgumentException('Document should be an object');
+		if (!isset($doc->_id))
+			throw new InvalidArgumentException('Document should have an ID');
+		$url = '/' . urlencode($this->dbname) . '/' . urlencode($doc->_id) . '/'. $attName;
+		if ($doc->_rev)
+			$url .= '?rev=' .urlencode($doc->_rev);
+		return $this->queryAndTest('GET', $url, [200]);
 	}
 
 	/**
@@ -821,7 +833,7 @@ class CouchClient extends Couch
 	{
 		if (!is_object($doc))
 			throw new InvalidArgumentException('Document should be an object');
-		if (!$doc->_id)
+		if (!isset($doc->_id))
 			throw new InvalidArgumentException('Document should have an ID');
 		if (!is_file($file))
 			throw new InvalidArgumentException("File $file does not exist");
@@ -846,7 +858,7 @@ class CouchClient extends Couch
 	{
 		if (!is_object($doc))
 			throw new InvalidArgumentException('Document should be an object');
-		if (!$doc->_id)
+		if (!isset($doc->_id))
 			throw new InvalidArgumentException('Document should have an ID');
 		if (!strlen($attachmentName))
 			throw new InvalidArgumentException('Attachment name not set');
@@ -1256,7 +1268,7 @@ class CouchClient extends Couch
 			throw new BadMethodCallException('The type parameter has not been implemented yet.');
 		$method = 'DELETE';
 		$urlEnd = urlencode($ddoc) . '/json/' . urlencode($name);
-		$url = '/' . urlencode($this->dbname) . './_index/' . $urlEnd;
+		$url = '/' . urlencode($this->dbname) . '/_index/' . $urlEnd;
 		return $this->queryAndTest($method, $url, [200]);
 	}
 

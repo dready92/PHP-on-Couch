@@ -1,6 +1,7 @@
 <?php
 
 use PHPOnCouch\CouchClient;
+use PHPOnCouch\CouchAdmin;
 use PHPOnCouch\CouchDocument;
 use PHPOnCouch\Exceptions;
 
@@ -14,6 +15,7 @@ class CouchDocumentTest extends \PHPUnit_Framework_TestCase
 
 	private $host = 'localhost';
 	private $port = '5984';
+	private $dbname = 'couchclienttest';
 
 	/**
 	 *
@@ -38,8 +40,8 @@ class CouchDocumentTest extends \PHPUnit_Framework_TestCase
 		$this->aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
 		$this->couch_server = 'http://' . $this->host . ':' . $this->port . '/';
 
-		$this->client = new CouchClient($this->url, 'couchclienttest');
-		$this->aclient = new CouchClient($this->aUrl, 'couchclienttest');
+		$this->client = new CouchClient($this->url, $this->dbname);
+		$this->aclient = new CouchClient($this->aUrl, $this->dbname);
 		try {
 			$this->aclient->deleteDatabase();
 		} catch (Exceptions\CouchNotFoundException $e) {
@@ -67,6 +69,11 @@ class CouchDocumentTest extends \PHPUnit_Framework_TestCase
 	 */
 	protected function tearDown()
 	{
+		try {
+			$this->aclient->deleteDatabase();
+		} catch (Exceptions\CouchNotFoundException $e) {
+			
+		}
 		$this->client = null;
 		$this->aclient = null;
 	}
@@ -95,6 +102,8 @@ class CouchDocumentTest extends \PHPUnit_Framework_TestCase
 		$this->expectException(InvalidArgumentException::class);
 		$cd->load('');
 	}
+
+
 
 	/**
 	 * @covers PHPOnCouch\CouchDocument::setAutocommit

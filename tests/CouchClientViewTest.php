@@ -34,7 +34,11 @@ class CouchClientViewTest extends PHPUnit_Framework_TestCase
 
 	public function tearDown()
 	{
-		$this->aclient = null;
+		try {
+			$this->aclient->deleteDatabase();
+		} catch (\Exception $e) {
+			
+		}
 		$this->aclient = null;
 	}
 
