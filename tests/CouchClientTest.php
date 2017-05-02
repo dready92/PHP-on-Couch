@@ -117,14 +117,18 @@ EOT
 
 	/**
 	 * @covers PHPOnCouch\CouchClient::setQueryParameters
-	 * @todo   Implement testSetQueryParameters().
 	 */
 	public function testSetQueryParameters()
 	{
-// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-				'This test has not been implemented yet.'
-		);
+		$refl = new \ReflectionClass(CouchClient::class);
+		$param = $refl->getProperty('queryParameters');
+		$param->setAccessible(true);
+		
+		$params = ['limit'=>1,'skip'=>2];
+		
+		$this->assertEmpty($param->getValue($this->aclient));
+		$this->assertEquals($this->aclient,$this->aclient->setQueryParameters($params));
+		$this->assertEquals($param->getValue($this->aclient),$params);
 	}
 
 	/**
@@ -1414,7 +1418,7 @@ EOT
 		];
 		$this->aclient->storeDocs($docs);
 
-		$response = $this->aclient->limit(1)->sort([['firstName' => 'desc'], ['age' => 'desc']])->explain(['firstName' => ['$gt' => null]], $fullIdx->id);
+		$response = $this->aclient->limit(1)->skip(1)->fields(['firstName'])->sort([['firstName' => 'desc'], ['age' => 'desc']])->explain(['firstName' => ['$gt' => null]], $fullIdx->id);
 		$this->assertObjectHasAttribute('dbname', $response);
 		$this->assertObjectHasAttribute('index', $response);
 		$this->assertObjectHasAttribute('selector', $response);

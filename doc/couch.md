@@ -106,7 +106,7 @@ Make a request with the $data passed into the request body.
 
 **Returns**  the server response or false if an error occured.
 
-##Adapters
+## Adapters
 
 
 

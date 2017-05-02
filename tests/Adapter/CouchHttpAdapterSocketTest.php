@@ -64,7 +64,6 @@ class CouchHttpAdapterSocketTest extends PHPUnit_Framework_TestCase
 	 */
 	protected function tearDown()
 	{
-//        $this->client = null;
 		$this->aclient = null;
 		$this->adapter = null;
 	}
@@ -174,10 +173,30 @@ class CouchHttpAdapterSocketTest extends PHPUnit_Framework_TestCase
 		$this->expectException("\Exception");
 		$this->adapter->storeAsFile("NOEXISTING", "something", "");
 	}
-
+	
+	public function testContinuousQueryInvalid(){
+		$this->expectException(\Exception::class);
+		$this->adapter->continuousQuery(function(){}, 'UNSUPPORTEDMETHOD', '');
+	}
+	
+	public function testContinuousQueryInvalidCallable(){
+		$this->expectException(\InvalidArgumentException::class);
+		$this->adapter->continuousQuery(new \stdClass(), 'GET', '');
+	}
+	
 	public function testContinuousQuery()
 	{
-		$this->markTestIncomplete();
+		$config = \config::getInstance();
+		$callable = function($row, $client) {
+			if (!isset($client->_cnt))
+				$client->_cnt = 0;
+			if ($client->_cnt == 3)
+				return false;
+			$client->_cnt++;
+		};
+		$path = join(DIRECTORY_SEPARATOR,[dirname(__DIR__),'_config','simulateChanges.php']);
+		$config->execInBackground("php -f $path");
+		$this->adapter->continuousQuery($callable, 'GET', '/_db_updates?feed=continuous');
 	}
 
 }
