@@ -16,6 +16,7 @@ class CouchClientTest extends PHPUnit_Framework_TestCase
 	private $host = 'localhost';
 	private $port = '5984';
 	private $dbname = 'couchclienttest';
+	private $continuousQueryTriggerFile = __DIR__ . DIRECTORY_SEPARATOR . 'continuousquery.lock';
 	private $updateFn = <<<EOT
 function(doc,req) {
 	var resp = {query:null,form:null};
@@ -123,12 +124,12 @@ EOT
 		$refl = new \ReflectionClass(CouchClient::class);
 		$param = $refl->getProperty('queryParameters');
 		$param->setAccessible(true);
-		
-		$params = ['limit'=>1,'skip'=>2];
-		
+
+		$params = ['limit' => 1, 'skip' => 2];
+
 		$this->assertEmpty($param->getValue($this->aclient));
-		$this->assertEquals($this->aclient,$this->aclient->setQueryParameters($params));
-		$this->assertEquals($param->getValue($this->aclient),$params);
+		$this->assertEquals($this->aclient, $this->aclient->setQueryParameters($params));
+		$this->assertEquals($param->getValue($this->aclient), $params);
 	}
 
 	/**
@@ -447,50 +448,119 @@ EOT
 
 	/**
 	 * @covers PHPOnCouch\CouchClient::feed
-	 * @todo   Implement testFeed().
 	 */
 	public function testFeed()
 	{
-// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-				'This test has not been implemented yet.'
-		);
+		$reflectionClass = new \ReflectionClass(CouchClient::class);
+		$params = $reflectionClass->getProperty('queryParameters');
+		$params->setAccessible(true);
+		$longpoll = 'longpoll';
+
+		//Longpoll
+		$this->assertEquals($this->aclient->feed($longpoll), $this->aclient);
+		$this->assertEquals($params->getValue($this->aclient)['feed'], $longpoll);
+
+		//Continuous
+		$cb = function($doc, $client) {
+			return $doc == $client;
+		};
+		$continuous = 'continuous';
+		$this->assertEquals($this->aclient, $this->aclient->feed($continuous, $cb));
+		$continuousParams = $params->getValue($this->aclient);
+		$this->assertEquals($continuousParams['feed'], $continuous);
+		$this->assertEquals($continuousParams['continuous_feed'], $cb);
+
+
+		//Other param
+		$this->assertEquals($this->aclient->feed('eventsource'), $this->aclient);
+		$emptyParams = $params->getValue($this->aclient);
+
+		$this->assertFalse(isset($emptyParams['feed']));
+		$this->assertFalse(isset($emptyParams['continuous_feed']));
 	}
 
 	/**
 	 * @covers PHPOnCouch\CouchClient::filter
-	 * @todo   Implement testFilter().
 	 */
 	public function testFilter()
 	{
-// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-				'This test has not been implemented yet.'
-		);
+		$reflectedClass = new \ReflectionClass(CouchClient::class);
+		$params = $reflectedClass->getProperty('queryParameters');
+		$params->setAccessible(true);
+		//String validation
+		$this->assertEquals($this->aclient, $this->aclient->filter(false));
+		$this->assertFalse(isset($params->getValue($this->aclient)['filter']));
+
+		//AditionnalQueryOptions
+		$value = 'smth';
+		$limit = 1;
+		$skip = 2;
+		$additionnalOpts = ['limit' => $limit, 'skip' => $skip];
+		$this->assertEquals($this->aclient, $this->aclient->filter($value, $additionnalOpts));
+
+		$updatedParams = $params->getValue($this->aclient);
+		$this->assertEquals($updatedParams['filter'], $value);
+		$this->assertEquals($updatedParams['limit'], $limit);
+		$this->assertEquals($updatedParams['skip'], $skip);
 	}
 
 	/**
 	 * @covers PHPOnCouch\CouchClient::getChanges
-	 * @todo   Implement testGetChanges().
 	 */
 	public function testGetChanges()
 	{
-// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-				'This test has not been implemented yet.'
-		);
+		$config = \config::getInstance();
+		if (file_exists($this->continuousQueryTriggerFile))
+			unlink($this->continuousQueryTriggerFile);
+		$db = 'getchanges';
+		$cookieClient = new CouchClient($this->aclient->dsn(), $db, ['cookie_auth' => true]);
+		try {
+			$cookieClient->deleteDatabase();
+		} catch (Exceptions\CouchNotFoundException $ex) {
+			
+		}
+		$cookieClient->createDatabase();
+
+		$cntr = new stdClass();
+		$cntr->cnt = 0;
+		$callable = function($row, $client) use ($cntr) {
+			if ($cntr->cnt == 3)
+				return false;
+			$cntr->cnt++;
+		};
+
+		$trigger = escapeshellarg($this->continuousQueryTriggerFile);
+		$path = escapeshellarg(join(DIRECTORY_SEPARATOR, [__DIR__, '_config', "simulateChanges.php"]));
+		touch($this->continuousQueryTriggerFile);
+		$config->execInBackground("php $path $db $trigger");
+		$cookieClient->feed('continuous',$callable);
+		$response = $cookieClient->getChanges();
+		$this->assertEquals($cntr->cnt, 3);
 	}
 
 	/**
 	 * @covers PHPOnCouch\CouchClient::open_revs
-	 * @todo   Implement testOpen_revs().
 	 */
-	public function testOpen_revs()
+	public function testOpenRevs()
 	{
-// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-				'This test has not been implemented yet.'
-		);
+		$reflectedClass = new \ReflectionClass(CouchClient::class);
+		$prop = $reflectedClass->getProperty('queryParameters');
+		$prop->setAccessible(true);
+
+		$this->assertEquals($this->aclient, $this->aclient->open_revs('not_all'));
+		$this->assertFalse(isset($prop->getValue($this->aclient)['open_revs']));
+
+		//Set all
+		$this->assertEquals($this->aclient, $this->aclient->open_revs('all'));
+		$this->assertEquals($prop->getValue($this->aclient)['open_revs'], 'all');
+
+		//Many revs
+		$revs = ['rev1', 'rev2', 'rev3'];
+		$this->assertEquals($this->aclient, $this->aclient->open_revs($revs));
+		$updatedRevs = $prop->getValue($this->aclient)['open_revs'];
+		$this->assertTrue(is_string($updatedRevs));
+		$revsParsed = json_decode($updatedRevs);
+		$this->assertEquals($revs, $revsParsed);
 	}
 
 	/**
@@ -1385,6 +1455,76 @@ EOT
 		$this->assertCount(1, $response4);
 
 		$response5 = $this->aclient->limit(1)->sort([['firstName' => 'desc'], ['age' => 'desc']])->find(['firstName' => ['$gt' => null]]);
+		$this->assertObjectHasAttribute('age', $response5[0]);
+		$this->assertEquals(35, $response5[0]->age);
+	}
+
+	/**
+	 * @covers PHPOnCouch\CouchClient::_find
+	 */
+	public function testProtectedFind()
+	{
+		$reflectedClass = new \ReflectionClass(CouchClient::class);
+		$method = $reflectedClass->getMethod('_find');
+		$method->setAccessible(true);
+
+		$response = $this->aclient->createIndex(['firstName', 'age', 'lastName', 'gender'], 'person');
+		$this->assertObjectHasAttribute('id', $response);
+		$docs = [
+			[
+				'firstName' => 'John',
+				'lastName' => 'Smith',
+				'age' => 35,
+				'gender' => 'Male'
+			],
+			[
+				'firstName' => 'Jimmy',
+				'lastName' => 'Neutron',
+				'age' => 13,
+				'gender' => 'Male'
+			],
+			[
+				'firstName' => 'Jenny',
+				'lastName' => 'Rugby',
+				'age' => 23,
+				'gender' => 'Female'
+			]
+		];
+		$this->aclient->storedocs($docs);
+
+		$this->aclient->fields(['age']);
+		$response1 = $method->invoke($this->aclient, '_find', ['firstName' => ['$eq' => 'John']])->docs;
+		$this->assertCount(1, $response1);
+		$this->assertEquals($response1[0]->age, 35);
+		$this->assertFalse(isset($response1[0]->firstName));
+
+		$selector2 = [
+			'$and' =>
+			[
+				['age' => ['$gt' => 16]],
+				['gender' => ['$eq' => 'Female']]
+			]
+		];
+		$response2 = $method->invoke($this->aclient, '_find', $selector2)->docs;
+		$this->assertcount(1, $response2);
+		$this->assertObjectHasAttribute('firstName', $response2[0]);
+		$this->assertObjectHasAttribute('lastName', $response2[0]);
+		$this->assertObjectHasAttribute('gender', $response2[0]);
+		$this->assertEquals('Jenny', $response2[0]->firstName);
+
+//Test limit and skip options
+		$selector3 = [
+			'age' => ['$gt' => 16]
+		];
+		$this->aclient->limit(1);
+		$response3 = $method->invoke($this->aclient, '_find', $selector3)->docs;
+		$this->assertCount(1, $response3);
+		$this->aclient->skip(1);
+		$response4 = $method->invoke($this->aclient, '_find', $selector3)->docs;
+		$this->assertCount(1, $response4);
+
+		$this->aclient->limit(1)->sort([['firstName' => 'desc'], ['age' => 'desc']]);
+		$response5 = $method->invoke($this->aclient, '_find', ['firstName' => ['$gt' => null]])->docs;
 		$this->assertObjectHasAttribute('age', $response5[0]);
 		$this->assertEquals(35, $response5[0]->age);
 	}

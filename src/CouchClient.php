@@ -125,13 +125,12 @@ class CouchClient extends Couch
 			$dsn = $parts['scheme'] . '://' . $parts['host'];
 			$dsn .= array_key_exists('port', $parts) ? ':' . $parts['port'] : '';
 			$dsn .= array_key_exists('path', $parts) ? $parts['path'] : '';
-		}
-		$this->useDatabase($dbname);
-		parent::__construct($dsn, $options);
-		if (array_key_exists('cookie_auth', $options) && $options['cookie_auth']) {
+
+			$this->useDatabase($dbname);
+			parent::__construct($dsn, $options);
 			$queryParams = http_build_query(['name' => $user, 'password' => $pass]);
 			$rawData = $this->query('POST', '/_session', null, $queryParams, 'application/x-www-form-urlencoded');
-			list($headers, $body) = explode("\r\n\r\n", $rawData, 2);
+			list($headers) = explode("\r\n\r\n", $rawData, 2);
 			$headersArray = explode("\r\n", $headers);
 			foreach ($headersArray as $line) {
 				if (strpos($line, 'Set-Cookie: ') === 0) {
@@ -144,7 +143,9 @@ class CouchClient extends Couch
 			if (empty($this->getSessionCookie())) {
 				throw new Exception('Cookie authentification failed');
 			}
-		}
+		} else
+			$this->useDatabase($dbname);
+		parent::__construct($dsn, $options);
 	}
 
 	/**
@@ -181,7 +182,7 @@ class CouchClient extends Couch
 	 * @return $this
 	 * @throws Exception
 	 */
-	function __call($name, $args)
+	public function __call($name, $args)
 	{
 		if (!array_key_exists($name, $this->queryDefs)) {
 			throw new Exception('Method $name does not exist');
@@ -273,7 +274,6 @@ class CouchClient extends Couch
 		return $this;
 	}
 
-	
 	public function getSessionCookie()
 	{
 		return parent::getSessionCookie();
@@ -494,8 +494,11 @@ class CouchClient extends Couch
 		} elseif ($value == 'continuous') {
 			$this->queryParameters['feed'] = $value;
 			$this->queryParameters['continuous_feed'] = $continuousCallback;
-		} elseif (!empty($this->queryParameters['feed'])) {
-			unset($this->queryParameters['feed']);
+		} else {
+			if (!empty($this->queryParameters['feed']))
+				unset($this->queryParameters['feed']);
+			if (!empty($this->queryParameters['continuous_feed']))
+				unset($this->queryParameters['continuous_feed']);
 		}
 		return $this;
 	}
@@ -509,7 +512,7 @@ class CouchClient extends Couch
 	 * @param  array $additionalQueryOpts additional query options
 	 * @return CouchClient $this
 	 */
-	public function filter($value, $additionalQueryOpts = [])
+	public function filter($value,array $additionalQueryOpts = [])
 	{
 		if (strlen(trim($value))) {
 			$this->queryParameters['filter'] = trim($value);
@@ -561,7 +564,7 @@ class CouchClient extends Couch
 	 * fetch a CouchDB document
 	 *
 	 * @param string $id document id
-	 * @return object CouchDB document
+	 * @return object|array CouchDB document
 	 * @throws InvalidArgumentException
 	 */
 	public function getDoc($id)
@@ -624,7 +627,7 @@ class CouchClient extends Couch
 	{
 		/*
 		  create the query content
-		 */	
+		 */
 		$request = ['docs' => []];
 		foreach ($docs as $doc) {
 			if ($doc instanceof CouchDocument) {
@@ -798,7 +801,7 @@ class CouchClient extends Couch
 		$this->resultAsArray = false;
 		return $response['body'];
 	}
-	
+
 	/**
 	 * Get an attachment file from a document.
 	 * @param object $doc	The document do get the attachment from. The document must has an _id and/or _rev.
@@ -806,14 +809,15 @@ class CouchClient extends Couch
 	 * @return string	Returns the raw content from the attachment.
 	 * @throws InvalidArgumentException if arguments are not valid.
 	 */
-	public function getAttachment($doc,$attName){
+	public function getAttachment($doc, $attName)
+	{
 		if (!is_object($doc))
 			throw new InvalidArgumentException('Document should be an object');
 		if (!isset($doc->_id))
 			throw new InvalidArgumentException('Document should have an ID');
-		$url = '/' . urlencode($this->dbname) . '/' . urlencode($doc->_id) . '/'. $attName;
+		$url = '/' . urlencode($this->dbname) . '/' . urlencode($doc->_id) . '/' . $attName;
 		if ($doc->_rev)
-			$url .= '?rev=' .urlencode($doc->_rev);
+			$url .= '?rev=' . urlencode($doc->_rev);
 		return $this->queryAndTest('GET', $url, [200]);
 	}
 
@@ -1277,82 +1281,41 @@ class CouchClient extends Couch
 	 * @see http://docs.couchdb.org/en/2.0.0/api/database/find.html#db-find
 	 * @throws CouchException if an error occurs during the transaction.
 	 * @param array|object $selector    An associative array or an object that follow Mango Query selector syntax.
-	 * @param array $fields Optional. An array of fields to return from the documents. By default, it returns 
 	 * everything.
-	 * @param array $sort    An array of fields to sort. You can either specify each name of the fields and CouchDB 
-	 * will assume a sort direction.
-	 * Otherwise, you can use an array of objects. In this case, each object will need a key with the name of the 
-	 * field and the direction as a value.
-	 * the direction can be either desc or asc.
 	 * @param array|string $index  Optional. Let your determine a specific index to use for your query.
 	 * @returns array Returns an array of documents.
 	 */
 	public function find($selector, $index = null)
 	{
-		$method = 'POST';
-		$url = '/' . urlencode($this->dbname) . '/_find';
-		$request = [
-			'selector' => $selector
-		];
-
-		//Parameter validation
-		if (isset($this->queryParameters['fields'])) {
-			$request['fields'] = $this->queryParameters['fields'];
-			unset($this->queryParameters['fields']);
-		}
-		if (isset($this->queryParameters['sort'])) {
-			//Handle both single array or arrays of sort
-			$sort = $this->queryParameters['sort'];
-			$firstElem = reset($sort);
-//            if (!is_array($firstElem))
-//                $sort = [$sort];
-			$request['sort'] = $sort;
-			unset($this->queryParameters['sort']);
-		}
-		if (isset($this->queryParameters['limit'])) {
-			$request['limit'] = $this->queryParameters['limit'];
-			unset($this->queryParameters['limit']);
-		}
-		if (isset($this->queryParameters['skip'])) {
-			$request['skip'] = $this->queryParameters['skip'];
-			unset($this->queryParameters['skip']);
-		}
-		if (isset($index) && (is_array($index) || is_string($index)))
-			$request['use_index'] = $index;
-		$response = $this->queryAndTest($method, $url, [200], [], $request);
-		return $response->docs;
+		return $this->_find('_find', $selector, $index)->docs;
 	}
 
 	/**
-	 * Execute a Mango Query on CouchDB and give details about the request.
-	 * @see http://docs.couchdb.org/en/2.0.0/api/database/find.html#db-explain
+	 * Protected function to call the _find and _explain endpoint
 	 * @throws CouchException if an error occurs during the transaction.
 	 * @param array|object $selector    An associative array or an object that follow Mango Query selector syntax.
-	 * @param array $fields Optional. An array of fields to return from the documents. By default, it returns 
 	 * everything.
-	 * @param array $sort    An array of fields to sort. You can either specify each name of the fields and CouchDB 
-	 * will assume a sort direction.
-	 * Otherwise, you can use an array of objects. In this case, each object will need a key with the name of the field
-	 *  and the direction as a value.
-	 * the direction can be either desc or asc.
+	 * @param string $endpoint	The endpoint to use. Either _explain or _find.
 	 * @param array|string $index  Optional. Let your determine a specific index to use for your query.
-	 * @returns object Returns an object that contains all the information about the query.
+	 * @returns array Returns an array of documents.
 	 */
-	public function explain($selector, $index = null)
+	private function _find($endpoint, $selector, $index = null)
 	{
 		$method = 'POST';
-		$url = '/' . urlencode($this->dbname) . '/_explain';
+		$url = '/' . urlencode($this->dbname) . '/' . $endpoint;
 		$request = [
 			'selector' => $selector
 		];
 
 		//Parameter validation
-		if (isset($this->queryParameters['fields'])) {
-			$request['fields'] = $this->queryParameters['fields'];
-			unset($this->queryParameters['fields']);
-		}
+		$fieldsToParse = ['fields', 'limit', 'skip'];
+		foreach ($fieldsToParse as $field)
+			if (isset($this->queryParameters[$field])) {
+				$request[$field] = $this->queryParameters[$field];
+				unset($this->queryParameters[$field]);
+			}
+
 		if (isset($this->queryParameters['sort'])) {
-			//Handle both single array or arrays of sort
 			$sort = $this->queryParameters['sort'];
 			$firstElem = reset($sort);
 			if (!is_array($firstElem))
@@ -1360,17 +1323,24 @@ class CouchClient extends Couch
 			$request['sort'] = $sort;
 			unset($this->queryParameters['sort']);
 		}
-		if (isset($this->queryParameters['limit'])) {
-			$request['limit'] = $this->queryParameters['limit'];
-			unset($this->queryParameters['limit']);
-		}
-		if (isset($this->queryParameters['skip'])) {
-			$request['skip'] = $this->queryParameters['skip'];
-			unset($this->queryParameters['skip']);
-		}
+
 		if (isset($index) && (is_array($index) || is_string($index)))
 			$request['use_index'] = $index;
 		return $this->queryAndTest($method, $url, [200], [], $request);
+	}
+
+	/**
+	 * Execute a Mango Query on CouchDB and give details about the request.
+	 * @see http://docs.couchdb.org/en/2.0.0/api/database/find.html#db-explain
+	 * @throws CouchException if an error occurs during the transaction.
+	 * @param array|object $selector    An associative array or an object that follow Mango Query selector syntax.
+	 * everything.
+	 * @param array|string $index  Optional. Let your determine a specific index to use for your query.
+	 * @returns object Returns an object that contains all the information about the query.
+	 */
+	public function explain($selector, $index = null)
+	{
+		return $this->_find('_explain', $selector, $index);
 	}
 
 }
