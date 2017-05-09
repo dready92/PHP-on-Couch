@@ -524,16 +524,16 @@ EOT
 		$cntr = new stdClass();
 		$cntr->cnt = 0;
 		$callable = function($row, $client) use ($cntr) {
+			$cntr->cnt++;
 			if ($cntr->cnt == 3)
 				return false;
-			$cntr->cnt++;
 		};
 
 		$trigger = escapeshellarg($this->continuousQueryTriggerFile);
 		$path = escapeshellarg(join(DIRECTORY_SEPARATOR, [__DIR__, '_config', "simulateChanges.php"]));
+		$config->execInBackground("php $path $db $trigger >log.txt");
+		$cookieClient->feed('continuous', $callable);
 		touch($this->continuousQueryTriggerFile);
-		$config->execInBackground("php $path $db $trigger");
-		$cookieClient->feed('continuous',$callable);
 		$response = $cookieClient->getChanges();
 		$this->assertEquals($cntr->cnt, 3);
 	}

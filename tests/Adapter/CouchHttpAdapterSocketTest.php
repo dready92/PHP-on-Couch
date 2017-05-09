@@ -209,15 +209,15 @@ class CouchHttpAdapterSocketTest extends PHPUnit_Framework_TestCase
 		$cntr = new stdClass();
 		$cntr->cnt = 0;
 		$callable = function($row, $client) use ($cntr) {
+			$cntr->cnt++;
 			if ($cntr->cnt == 3)
 				return false;
-			$cntr->cnt++;
 		};
 
 		$trigger = escapeshellarg($this->continuousQueryTriggerFile);
 		$path = escapeshellarg(join(DIRECTORY_SEPARATOR, [dirname(__DIR__), '_config', "simulateChanges.php"]));
+		$config->execInBackground("php $path $db $trigger >log.txt");
 		touch($this->continuousQueryTriggerFile);
-		$config->execInBackground("php $path $db $trigger");
 		$this->adapter->continuousQuery($callable, 'GET', "/$db/_changes?feed=continuous");
 		$this->assertEquals($cntr->cnt, 3);
 	}
