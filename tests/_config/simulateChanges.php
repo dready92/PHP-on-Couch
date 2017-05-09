@@ -23,8 +23,8 @@ $timeout = 30;
 var_dump($argv);
 //To avoiding infinite loop
 echo $file;
-if (!set_time_limit($timeout))
-	die("Unable to setup file execution limit. Closing...");
+//if (!set_time_limit($timeout))
+//	die("Unable to setup file execution limit. Closing...");
 
 while (!file_exists($file) && !file_exists(__DIR__ . DIRECTORY_SEPARATOR . $file))
 	sleep(0.02);
