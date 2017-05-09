@@ -69,6 +69,15 @@ class config
 		return $this->users;
 	}
 
+	public function execInBackground($cmd)
+	{
+		if (substr(php_uname(), 0, 7) == "Windows") {
+			pclose(popen("start /B " . $cmd, "r"));
+		} else {
+			exec($cmd . " > /dev/null &");
+		}
+	}
+
 	public static function getInstance()
 	{
 		if (self::$instance == null)

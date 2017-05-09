@@ -21,6 +21,15 @@ namespace PHPOnCouch;
 
 use Exception;
 use InvalidArgumentException;
+use PHPOnCouch\Exceptions\CouchException;
+use PHPOnCouch\Exceptions\ConflictException;
+use PHPOnCouch\Exceptions\ForbiddenException;
+use PHPOnCouch\Exceptions\NotFoundException;
+use PHPOnCouch\Exceptions\UnauthorizedException;
+use PHPOnCouch\Exceptions\ExpectationException;
+use PHPOnCouch\Adapter\CouchHttpAdapterInterface;
+use PHPOnCouch\Adapter\CouchHttpAdapterCurl;
+use PHPOnCouch\Adapter\CouchHttpAdapterSocket;
 
 /**
  * couch class
@@ -28,650 +37,248 @@ use InvalidArgumentException;
  * basics to implement JSON / REST / HTTP CouchDB protocol
  *
  */
-class Couch {
+class Couch
+{
 
-    /**
-     * @var string database source name
-     */
-    protected $dsn = '';
+	/**
+	 * @var string database source name
+	 */
+	protected $dsn = '';
 
-    /**
-     * @var array database source name parsed
-     */
-    protected $dsnParsed = null;
+	/**
+	 * @var array database source name parsed
+	 */
+	protected $dsnParsed = null;
 
-    /**
-     * @var array couch options
-     */
-    protected $options = null;
+	/**
+	 * @var array couch options
+	 */
+	protected $options = null;
 
-    /**
-     * @var array allowed HTTP methods for REST dialog
-     */
-    private $_httpMethods = ['GET', 'POST', 'PUT', 'DELETE', 'COPY'];
+	/**
+	 * class constructor
+	 *
+	 * @param string $dsn CouchDB Data Source Name
+	 * 	@param array $options Couch options
+	 */
+	public function __construct($dsn, $options = [])
+	{
+		$this->dsn = preg_replace('@/+$@', '', $dsn);
+		$this->options = $options;
+		$this->dsnParsed = parse_url($this->dsn);
+		if (!isset($this->dsnParsed['port'])) {
+			$this->dsnParsed['port'] = 80;
+		}
+	}
 
-    /**
-     * @var resource HTTP server socket
-     * @see _connect()
-     */
-    protected $socket = null;
+	/**
+	 * Returns and init if necessary, the CouchHttpAdapter
+	 * @returns PHPOnCouch\Adapter\CouchHttpAdapterInterface
+	 */
+	public function getAdapter()
+	{
+		if (!isset($this->adapter)) {
+			$this->adapter = $this->initAdapter($this->options);
+		}
+		return $this->adapter;
+	}
 
-    /**
-     * @var boolean tell if curl PHP extension has been detected
-     */
-    protected $curl = false;
+	/**
+	 * Set a new adapter to the Couch Class.
+	 * @param \PHPOnCouch\Adapter\CouchHttpAdapterInterface $adapter    The adapter to set
+	 */
+	public function setAdapter(CouchHttpAdapterInterface $adapter)
+	{
+		$this->adapter = $adapter;
+	}
 
-    /**
-     * @var string the session cookie
-     */
-    protected $sessioncookie = null;
+	/**
+	 * Init the HTTP Adapter with cURL if available.
+	 * @param Array $options    An array of options.
+	 * @return \PHPOnCouch\CouchHttpAdapterSocket
+	 */
+	public function initAdapter($options)
+	{
+		if (!isset($options))
+			$options = $this->options;
+		if (function_exists('curl_init'))
+			$adapter = new CouchHttpAdapterCurl($this->dsn, $options);
+		else
+			$adapter = new CouchHttpAdapterSocket($this->dsn, $options);
+		$this->adapter = $adapter;
+		return $adapter;
+	}
 
-    /**
-     * class constructor
-     *
-     * @param string $dsn CouchDB Data Source Name
-     * 	@param array $options Couch options
-     */
-    public function __construct($dsn, $options = []) {
-        $this->dsn = preg_replace('@/+$@', '', $dsn);
-        $this->options = $options;
-        $this->dsnParsed = parse_url($this->dsn);
-        if (!isset($this->dsnParsed['port'])) {
-            $this->dsnParsed['port'] = 80;
-        }
-        if (function_exists('curl_init')) {
-            $this->curl = true;
-        }
-    }
+	/**
+	 * returns the DSN, untouched
+	 *
+	 * @return string DSN
+	 */
+	public function dsn()
+	{
+		return $this->dsn;
+	}
 
-    /**
-     * returns the DSN, untouched
-     *
-     * @return string DSN
-     */
-    public function dsn() {
-        return $this->dsn;
-    }
+	/**
+	 * returns the options array
+	 *
+	 * @return string DSN
+	 */
+	public function options()
+	{
+		return $this->options;
+	}
 
-    /**
-     * returns the options array
-     *
-     * @return string DSN
-     */
-    public function options() {
-        return $this->options;
-    }
-    
-    /**
-     * Returns the session cookie
-     * @return string The cookie
-     */
-    public function getSessionCookie(){
-        return $this->sessioncookie;
-    }
-    
-    /**
-     * set the session cookie to send in the headers
-     * @param string $cookie the session cookie 
-     * ( example : AuthSession=Y291Y2g6NENGNDgzNz )
-     *
-     * @return \couch
-     */
-    public function setSessionCookie($cookie) {
-        $this->sessioncookie = $cookie;
-        return $this;
-    }
+	/**
+	 * set the session cookie to send in the headers
+	 * @param string $cookie the session cookie 
+	 * ( example : AuthSession=Y291Y2g6NENGNDgzNz )
+	 *
+	 * @return \PHPOnCouch\Couch
+	 */
+	public function setSessionCookie($cookie)
+	{
+		return $this->getAdapter()->setSessionCookie($cookie);
+	}
 
-    /**
-     * return a part of the data source name
-     *
-     * if $part parameter is empty, returns dns array
-     *
-     * @param string $part part to return
-     * @return string DSN part
-     */
-    public function dsnPart($part = null) {
-        if (!$part) {
-            return $this->dsnParsed;
-        }
-        if (isset($this->dsnParsed[$part])) {
-            return $this->dsnParsed[$part];
-        }
-    }
+	/**
+	 * Get the current session cookie set to the class.
+	 * @return String The cookie
+	 */
+	public function getSessionCookie()
+	{
+		return $this->getAdapter()->getSessionCookie();
+	}
 
-    /**
-     * parse a CouchDB server response and sends back an array
-     * the array contains keys :
-     * status_code : the HTTP status code returned by the server
-     * status_message : the HTTP message related to the status code
-     * body : the response body (if any). If CouchDB server response 
-     * Content-Type is application/json
-     *        the body will by json_decode()d
-     *
-     * @static
-     * @param string $rawData data sent back by the server
-     * @param boolean $jsonAsArray is true, the json response will be 
-     * decoded as an array. Is false, it's decoded as an object
-     * @return array CouchDB response
-     * @throws InvalidArgumentException
-     */
-    public static function parseRawResponse($rawData, $jsonAsArray = false) {
-        if (!strlen($rawData))
-            throw new InvalidArgumentException("no data to parse");
-        $httpHeader = "HTTP/1.1 100 Continue\r\n\r\n";
-        while (!substr_compare($rawData, $httpHeader, 0, 25)) {
-            $rawData = substr($rawData, 25);
-        }
-        $response = ['body' => null];
-        list($headers, $body) = explode("\r\n\r\n", $rawData, 2);
-        $headersArray = explode("\n", $headers);
-        $statusLine = reset($headersArray);
-        $statusArray = explode(' ', $statusLine, 3);
-        $response['status_code'] = trim($statusArray[1]);
-        $response['status_message'] = trim($statusArray[2]);
-        if (strlen($body)) {
-            $regex = '@Content-Type:\s+application/json@i';
-            if (preg_match($regex, $headers))
-                $response['body'] = json_decode($body, $jsonAsArray);
-            else
-                $response['body'] = $body;
-        }
-        return $response;
-    }
+	/**
+	 * return a part of the data source name
+	 *
+	 * if $part parameter is empty, returns dns array
+	 *
+	 * @param string $part part to return
+	 * @return string DSN part
+	 */
+	public function dsnPart($part = null)
+	{
+		if (!$part) {
+			return $this->dsnParsed;
+		}
+		if (isset($this->dsnParsed[$part])) {
+			return $this->dsnParsed[$part];
+		}
+	}
 
-    /**
-     * send a query to the CouchDB server
-     *
-     * @param string $method HTTP method to use (GET, POST, ...)
-     * @param string $url URL to fetch
-     * @param array $parameters additionnal parameters to send with the request
-     * @param string $contentType the content type of the sent data 
-     *  (defaults to application/json)
-     * @param string|array|object $data request body
-     *
-     * @return string|false server response on success, false on error
-     */
-    public function query($method, $url, $parameters = [], $data = null, $contentType = null) {
-        if ($this->curl)
-            return $this->curlQuery($method, $url, $parameters, $data, $contentType);
-        else
-            return $this->socketQuery($method, $url, $parameters, $data, $contentType);
-    }
+	/**
+	 * parse a CouchDB server response and sends back an array
+	 * the array contains keys :
+	 * status_code : the HTTP status code returned by the server
+	 * status_message : the HTTP message related to the status code
+	 * body : the response body (if any). If CouchDB server response 
+	 * Content-Type is application/json
+	 *        the body will by json_decode()d
+	 *
+	 * @static
+	 * @param string|boolean $rawData data sent back by the server
+	 * @param boolean $jsonAsArray is true, the json response will be 
+	 * decoded as an array. Is false, it's decoded as an object
+	 * @return array CouchDB response
+	 * @throws InvalidArgumentException
+	 */
+	public static function parseRawResponse($rawData, $jsonAsArray = false)
+	{
+		if (!strlen($rawData))
+			throw new InvalidArgumentException("no data to parse");
+		$httpHeader = "HTTP/1.1 100 Continue\r\n\r\n";
+		while (!substr_compare($rawData, $httpHeader, 0, 25)) {
+			$rawData = substr($rawData, 25);
+		}
+		$response = ['body' => null];
+		list($headers, $body) = explode("\r\n\r\n", $rawData, 2);
+		$headersArray = explode("\n", $headers);
+		$statusLine = reset($headersArray);
+		$statusArray = explode(' ', $statusLine, 3);
+		$response['status_code'] = trim($statusArray[1]);
+		$response['status_message'] = trim($statusArray[2]);
+		if (strlen($body)) {
+			$regex = '@Content-Type:\s+application/json@i';
+			if (preg_match($regex, $headers))
+				$response['body'] = json_decode($body, $jsonAsArray);
+			else
+				$response['body'] = $body;
+		}
+		return $response;
+	}
 
-    /**
-     * record a file located on the disk as a CouchDB attachment
-     *
-     * @param string $url CouchDB URL to store the file to
-     * @param string $file path to the on-disk file
-     * @param string $contentType attachment content_type
-     *
-     * @return string server response
-     */
-    public function storeFile($url, $file, $contentType) {
-        if ($this->curl)
-            return $this->curlStoreFile($url, $file, $contentType);
-        else
-            return $this->socketStoreFile($url, $file, $contentType);
-    }
+	/**
+	 * send a query to the CouchDB server
+	 *
+	 * @param string $method HTTP method to use (GET, POST, ...)
+	 * @param string $url URL to fetch
+	 * @param array $parameters additionnal parameters to send with the request
+	 * @param string|array|object $data request body
+	 * @param string $contentType the content type of the sent data 
+	 *  (defaults to application/json)
+	 *
+	 * @return string|false server response on success, false on error
+	 */
+	public function query($method, $url, $parameters = [], $data = null, $contentType = null)
+	{
+		return $this->getAdapter()->query($method, $url, $parameters, $data, $contentType);
+	}
 
-    /**
-     * store some data as a CouchDB attachment
-     *
-     * @param string $url CouchDB URL to store the file to
-     * @param string $data data to send as the attachment content
-     * @param string $contentType attachment content_type
-     *
-     * @return string server response
-     */
-    public function storeAsFile($url, $data, $contentType) {
-        if ($this->curl)
-            return $this->curlStoreAsFile($url, $data, $contentType);
-        else
-            return $this->socketStoreAsFile($url, $data, $contentType);
-    }
+	/**
+	 * record a file located on the disk as a CouchDB attachment
+	 *
+	 * @param string $url CouchDB URL to store the file to
+	 * @param string $file path to the on-disk file
+	 * @param string $contentType attachment content_type
+	 *
+	 * @return string server response
+	 */
+	public function storeFile($url, $file, $contentType)
+	{
+		return $this->getAdapter()->storeFile($url, $file, $contentType);
+	}
 
-    /**
-     * send a query to the CouchDB server
-     *
-     * In a continuous query, the server send headers, and then a JSON object per line.
-     * On each line received, the $callable callback is fired, with two arguments :
-     *
-     * - the JSON object decoded as a PHP object
-     *
-     * - a couchClient instance to use to make queries inside the callback
-     *
-     * If the callable returns the boolean false , continuous reading stops.
-     *
-     * @param callable $callable PHP function name / callable array ( see http://php.net/is_callable )
-     * @param string $method HTTP method to use (GET, POST, ...)
-     * @param string $url URL to fetch
-     * @param array $parameters additionnal parameters to send with the request
-     * @param string|array|object $data request body
-     *
-     * @return string|false server response on success, false on error
-     *
-     * @throws Exception|InvalidArgumentException|CouchException|CouchNoResponseException
-     */
-    public function continuousQuery($callable, $method, $url, $parameters = [], $data = null) {
-        if (!in_array($method, $this->_httpMethods))
-            throw new Exception("Bad HTTP method: $method");
-        if (!is_callable($callable))
-            throw new InvalidArgumentException("callable argument have to success to is_callable PHP function");
-        if (is_array($parameters) && count($parameters))
-            $url = $url . '?' . http_build_query($parameters);
-        //Send the request to the socket
-        $request = $this->socketBuildRequest($method, $url, $data, null);
-        if (!$this->connect())
-            return false;
+	/**
+	 * store some data as a CouchDB attachment
+	 *
+	 * @param string $url CouchDB URL to store the file to
+	 * @param string $data data to send as the attachment content
+	 * @param string $contentType attachment content_type
+	 *
+	 * @return string server response
+	 */
+	public function storeAsFile($url, $data, $contentType)
+	{
+		return $this->getAdapter()->storeAsFile($url, $data, $contentType);
+	}
 
-        //Read the headers and check that the response is valid
-        $response = '';
-        $headers = false;
-        while (!feof($this->socket) && !$headers) {
-            $response .= fgets($this->socket);
-            if ($response == "HTTP/1.1 100 Continue\r\n\r\n") {
-                $response = '';
-                continue;
-            } //Ignore 'continue' headers, they will be followed by the real header.
-            else if (preg_match("/\r\n\r\n$/", $response)) {
-                $headers = true;
-            }
-        }
-        $headers = explode("\n", trim($response));
-        $split = explode(" ", trim(reset($headers)));
-        $code = $split[1];
-        unset($split);
-        //If an invalid response is sent, read the rest of the response and throw an appropriate CouchException
-        if (!in_array($code, [200, 201])) {
-            stream_set_blocking($this->socket, false);
-            $response .= stream_get_contents($this->socket);
-            fclose($this->socket);
-            throw CouchException::factory($response, $method, $url, $parameters);
-        }
-
-        //For as long as the socket is open, read lines and pass them to the callback
-        $clone = clone $this;
-        while ($this->socket && !feof($this->socket)) {
-            $e = null;
-            $e2 = null;
-            $read = [$this->socket];
-            ($numChangedStreams = stream_select($read, $e, $e2, 1));
-            if (false === $numChangedStreams) {
-                $this->socket = null;
-            } elseif ($numChangedStreams > 0) {
-                $line = fgets($this->socket);
-                if (strlen(trim($line))) {
-                    $break = call_user_func($callable, json_decode($line), $clone);
-                    if ($break === false) {
-                        fclose($this->socket);
-                    }
-                }
-            }
-        }
-        return $code;
-    }
-
-    /**
-     * send a query to the CouchDB server
-     *
-     * @param string $method HTTP method to use (GET, POST, ...)
-     * @param string $url URL to fetch
-     * @param array $parameters additionnal parameters to send with the request
-     * @param string $contentType the content type of the sent data (defaults to application/json)
-     * @param string|array|object $data request body
-     *
-     * @return string|false server response on success, false on error
-     *
-     * @throws Exception
-     */
-    public function socketQuery($method, $url, $parameters = [], $data = null, $contentType = null) {
-        if (!in_array($method, $this->_httpMethods))
-            throw new Exception("Bad HTTP method: $method");
-
-        if (is_array($parameters) && count($parameters))
-            $url = $url . '?' . http_build_query($parameters);
-
-        $request = $this->socketBuildRequest($method, $url, $data, $contentType);
-        if (!$this->connect())
-            return false;
-// 		echo "DEBUG: Request ------------------ \n$request\n";
-        $rawResponse = $this->execute($request);
-        $this->disconnect();
-
-// 		echo 'debug',"COUCH : Executed query $method $url";
-// 		echo 'debug',"COUCH : ".$raw_response;
-        return $rawResponse;
-    }
-
-    /**
-     * returns first lines of request headers
-     *
-     * lines :
-     * <code>
-     * VERB HTTP/1.0
-     * Host: my.super.server.com
-     * Authorization: Basic...
-     * Accept: application/json,text/html,text/plain,* /*
-     * </code>
-     *
-     * @param string $method HTTP method to use
-     * @param string $url the request URL
-     * @return string start of HTTP request
-     */
-    protected function socketStartRequestHeaders($method, $url) {
-        if ($this->dsnPart('path'))
-            $url = $this->dsnPart('path') . $url;
-        $req = "$method $url HTTP/1.0\r\nHost: " . $this->dsnPart('host') . "\r\n";
-        if ($this->dsnPart('user') && $this->dsnPart('pass')) {
-            $req .= 'Authorization: Basic ' . base64_encode($this->dsnPart('user') . ':' .
-                            $this->dsnPart('pass')) . "\r\n";
-        } elseif ($this->sessioncookie) {
-            $req .= "Cookie: " . $this->sessioncookie . "\r\n";
-        }
-        $req .= "Accept: application/json,text/html,text/plain,*/*\r\n";
-
-        return $req;
-    }
-
-    /**
-     * build HTTP request to send to the server
-     *
-     * @param string $method HTTP method to use
-     * @param string $url the request URL
-     * @param string|object|array $data the request body. If it's an array || an object, $data is json_encode()d
-     * @param string $contentType the content type of the sent data (defaults to application/json)
-     * @return string HTTP request
-     */
-    protected function socketBuildRequest($method, $url, $data, $contentType) {
-        if (is_object($data) || is_array($data))
-            $data = json_encode($data);
-        $req = $this->socketStartRequestHeaders($method, $url);
-        if ($contentType) {
-            $req .= 'Content-Type: ' . $contentType . "\r\n";
-        } else {
-            $req .= 'Content-Type: application/json' . "\r\n";
-        }
-        if ($method == 'COPY') {
-            $req .= 'Destination: ' . $data . "\r\n\r\n";
-        } elseif ($data) {
-            $req .= 'Content-Length: ' . strlen($data) . "\r\n\r\n";
-            $req .= $data . "\r\n";
-        } else {
-            $req .= "\r\n";
-        }
-        return $req;
-    }
-
-    /**
-     * record a file located on the disk as a CouchDB attachment
-     * uses PHP socket API
-     *
-     * @param string $url CouchDB URL to store the file to
-     * @param string $file path to the on-disk file
-     * @param string $contentType attachment content_type
-     *
-     * @return string server response
-     *
-     * @throws InvalidArgumentException
-     */
-    protected function socketStoreFile($url, $file, $contentType) {
-
-        if (!strlen($url))
-            throw new InvalidArgumentException("Attachment URL can't be empty");
-        if (!strlen($file) || !is_file($file) || !is_readable($file))
-            throw new InvalidArgumentException("Attachment file does not exist or is not readable");
-        if (!strlen($contentType))
-            throw new InvalidArgumentException("Attachment Content Type can't be empty");
-        $req = $this->socketStartRequestHeaders('PUT', $url);
-        $req .= 'Content-Length: ' . filesize($file) . "\r\n"
-                . 'Content-Type: ' . $contentType . "\r\n\r\n";
-        $fstream = fopen($file, 'r');
-        $this->connect();
-        fwrite($this->socket, $req);
-        stream_copy_to_stream($fstream, $this->socket);
-        $response = '';
-        while (!feof($this->socket))
-            $response .= fgets($this->socket);
-        $this->disconnect();
-        fclose($fstream);
-        return $response;
-    }
-
-    /**
-     * store some data as a CouchDB attachment
-     * uses PHP socket API
-     *
-     * @param string $url CouchDB URL to store the file to
-     * @param string $data data to send as the attachment content
-     * @param string $contentType attachment content_type
-     *
-     * @return string server response
-     *
-     * @throws InvalidArgumentException
-     */
-    public function socketStoreAsFile($url, $data, $contentType) {
-        if (!strlen($url))
-            throw new InvalidArgumentException("Attachment URL can't be empty");
-        if (!strlen($contentType))
-            throw new InvalidArgumentException("Attachment Content Type can't be empty");
-
-        $req = $this->socketStartRequestHeaders('PUT', $url);
-        $req .= 'Content-Length: ' . strlen($data) . "\r\n"
-                . 'Content-Type: ' . $contentType . "\r\n\r\n";
-        $this->connect();
-        fwrite($this->socket, $req);
-        fwrite($this->socket, $data);
-        $response = '';
-        while (!feof($this->socket))
-            $response .= fgets($this->socket);
-        $this->disconnect();
-        return $response;
-    }
-
-    /**
-     * open the connection to the CouchDB server
-     *
-     * This function can throw an Exception if it fails
-     *
-     * @return boolean wheter the connection is successful
-     *
-     * @throws Exception
-     */
-    protected function connect() {
-        $ssl = $this->dsnPart('scheme') == 'https' ? 'ssl://' : '';
-        $this->socket = @fsockopen($ssl . $this->dsnPart('host'), $this->dsnPart('port'), $errNum, $errStr);
-        if (!$this->socket) {
-            $errMsg = 'Could not open connection to ' . $this->dsnPart('host') . ':';
-            $errMsg .= $this->dsnPart('port') . ': ' . $errStr . ' (' . $errNum . ')';
-            throw new Exception($errMsg);
-        }
-        return true;
-    }
-
-    /**
-     * send the HTTP request to the server and read the response
-     *
-     * @param string $request HTTP request to send
-     * @return string $response HTTP response from the CouchDB server
-     */
-    protected function execute($request) {
-        fwrite($this->socket, $request);
-        $response = '';
-        while (!feof($this->socket))
-            $response .= fgets($this->socket);
-        return $response;
-    }
-
-    /**
-     * Closes the connection to the server
-     */
-    protected function disconnect() {
-        @fclose($this->socket);
-        $this->socket = null;
-    }
-
-    /**
-     * add user-defined options to Curl resource
-     * @param object $res ?
-     */
-    protected function curlAddCustomOptions($res) {
-        if (array_key_exists("curl", $this->options) && is_array($this->options["curl"])) {
-            curl_setopt_array($res, $this->options["curl"]);
-        }
-    }
-
-    /**
-     * build HTTP request to send to the server
-     * uses PHP cURL API
-     *
-     * @param string $method HTTP method to use
-     * @param string $url the request URL
-     * @param string|object|array $data the request body. If it's an array or an object, $data is json_encode()d
-     * @param string $contentType the content type of the sent data (defaults to application/json)
-     * @return resource CURL request resource
-     */
-    protected function curlBuildRequest($method, $url, $data, $contentType) {
-        $http = curl_init($url);
-        $httpHeaders = ['Accept: application/json,text/html,text/plain,*/*'];
-        if (is_object($data) || is_array($data)) {
-            $data = json_encode($data);
-        }
-        if ($contentType) {
-            $httpHeaders[] = 'Content-Type: ' . $contentType;
-        } else {
-            $httpHeaders[] = 'Content-Type: application/json';
-        }
-        if ($this->sessioncookie) {
-            $httpHeaders[] = "Cookie: " . $this->sessioncookie;
-        }
-        curl_setopt($http, CURLOPT_CUSTOMREQUEST, $method);
-
-        if ($method == 'COPY') {
-            $httpHeaders[] = "Destination: $data";
-        } elseif ($data) {
-            curl_setopt($http, CURLOPT_POSTFIELDS, $data);
-        }
-        $httpHeaders[] = 'Expect: ';
-        curl_setopt($http, CURLOPT_HTTPHEADER, $httpHeaders);
-        return $http;
-    }
-
-    /**
-     * send a query to the CouchDB server
-     * uses PHP cURL API
-     *
-     * @param string $method HTTP method to use (GET, POST, ...)
-     * @param string $url URL to fetch
-     * @param array $parameters additionnal parameters to send with the request
-     * @param string|array|object $data request body
-     * @param string $contentType the content type of the sent data (defaults to application/json)
-     *
-     * @return string|false server response on success, false on error
-     *
-     * @throws Exception
-     */
-    public function curlQuery($method, $url, $parameters = [], $data = null, $contentType = null) {
-        if (!in_array($method, $this->_httpMethods))
-            throw new Exception("Bad HTTP method: $method");
-
-        $url = $this->dsn . $url;
-        if (is_array($parameters) && count($parameters))
-            $url = $url . '?' . http_build_query($parameters);
-        $http = $this->curlBuildRequest($method, $url, $data, $contentType);
-        $this->curlAddCustomOptions($http);
-        curl_setopt($http, CURLOPT_HEADER, true);
-        curl_setopt($http, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($http, CURLOPT_FOLLOWLOCATION, true);
-
-        $response = curl_exec($http);
-        curl_close($http);
-
-        return $response;
-    }
-
-    /**
-     * record a file located on the disk as a CouchDB attachment
-     * uses PHP cURL API
-     *
-     * @param string $url CouchDB URL to store the file to
-     * @param string $file path to the on-disk file
-     * @param string $contentType attachment content_type
-     *
-     * @return string server response
-     *
-     * @throws InvalidArgumentException
-     */
-    public function curlStoreFile($url, $file, $contentType) {
-        if (!strlen($url))
-            throw new InvalidArgumentException("Attachment URL can't be empty");
-        if (!strlen($file) || !is_file($file) || !is_readable($file))
-            throw new InvalidArgumentException("Attachment file does not exist or is not readable");
-        if (!strlen($contentType))
-            throw new InvalidArgumentException("Attachment Content Type can't be empty");
-        $url = $this->dsn . $url;
-        $http = curl_init($url);
-        $httpHeaders = [
-            'Accept: application/json,text/html,text/plain,*/*',
-            'Content-Type: ' . $contentType,
-            'Expect: '
-        ];
-        if ($this->sessioncookie) {
-            $httpHeaders[] = "Cookie: " . $this->sessioncookie;
-        }
-        curl_setopt($http, CURLOPT_PUT, 1);
-        curl_setopt($http, CURLOPT_HTTPHEADER, $httpHeaders);
-        curl_setopt($http, CURLOPT_UPLOAD, true);
-        curl_setopt($http, CURLOPT_HEADER, true);
-        curl_setopt($http, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($http, CURLOPT_FOLLOWLOCATION, true);
-        $fstream = fopen($file, 'r');
-        curl_setopt($http, CURLOPT_INFILE, $fstream);
-        curl_setopt($http, CURLOPT_INFILESIZE, filesize($file));
-        $this->curlAddCustomOptions($http);
-        $response = curl_exec($http);
-        fclose($fstream);
-        curl_close($http);
-        return $response;
-    }
-
-    /**
-     * store some data as a CouchDB attachment
-     * uses PHP cURL API
-     *
-     * @param string $url CouchDB URL to store the file to
-     * @param string $data data to send as the attachment content
-     * @param string $contentType attachment content_type
-     *
-     * @return string server response
-     *
-     * @throws InvalidArgumentException
-     */
-    public function curlStoreAsFile($url, $data, $contentType) {
-        if (!strlen($url))
-            throw new InvalidArgumentException("Attachment URL can't be empty");
-        if (!strlen($contentType))
-            throw new InvalidArgumentException("Attachment Content Type can't be empty");
-        $url = $this->dsn . $url;
-        $http = curl_init($url);
-        $httpHeaders = [
-            'Accept: application/json,text/html,text/plain,*/*',
-            'Content-Type: ' . $contentType,
-            'Expect: ',
-            'Content-Length: ' . strlen($data)
-        ];
-        if ($this->sessioncookie) {
-            $httpHeaders[] = "Cookie: " . $this->sessioncookie;
-        }
-        curl_setopt($http, CURLOPT_CUSTOMREQUEST, 'PUT');
-        curl_setopt($http, CURLOPT_HTTPHEADER, $httpHeaders);
-        curl_setopt($http, CURLOPT_HEADER, true);
-        curl_setopt($http, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($http, CURLOPT_FOLLOWLOCATION, true);
-        curl_setopt($http, CURLOPT_POSTFIELDS, $data);
-        $this->curlAddCustomOptions($http);
-        $response = curl_exec($http);
-        curl_close($http);
-        return $response;
-    }
+	/**
+	 * send a query to the CouchDB server
+	 *
+	 * In a continuous query, the server send headers, and then a JSON object per line.
+	 * On each line received, the $callable callback is fired, with two arguments :
+	 *
+	 * - the JSON object decoded as a PHP object
+	 *
+	 * - a couchClient instance to use to make queries inside the callback
+	 *
+	 * If the callable returns the boolean false , continuous reading stops.
+	 *
+	 * @param callable $callable PHP function name / callable array ( see http://php.net/is_callable )
+	 * @param string $method HTTP method to use (GET, POST, ...)
+	 * @param string $url URL to fetch
+	 * @param array $parameters additionnal parameters to send with the request
+	 * @param string|array|object $data request body
+	 *
+	 * @return string|false server response on success, false on error
+	 *
+	 * @throws Exception|InvalidArgumentException|CouchException|CouchNoResponseException
+	 */
+	public function continuousQuery($callable, $method, $url, $parameters = [], $data = null)
+	{
+		return $this->getAdapter()->continuousQuery($callable, $method, $url, $parameters, $data);
+	}
 
 }
