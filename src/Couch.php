@@ -178,7 +178,7 @@ class Couch
 	 *        the body will by json_decode()d
 	 *
 	 * @static
-	 * @param string $rawData data sent back by the server
+	 * @param string|boolean $rawData data sent back by the server
 	 * @param boolean $jsonAsArray is true, the json response will be 
 	 * decoded as an array. Is false, it's decoded as an object
 	 * @return array CouchDB response

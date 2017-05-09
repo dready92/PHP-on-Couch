@@ -12,8 +12,11 @@
 			<file>./tests/Adapter/CouchHttpAdapterSocketTest.php</file>
 			<file>./tests/CouchTest.php</file>
 			<file>./tests/CouchClientTest.php</file>
-			<file>./tests/CouchClientViewTest</file>
+			<file>./tests/CouchClientViewTest.php</file>
 			<file>./tests/CouchAdminTest.php</file>
+			<file>./tests/CouchReplicatorTest.php</file>
+			<file>./tests/CouchDocumentTest.php</file>
+			<file>./tests/Exceptions/CouchExceptionTest.php</file>
 		</testsuite>
 	</testsuites>
 	<logging>

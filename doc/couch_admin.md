@@ -18,6 +18,7 @@ This section give details about the CouchAdmin object.
 - [Roles assignation](#roles-assignation)
     + [addRoleToUser($user, $role)](#addroletouseruser-role)
     + [removeRoleFromUser($user, $role)](#removerolefromuseruser-role)
+    + [setRolesToUser($user,array $roles = [])](#setrolestouseruser-array-roles--)
 - [Database user security](#database-user-security)
     + [addDatabaseMemberUser($login)](#adddatabasememberuserlogin)
     + [addDatabaseAdminUser($login)](#adddatabaseadminuserlogin)
@@ -462,6 +463,28 @@ try {
     die("unable to remove a role of a user: ".$e->getMessage());
 }
 echo "Joe don't belongs to the cowboy role anymore";
+```
+
+### setRolesToUser($user, array $roles = [])
+
+This method let you set the roles for the selected user. A $user can either be the username of the user or a user object containing an **_id** and a **roles** property. 
+
+Example of usage : 
+
+```php
+<?php
+use PHPOnCouch\Couch,
+    PHPOnCouch\CouchClient,
+    PHPOnCouch\CouchAdmin;
+$client = new CouchClient ("http://couchAdmin:secretpass@localhost:5984/","mydb" );
+$adm = new CouchAdmin($client);
+
+try {
+    $adm->setRolesForUser("joe",['tester','developer']);
+    echo "Joe has now the tester and developer roles.";
+} catch ( Exception $e ) {
+    die("unable to remove a role of a user: ".$e->getMessage());
+}
 ```
 
 

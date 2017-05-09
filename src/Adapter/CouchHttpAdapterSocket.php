@@ -21,6 +21,7 @@ namespace PHPOnCouch\Adapter;
 
 use InvalidException;
 use InvalidArgumentException;
+use PHPOnCouch\Exceptions\CouchException;
 use Exception;
 
 /**
@@ -35,22 +36,21 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
 
 	/**
 	 * open the connection to the CouchDB server
+	 * 
+	 * @param bool $stream True to setup a stream client, otherwise false.
 	 *
 	 * This function can throw an Exception if it fails
 	 *
-	 * @return boolean Weither the connecti
-	 * 
-	 * 
-	 * ooopp        terminal
-	  sudo reboot
-	 * on is successful
+	 * @return boolean Weither the connection is successful
 	 *
 	 * @throws Exception
 	 */
 	protected function connect()
 	{
 		$ssl = $this->dsnPart('scheme') == 'https' ? 'ssl://' : '';
-		$this->socket = @fsockopen($ssl . $this->dsnPart('host'), $this->dsnPart('port'), $errNum, $errStr);
+		$errNum = -1;
+		$errStr = '';
+		$this->socket = fsockopen($ssl . $this->dsnPart('host'), $this->dsnPart('port'), $errNum, $errStr);
 		if (!$this->socket) {
 			$errMsg = 'Could not open connection to ' . $this->dsnPart('host') . ':';
 			$errMsg .= $this->dsnPart('port') . ': ' . $errStr . ' (' . $errNum . ')';
@@ -210,20 +210,21 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
 			$url = $url . '?' . http_build_query($parameters);
 		//Send the request to the socket
 		$request = $this->buildRequest($method, $url, $data, null);
-		if (!$this->connect())
+		if (!$this->connect(true))
 			return false;
 
+		fwrite($this->socket, $request);
 		//Read the headers and check that the response is valid
 		$response = '';
-		$headers = false;
-		while (!feof($this->socket) && !$headers) {
-			$response .= fgets($this->socket);
+		$hasHeaders = false;
+		while (!feof($this->socket) && !$hasHeaders) {
+			$response .= fgets($this->socket, 128);
 			if ($response == "HTTP/1.1 100 Continue\r\n\r\n") {
 				$response = '';
 				continue;
 			} //Ignore 'continue' headers, they will be followed by the real header.
 			else if (preg_match("/\r\n\r\n$/", $response)) {
-				$headers = true;
+				$hasHeaders = true;
 			}
 		}
 		$headers = explode("\n", trim($response));
@@ -246,14 +247,13 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
 			$read = [$this->socket];
 			($numChangedStreams = stream_select($read, $e, $e2, 1));
 			if (false === $numChangedStreams) {
-				$this->socket = null;
+				$this->disconnect();
 			} elseif ($numChangedStreams > 0) {
 				$line = fgets($this->socket);
 				if (strlen(trim($line))) {
 					$break = call_user_func($callable, json_decode($line), $clone);
-					if ($break === false) {
-						fclose($this->socket);
-					}
+					if ($break === false)
+						$this->disconnect();
 				}
 			}
 		}

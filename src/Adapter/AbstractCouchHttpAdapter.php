@@ -24,113 +24,124 @@ namespace PHPOnCouch\Adapter;
  *
  * @author alexis
  */
-abstract class AbstractCouchHttpAdapter implements CouchHttpAdapterInterface {
+abstract class AbstractCouchHttpAdapter implements CouchHttpAdapterInterface
+{
 
-    protected $dsn = null;
+	protected $dsn = null;
 
-    /**
-     * @var array database source name parsed
-     */
-    protected $dsnParsed = null;
-    protected $options = null;
+	/**
+	 * @var array database source name parsed
+	 */
+	protected $dsnParsed = null;
+	protected $options = null;
 
-    /**
-     *
-     * @var array allowed HTTP methods for REST dialog
-     */
-    protected $httpMethods = [
-        SELF::METHOD_PUT,
-        SELF::METHOD_POST,
-        SELF::METHOD_GET,
-        SELF::METHOD_DELETE,
-        SELF::METHOD_COPY
-    ];
+	/**
+	 *
+	 * @var array allowed HTTP methods for REST dialog
+	 */
+	protected $httpMethods = [
+		SELF::METHOD_PUT,
+		SELF::METHOD_POST,
+		SELF::METHOD_GET,
+		SELF::METHOD_DELETE,
+		SELF::METHOD_COPY
+	];
 
-    /**
-     *
-     * @var string the session cookie
-     */
-    protected $sessioncookie = null;
+	/**
+	 *
+	 * @var string the session cookie
+	 */
+	protected $sessioncookie = null;
 
-    public function setDsn($dsn) {
-        $this->dsn = $dsn;
-    }
+	public function setDsn($dsn)
+	{
+		$this->dsn = $dsn;
+	}
 
-    public function getDsn() {
-        return $this->dsn;
-    }
+	public function getDsn()
+	{
+		return $this->dsn;
+	}
 
-    public function setOptions($options) {
-        $this->options = $options;
-    }
+	public function setOptions($options)
+	{
+		$this->options = $options;
+	}
 
-    public function getOptions() {
-        return $this->options;
-    }
+	public function getOptions()
+	{
+		return $this->options;
+	}
 
-    public function __construct($dsn, $options = []) {
-        $this->setOptions($options);
-        $this->dsn = preg_replace('@/+$@', '', $dsn);
-        $this->dsnParsed = parse_url($this->dsn);
+	public function __construct($dsn, $options = [])
+	{
+		$this->setOptions($options);
+		$this->dsn = preg_replace('@/+$@', '', $dsn);
+		if (($parsed = parse_url($this->dsn)))
+			$this->dsnParsed = $parsed;
 
-        if (!isset($this->dsnParsed['port'])) {
-            $this->dsnParsed['port'] = 80;
-        }
-    }
+		if (!isset($this->dsnParsed['port'])) {
+			$this->dsnParsed['port'] = 80;
+		}
+	}
 
-    /**
-     * set the session cookie to send in the headers
-     *
-     * @param string $cookie
-     *            the session cookie ( example : AuthSession=Y291Y2g6NENGNDgzNz )
-     *
-     * @return \PHPOnCouch\Couch
-     */
-    public function setSessionCookie($cookie) {
-        $this->sessioncookie = $cookie;
-        return $this;
-    }
+	/**
+	 * set the session cookie to send in the headers
+	 *
+	 * @param string $cookie
+	 *            the session cookie ( example : AuthSession=Y291Y2g6NENGNDgzNz )
+	 *
+	 * @return \PHPOnCouch\Couch
+	 */
+	public function setSessionCookie($cookie)
+	{
+		$this->sessioncookie = $cookie;
+		return $this;
+	}
 
-    /**
-     * get the session cookie
-     *
-     * @return string cookie
-     */
-    public function getSessionCookie() {
-        return $this->sessioncookie;
-    }
+	/**
+	 * get the session cookie
+	 *
+	 * @return string cookie
+	 */
+	public function getSessionCookie()
+	{
+		return $this->sessioncookie;
+	}
 
-    /**
-     * get the session cookie
-     *
-     * @return string cookie
-     */
-    public function hasSessionCookie() {
-        return (bool) $this->sessioncookie;
-    }
+	/**
+	 * get the session cookie
+	 *
+	 * @return string cookie
+	 */
+	public function hasSessionCookie()
+	{
+		return (bool) $this->sessioncookie;
+	}
 
-    /**
-     * return a part of the data source name
-     *
-     * if $part parameter is empty, returns dns array
-     *
-     * @param string $part part to return
-     * @return string DSN part
-     */
-    protected function dsnPart($part = null) {
-        if (!$part) {
-            return $this->getDsn();
-        }
-        if (isset($this->dsnParsed[$part])) {
-            return $this->dsnParsed[$part];
-        }
-    }
+	/**
+	 * return a part of the data source name
+	 *
+	 * if $part parameter is empty, returns dns array
+	 *
+	 * @param string $part part to return
+	 * @return string DSN part
+	 */
+	protected function dsnPart($part = '')
+	{
+		if (strlen($part) <= 0) {
+			return $this->getDsn();
+		}
+		if (isset($this->dsnParsed[$part])) {
+			return $this->dsnParsed[$part];
+		}
+	}
 
-    abstract public function query($method, $url, $parameters = [], $data = null, $contentType = null);
+	abstract public function query($method, $url, $parameters = [], $data = null, $contentType = null);
 
-    abstract public function storeAsFile($url, $data, $contentType);
+	abstract public function storeAsFile($url, $data, $contentType);
 
-    abstract public function storeFile($url, $file, $contentType);
+	abstract public function storeFile($url, $file, $contentType);
 
-    abstract public function continuousQuery($callable, $method, $url, $parameters = [], $data = null);
+	abstract public function continuousQuery($callable, $method, $url, $parameters = [], $data = null);
 }

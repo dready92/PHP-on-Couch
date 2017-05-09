@@ -22,6 +22,7 @@ class CouchHttpAdapterSocketTest extends PHPUnit_Framework_TestCase
 	private $host = 'localhost';
 	private $port = '5984';
 	private $dbName = 'couchclienttest';
+	private $continuousQueryTriggerFile = __DIR__ . DIRECTORY_SEPARATOR . 'continuousquery.lock';
 	private $admin = ["login" => "adm", "password" => "sometest"];
 	protected $adapter;
 
@@ -64,7 +65,8 @@ class CouchHttpAdapterSocketTest extends PHPUnit_Framework_TestCase
 	 */
 	protected function tearDown()
 	{
-//        $this->client = null;
+		if (file_exists($this->continuousQueryTriggerFile))
+			unlink($this->continuousQueryTriggerFile);
 		$this->aclient = null;
 		$this->adapter = null;
 	}
@@ -175,9 +177,49 @@ class CouchHttpAdapterSocketTest extends PHPUnit_Framework_TestCase
 		$this->adapter->storeAsFile("NOEXISTING", "something", "");
 	}
 
+	public function testContinuousQueryInvalid()
+	{
+		$this->expectException(\Exception::class);
+		$this->adapter->continuousQuery(function() {
+			
+		}, 'UNSUPPORTEDMETHOD', '');
+	}
+
+	public function testContinuousQueryInvalidCallable()
+	{
+		$this->expectException(\InvalidArgumentException::class);
+		$this->adapter->continuousQuery(new \stdClass(), 'GET', '');
+	}
+
 	public function testContinuousQuery()
 	{
-		$this->markTestIncomplete();
+		$config = \config::getInstance();
+		if (file_exists($this->continuousQueryTriggerFile))
+			unlink($this->continuousQueryTriggerFile);
+		$db = 'continuousquery';
+		$cookieClient = new CouchClient($this->adapter->getDsn(), $db, ['cookie_auth' => true]);
+		try {
+			$cookieClient->deleteDatabase();
+		} catch (Exceptions\CouchNotFoundException $ex) {
+			
+		}
+		$cookieClient->createDatabase();
+
+		$this->adapter->setSessionCookie($cookieClient->getSessionCookie());
+		$cntr = new stdClass();
+		$cntr->cnt = 0;
+		$callable = function($row, $client) use ($cntr) {
+			if ($cntr->cnt == 3)
+				return false;
+			$cntr->cnt++;
+		};
+
+		$trigger = escapeshellarg($this->continuousQueryTriggerFile);
+		$path = escapeshellarg(join(DIRECTORY_SEPARATOR, [dirname(__DIR__), '_config', "simulateChanges.php"]));
+		touch($this->continuousQueryTriggerFile);
+		$config->execInBackground("php $path $db $trigger");
+		$this->adapter->continuousQuery($callable, 'GET', "/$db/_changes?feed=continuous");
+		$this->assertEquals($cntr->cnt, 3);
 	}
 
 }

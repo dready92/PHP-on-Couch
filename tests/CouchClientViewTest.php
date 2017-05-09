@@ -3,32 +3,30 @@
 // error_reporting(E_STRICT);
 error_reporting(E_ALL);
 
-
 use PHPOnCouch\CouchClient,
 	PHPOnCouch\CouchDocument,
 	PHPOnCouch\CouchAdmin,
+	PHPOnCouch\Exceptions,
 	PHPOnCouch\Replicator;
 
-require_once join(DIRECTORY_SEPARATOR,[__DIR__,'_config','config.php']);
+require_once join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'config.php']);
 
-
-class couchClientViewTest extends PHPUnit_Framework_TestCase
+class CouchClientViewTest extends PHPUnit_Framework_TestCase
 {
 
 	private $host = 'localhost';
 	private $port = '5984';
-
 
 	public function setUp()
 	{
 		$config = config::getInstance();
 		$url = $config->getUrl($this->host, $this->port, $config->getFirstNormalUser());
 		$aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
-		$this->client = new CouchClient($url, 'couchclienttest');
+		$this->aclient = new CouchClient($url, 'couchclienttest');
 		$this->aclient = new CouchClient($aUrl, 'couchclienttest');
 		try {
 			$this->aclient->deleteDatabase();
-		} catch (Exception $e) {
+		} catch (Exceptions\CouchNotFoundException $e) {
 			
 		}
 		$this->aclient->createDatabase();
@@ -36,10 +34,13 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 
 	public function tearDown()
 	{
-		$this->client = null;
+		try {
+			$this->aclient->deleteDatabase();
+		} catch (\Exception $e) {
+			
+		}
 		$this->aclient = null;
 	}
-
 
 	protected function _makeView()
 	{
@@ -81,10 +82,10 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 			array("_id" => "four", "type" => "test2", "param" => null),
 			array("_id" => "five", "type" => "test", "param" => null)
 		);
-		$this->client->storeDocs($docs);
-		$infos = $this->client->getDatabaseInfos();
+		$this->aclient->storeDocs($docs);
+		$infos = $this->aclient->getDatabaseInfos();
 		$this->assertEquals($infos->doc_count, 6);
-		$test = $this->client->reduce(false)->getView("test", "simple");
+		$test = $this->aclient->reduce(false)->getView("test", "simple");
 		$this->assertInternalType("object", $test);
 		$this->assertObjectHasAttribute("total_rows", $test);
 		$this->assertEquals($test->total_rows, 4);
@@ -111,10 +112,10 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 			array("_id" => "four", "type" => "test2", "param" => null),
 			array("_id" => "five", "type" => "test", "param" => null)
 		);
-		$this->client->storeDocs($docs);
-		$infos = $this->client->getDatabaseInfos();
+		$this->aclient->storeDocs($docs);
+		$infos = $this->aclient->getDatabaseInfos();
 		$this->assertEquals($infos->doc_count, 6);
-		$test = $this->client->getView("test", "simple");
+		$test = $this->aclient->getView("test", "simple");
 // 		print_r($test);
 		$this->assertInternalType("object", $test);
 		$this->assertObjectHasAttribute("rows", $test);
@@ -136,10 +137,10 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 			array("_id" => "four", "type" => "test2", "param" => null),
 			array("_id" => "five", "type" => "test", "param" => null)
 		);
-		$this->client->storeDocs($docs);
-		$infos = $this->client->getDatabaseInfos();
+		$this->aclient->storeDocs($docs);
+		$infos = $this->aclient->getDatabaseInfos();
 		$this->assertEquals($infos->doc_count, 6);
-		$test = $this->client->reduce(false)->include_docs(true)->getView("test", "simple");
+		$test = $this->aclient->reduce(false)->include_docs(true)->getView("test", "simple");
 		$this->assertInternalType("object", $test);
 		$this->assertObjectHasAttribute("total_rows", $test);
 		$this->assertEquals($test->total_rows, 4);
@@ -166,10 +167,10 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 			array("_id" => "four", "type" => "test2", "param" => null),
 			array("_id" => "five", "type" => "test2", "param" => null)
 		);
-		$this->client->storeDocs($docs);
-		$infos = $this->client->getDatabaseInfos();
+		$this->aclient->storeDocs($docs);
+		$infos = $this->aclient->getDatabaseInfos();
 		$this->assertEquals($infos->doc_count, 6);
-		$test = $this->client->reduce(false)->key("test")->getView("test", "complex");
+		$test = $this->aclient->reduce(false)->key("test")->getView("test", "complex");
 // 		print_r($test);
 		$this->assertInternalType("object", $test);
 		$this->assertObjectHasAttribute("total_rows", $test);
@@ -197,16 +198,16 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 			array("_id" => "four", "type" => "test3", "param" => null),
 			array("_id" => "five", "type" => "test2", "param" => null)
 		);
-		$this->client->storeDocs($docs);
-		$infos = $this->client->getDatabaseInfos();
+		$this->aclient->storeDocs($docs);
+		$infos = $this->aclient->getDatabaseInfos();
 		$this->assertEquals($infos->doc_count, 6);
-		$test = $this->client->reduce(false)->keys(array("test", "test3"))->getView("test", "complex");
+		$test = $this->aclient->reduce(false)->keys(array("test", "test3"))->getView("test", "complex");
 // 		print_r($test);	
 		$this->assertInternalType("object", $test);
 		$this->assertObjectHasAttribute("total_rows", $test);
 		$this->assertEquals($test->total_rows, 5);
 		$this->assertObjectHasAttribute("offset", $test);
-		$this->assertEquals($test->offset, 0);
+		$this->assertEquals($test->offset, 2);
 		$this->assertObjectHasAttribute("rows", $test);
 		$this->assertInternalType("array", $test->rows);
 		$this->assertEquals(count($test->rows), 3);
@@ -227,10 +228,10 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 			array("_id" => "four", "type" => "test3", "param" => null),
 			array("_id" => "five", "type" => "test2", "param" => null)
 		);
-		$this->client->storeDocs($docs);
-		$infos = $this->client->getDatabaseInfos();
+		$this->aclient->storeDocs($docs);
+		$infos = $this->aclient->getDatabaseInfos();
 		$this->assertEquals($infos->doc_count, 6);
-		$test = $this->client->reduce(false)->startkey("test3")->getView("test", "complex");
+		$test = $this->aclient->reduce(false)->startkey("test3")->getView("test", "complex");
 		$this->assertInternalType("object", $test);
 		$this->assertObjectHasAttribute("total_rows", $test);
 		$this->assertEquals($test->total_rows, 5);
@@ -256,10 +257,10 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 			array("_id" => "four", "type" => "test3", "param" => null),
 			array("_id" => "five", "type" => "test2", "param" => null)
 		);
-		$this->client->storeDocs($docs);
-		$infos = $this->client->getDatabaseInfos();
+		$this->aclient->storeDocs($docs);
+		$infos = $this->aclient->getDatabaseInfos();
 		$this->assertEquals($infos->doc_count, 6);
-		$test = $this->client->reduce(false)->endkey("test")->getView("test", "complex");
+		$test = $this->aclient->reduce(false)->endkey("test")->getView("test", "complex");
 		$this->assertInternalType("object", $test);
 		$this->assertObjectHasAttribute("total_rows", $test);
 		$this->assertEquals($test->total_rows, 5);
@@ -274,7 +275,7 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 			$this->assertObjectHasAttribute("value", $row);
 		}
 
-		$test = $this->client->reduce(false)->endkey("test")->inclusive_end(false)->getView("test", "complex");
+		$test = $this->aclient->reduce(false)->endkey("test")->inclusive_end(false)->getView("test", "complex");
 		$this->assertInternalType("object", $test);
 		$this->assertObjectHasAttribute("total_rows", $test);
 		$this->assertEquals($test->total_rows, 5);
@@ -300,10 +301,10 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 			array("_id" => "four", "type" => "test3", "param" => null),
 			array("_id" => "five", "type" => "test2", "param" => null)
 		);
-		$this->client->storeDocs($docs);
-		$infos = $this->client->getDatabaseInfos();
+		$this->aclient->storeDocs($docs);
+		$infos = $this->aclient->getDatabaseInfos();
 		$this->assertEquals($infos->doc_count, 6);
-		$test = $this->client->reduce(false)->startkey("test")->startkey_docid("three")->getView("test", "complex");
+		$test = $this->aclient->reduce(false)->startkey("test")->startkey_docid("three")->getView("test", "complex");
 // 		print_r($test);	
 		$this->assertInternalType("object", $test);
 		$this->assertObjectHasAttribute("total_rows", $test);
@@ -330,10 +331,10 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 			array("_id" => "four", "type" => "test3", "param" => null),
 			array("_id" => "five", "type" => "test2", "param" => null)
 		);
-		$this->client->storeDocs($docs);
-		$infos = $this->client->getDatabaseInfos();
+		$this->aclient->storeDocs($docs);
+		$infos = $this->aclient->getDatabaseInfos();
 		$this->assertEquals($infos->doc_count, 6);
-		$test = $this->client->reduce(false)->endkey("test2")->endkey_docid("five")->getView("test", "complex");
+		$test = $this->aclient->reduce(false)->endkey("test2")->endkey_docid("five")->getView("test", "complex");
 // 		print_r($test);	
 		$this->assertInternalType("object", $test);
 		$this->assertObjectHasAttribute("total_rows", $test);
@@ -360,10 +361,10 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 			array("_id" => "four", "type" => "test3", "param" => null),
 			array("_id" => "five", "type" => "test2", "param" => null)
 		);
-		$this->client->storeDocs($docs);
-		$infos = $this->client->getDatabaseInfos();
+		$this->aclient->storeDocs($docs);
+		$infos = $this->aclient->getDatabaseInfos();
 		$this->assertEquals($infos->doc_count, 6);
-		$test = $this->client->reduce(false)->limit(2)->getView("test", "complex");
+		$test = $this->aclient->reduce(false)->limit(2)->getView("test", "complex");
 // 		print_r($test);	
 		$this->assertInternalType("object", $test);
 		$this->assertObjectHasAttribute("total_rows", $test);
@@ -390,10 +391,10 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 			array("_id" => "four", "type" => "test3", "param" => null),
 			array("_id" => "five", "type" => "test2", "param" => null)
 		);
-		$this->client->storeDocs($docs);
-		$infos = $this->client->getDatabaseInfos();
+		$this->aclient->storeDocs($docs);
+		$infos = $this->aclient->getDatabaseInfos();
 		$this->assertEquals($infos->doc_count, 6);
-		$test = $this->client->reduce(false)->skip(2)->getView("test", "complex");
+		$test = $this->aclient->reduce(false)->skip(2)->getView("test", "complex");
 // 		print_r($test);	
 		$this->assertInternalType("object", $test);
 		$this->assertObjectHasAttribute("total_rows", $test);
@@ -420,10 +421,10 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 			array("_id" => "four", "type" => "test3", "param" => null),
 			array("_id" => "five", "type" => "test2", "param" => null)
 		);
-		$this->client->storeDocs($docs);
-		$infos = $this->client->getDatabaseInfos();
+		$this->aclient->storeDocs($docs);
+		$infos = $this->aclient->getDatabaseInfos();
 		$this->assertEquals($infos->doc_count, 6);
-		$test = $this->client->reduce(false)->getView("test", "complex");
+		$test = $this->aclient->reduce(false)->getView("test", "complex");
 // 		print_r($test);	
 		$this->assertInternalType("object", $test);
 		$this->assertObjectHasAttribute("total_rows", $test);
@@ -437,7 +438,7 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 		$this->assertObjectHasAttribute("key", $row);
 		$this->assertEquals($row->key, "test");
 
-		$test = $this->client->reduce(false)->descending(true)->getView("test", "complex");
+		$test = $this->aclient->reduce(false)->descending(true)->getView("test", "complex");
 // 		print_r($test);	
 		$this->assertInternalType("object", $test);
 		$this->assertObjectHasAttribute("total_rows", $test);
@@ -462,11 +463,11 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 			array("_id" => "four", "type" => "test3", "param" => 1),
 			array("_id" => "five", "type" => "test2", "param" => 1)
 		);
-		$this->client->storeDocs($docs);
-		$infos = $this->client->getDatabaseInfos();
+		$this->aclient->storeDocs($docs);
+		$infos = $this->aclient->getDatabaseInfos();
 		$this->assertEquals($infos->doc_count, 6);
 
-		$doc = CouchDocument::getInstance($this->client, "_design/test");
+		$doc = CouchDocument::getInstance($this->aclient, "_design/test");
 		$views = $doc->views;
 		$views->multigroup = new stdClass();
 		$views->multigroup->map = "function (doc) {
@@ -479,13 +480,13 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 		}";
 		$doc->views = $views;
 
-		$test = $this->client->group(true)->getView("test", "multigroup");
+		$test = $this->aclient->group(true)->getView("test", "multigroup");
 		$this->assertInternalType("object", $test);
 		$this->assertObjectHasAttribute("rows", $test);
 		$this->assertInternalType("array", $test->rows);
 		$this->assertEquals(count($test->rows), 5);
 
-		$test = $this->client->group(true)->group_level(1)->getView("test", "multigroup");
+		$test = $this->aclient->group(true)->group_level(1)->getView("test", "multigroup");
 		$this->assertInternalType("object", $test);
 		$this->assertObjectHasAttribute("rows", $test);
 		$this->assertInternalType("array", $test->rows);
@@ -502,10 +503,10 @@ class couchClientViewTest extends PHPUnit_Framework_TestCase
 			array("_id" => "four", "type" => "test3", "param" => null),
 			array("_id" => "five", "type" => "test2", "param" => null)
 		);
-		$this->client->storeDocs($docs);
-		$infos = $this->client->getDatabaseInfos();
+		$this->aclient->storeDocs($docs);
+		$infos = $this->aclient->getDatabaseInfos();
 		$this->assertEquals($infos->doc_count, 6);
-		$test = $this->client->reduce(false)->asArray()->getView("test", "complex");
+		$test = $this->aclient->reduce(false)->asArray()->getView("test", "complex");
 // 		print_r($test);	
 		$this->assertInternalType("array", $test);
 	}
