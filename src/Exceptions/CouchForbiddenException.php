@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2016 Alexis
+ * Copyright (C) 2016 Alexis Côté
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ namespace PHPOnCouch\Exceptions;
 /**
  * Description of couchForbiddenException
  *
- * @author Alexis
+ * @author Alexis Côté
  */
 class CouchForbiddenException extends CouchException {
     //put your code here

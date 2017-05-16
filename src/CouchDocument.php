@@ -22,7 +22,7 @@ namespace PHPOnCouch;
 use stdClass;
 use Exception;
 use InvalidArgumentException;
-use PHPOnCouch\CouchReplicator;
+//use PHPOnCouch\CouchReplicator;
 
 /**
  * Class used to manipulate Couch document easily. Allow to auto update the changes.
