@@ -31,7 +31,33 @@ use BadMethodCallException;
  * This class implements all required methods to use with a
  * CouchDB server
  *
- *
+ * @method CouchClient since(string $val) Start the results from the change immediately after the given update sequence.
+ * @method CouchClient heartbeat(int $val) Period in milliseconds after which an 
+ * empty line is sent in the results. Only applicable for longpoll, continuous, and eventsource feeds. 
+ * @method CouchClient style(string $val) Specifies how many revisions are returned in the changes array.
+ * @method CouchClient conflicts(boolean $include_conflicts) Includes conflicts information in response. 
+ * @method CouchClient descending(boolean $descending) Return the change results in descending sequence order (most recent change first). Default is false.
+ * @method CouchClient revs(boolean includeRevs)  Includes list of all known document revisions.
+ * @method CouchClient rev(string $rev) Retrieves document of specified revision.
+ * @method CouchClient revs_info(boolean $includeRevInfo) Includes detailed information for all known document revisions.
+ * @method CouchClient key(string $key) Specify a document id to fetch in the query.
+ * @method CouchClient keys(array $keys) A list of documents ids to fetch in the query.
+ * @method CouchClient startkey(string $val)  Return records starting with the specified key.
+ * @method CouchClient endkey(string $val) Stop returning records when the specified key is reached. 
+ * @method CouchClient startkey_docid(string $val) Return records starting with the specified document ID. Requires startkey to be specified for this to have any effect.
+ * @method CouchClient endkey_docid(string $val) Stop returning records when the specified document ID is reached. Requires endkey to be specified for this to have any effect.
+ * @method CouchClient limit(int $val) Limit the number of the returned documents to the specified number.
+ * @method CouchClient stale(string $val)  Allow the results from a stale view to be used. Supported values: ok and update_after.
+ * @method CouchClient skip(int $val)  Allow the results from a stale view to be used. Supported values: ok and update_after.
+ * @method CouchClient group(boolean $val) Group the results using the reduce function to a group or single row.
+ * @method CouchClient group_level(int $val) Specify the group level to be used.
+ * @method CouchClient reduce(boolean $val) Use the reduction function
+ * @method CouchClient include_docs(boolean $val) Include the associated document with each result. If there are conflicts, only the winning revision is returned.
+ * @method CouchClient inclusive_end(boolean $val) Specifies wheter the specified end key should be included in the result.
+ * @method CouchClient attachments(boolean $val)  Include the Base64-encoded content of attachments in the documents that are included if include_docs is true.
+ * @method CouchClient sort(object $sortObj)  JSON array following sort syntax.
+ * @method CouchClient fields(array|string $fields) SON array specifying which fields of each object should be returned. If it is omitted, the entire object is returned. More information provided in the section on filtering fields.
+ * 
  */
 class CouchClient extends Couch
 {
@@ -78,7 +104,7 @@ class CouchClient extends Couch
 		'include_docs' => ['name' => 'include_docs', 'filter' => 'jsonEncodeBoolean'],
 		'inclusive_end' => ['name' => 'inclusive_end', 'filter' => 'jsonEncodeBoolean'],
 		'attachments' => ['name' => 'attachments', 'filter' => 'jsonEncodeBoolean'],
-		//Those parameter are only for MangoQuery (Could cause problems in the feature)
+		//Those parameter are only for MangoQuery (Could cause problems in the futur)
 		'sort' => ['name' => 'sort', 'filter' => null],
 		'fields' => ['name' => 'fields', 'filter' => 'ensureArray'],
 	];
@@ -185,7 +211,7 @@ class CouchClient extends Couch
 	public function __call($name, $args)
 	{
 		if (!array_key_exists($name, $this->queryDefs)) {
-			throw new Exception('Method $name does not exist');
+			throw new Exception("Method $name does not exist");
 		}
 		if ($this->queryDefs[$name]['filter'] == 'int') {
 			$this->queryParameters[$this->queryDefs[$name]['name']] = (int) reset($args);

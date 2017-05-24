@@ -131,7 +131,7 @@ class CouchReplicatorTest extends PHPUnit_Framework_TestCase
 	public function testCreateTarget()
 	{
 		//Should return itself
-		$this->assertEquals($this->replicator, $this->replicator->createTarget());
+		$this->assertEquals($this->replicator, $this->replicator->create_target());
 		//Should be set to true
 		$this->assertTrue($this->opts->getValue($this->replicator)['create_target']);
 
