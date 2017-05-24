@@ -8,22 +8,25 @@
 
 */
 
-$couch_dsn = "http://localhost:5984/";
-$couch_db = "example";
+ //Setup an autoloader (using src/autoload.php)
+ $srcDir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'src';
+ require $srcDir . DIRECTORY_SEPARATOR . 'autoload.php';
+
+### ANON DSN
+$couchDsn = "http://localhost:5984/";
+### AUTHENTICATED DSN
+//$couchDsn = "http://admin:adminPwd@localhost:5984/";
+$couchDB = "example";
 
 
-/**
-* include the library
-*/
-
-require_once "../lib/couch.php";
-require_once "../lib/couchClient.php";
-require_once "../lib/couchDocument.php";
+//Import required libraries
+use PHPOnCouch\CouchClient;
+use PHPOnCouch\Exceptions\CouchException;
 
 /**
 * create the client
 */
-$client = new couchClient($couch_dsn,$couch_db);
+$client = new CouchClient($couchDsn,$couchDB);
 
 
 /**
@@ -34,21 +37,20 @@ $client = new couchClient($couch_dsn,$couch_db);
 echo "#### Creating database ".$client->getDatabaseUri().': $result = $client->createDatabase();'."\n";
 try {
         $result = $client->createDatabase();
-} catch (Exception $e) {
-        if ( $e instanceof CouchException ) {
-                echo "We issued the request, but couch server returned an error.\n";
-                echo "We can have HTTP Status code returned by couchDB using \$e->getCode() : ". $e->getCode()."\n";
-                echo "We can have error message returned by couchDB using \$e->getMessage() : ". $e->getMessage()."\n";
-                echo "Finally, we can have CouchDB's complete response body using \$e->getBody() : ". print_r($e->getBody(),true)."\n";
-		echo "Are you sure that your CouchDB server is at $couch_dsn, and that database $couch_db does not exist ?\n";
-                exit (1);
-        } else {
-                echo "It seems that something wrong happened. You can have more details using :\n";
-                echo "the exception class with get_class(\$e) : ".get_class($e)."\n";
-                echo "the exception error code with \$e->getCode() : ".$e->getCode()."\n";
-                echo "the exception error message with \$e->getMessage() : ".$e->getMessage()."\n";
-                exit (1);
-        }
+} catch (CouchException $e) {
+        echo "We issued the request, but couch server returned an error.\n";
+        echo "We can have HTTP Status code returned by couchDB using \$e->getCode() : ". $e->getCode()."\n";
+        echo "We can have error message returned by couchDB using \$e->getMessage() : ". $e->getMessage()."\n";
+        echo "Finally, we can have CouchDB's complete response body using \$e->getBody() : ". print_r($e->getBody(),true)."\n";
+        echo "Are you sure that your CouchDB server is at $couchDsn, and that database $couchDB does not exist ?\n";
+        exit (1);        
+}
+catch(Exception $e){
+        echo "It seems that something wrong happened. You can have more details using :\n";
+        echo "the exception class with get_class(\$e) : ".get_class($e)."\n";
+        echo "the exception error code with \$e->getCode() : ".$e->getCode()."\n";
+        echo "the exception error message with \$e->getMessage() : ".$e->getMessage()."\n";
+        exit (1);
 }
 echo "Database successfully created. CouchDB sent the response :".print_r($result,true)."\n";
 

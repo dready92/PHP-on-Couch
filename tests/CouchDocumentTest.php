@@ -342,14 +342,27 @@ class CouchDocumentTest extends \PHPUnit_Framework_TestCase
 
 	/**
 	 * @covers PHPOnCouch\CouchDocument::record
-	 * @todo   Implement testRecord().
 	 */
 	public function testRecord()
 	{
-		// Remove the following lines when you implement this test.
-		$this->markTestIncomplete(
-				'This test has not been implemented yet.'
-		);
+		$cd = new CouchDocument($this->aclient);
+		$cd->setAutocommit(false);
+		
+		$cd->_id = 'test_record';
+		$cd->name = 'alexis';
+		//We set the doc
+		$this->aclient->storeDoc((object)$cd->getFields());
+		
+		//if we update the document, it should not auto commit
+		$cd->name ='john';
+		
+		$updatedDoc = CouchDocument::getInstance($this->aclient, $cd->_id);
+		$this->assertEquals($updatedDoc->name,'alexis');
+		$updatedDoc->setAutocommit(false);
+		$updatedDoc->name = 'john';
+		$updatedDoc->record();
+		$updated2 = $this->aclient->getDoc($cd->_id);
+		$this->assertEquals($updated2->name,'john');
 	}
 
 	/**

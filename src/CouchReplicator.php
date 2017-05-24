@@ -54,7 +54,7 @@ class CouchReplicator
 	 *
 	 * @return CouchReplicator $this
 	 */
-	public function createTarget()
+	public function create_target()
 	{
 		$this->opts['create_target'] = true;
 		return $this;

@@ -352,7 +352,7 @@ class CouchDocument
 		}
 		$repl = new CouchReplicator($this->_couchData->client);
 		if ($createTarget) {
-			$repl->createTarget();
+			$repl->create_target();
 		}
 		try {
 			$repl->doc_ids([$this->_id])->to($url);
@@ -374,7 +374,7 @@ class CouchDocument
 	{
 		$repl = new CouchReplicator($this->_couchData->client);
 		if ($createTarget) {
-			$repl->createTarget();
+			$repl->create_target();
 		}
 		try {
 			$repl->doc_ids([$id])->from($url);
