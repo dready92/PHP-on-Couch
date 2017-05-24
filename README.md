@@ -101,53 +101,63 @@ A dedicated class to manage replications over different instances of CouchDB dat
 A class to manage users and database/users associations. Documentation available [here](doc/couch_admin.md).
 
 ## Quick-start guide
-  
-1. Import those classes whenever you need to access CouchDB server :
 
+1. PHP-on-Couch package is available under the PHPOnCouch namespace.
+2. To start using PHP-on-Couch, you need to import the classes. 
+
+**Available high level classes**
+
+| Class name | Description |
+| ---------- | ----------- |
+| PHPOnCouch\CouchClient | The client to access a CouchDB database |
+| PHPOnCouch\CouchAdmin | The class to handle CouchDB admins,user and permissions. |
+| PHPOnCouch\CouchReplicator | A class to handle replication with databases. |
+| PHPOnCouch\CouchDocument | A class that enhance document handling. Allow to auto-commit changes, replication and more. |
+
+**Example**
+```php
+use PHPOnCouch\CouchClient;
+use PHPOnCouch\CouchDocument;
 ```
-use PHPOnCouch\Couch, 
-    PHPOnCouch\CouchAdmin, 
-    PHPOnCouch\CouchClient; 
+
+3. Create a client object. You have to tell it the _Data source name_ (dsn) of your CouchDB server, as well as the name of the database you want to work on. The DSN is the URL of your CouchDB server, for example _http://localhost:5984_.
+        
+```php
+$client = new CouchClient($couchdb_server_dsn, $couchdb_database_name);
 ```
 
-If you need to use replication features, also use the couchReplicator definition :
+4. Use it !
+        
+```php
+try {
+    $client->createDatabase();
+} catch (\PHPOnCouch\Exceptions\CouchException $e) {
+    echo "Unable to create database : ".$e->getMessage();
+}
 
-        use PHPOnCouch\CouchReplicator;
+$doc = new CouchDocument($client);
+$doc->set( array('_id'=>'some_doc_id', 'type'=>'story','title'=>"First story") );
 
-2. Create a client object. You have to tell it the _Data source name_ (dsn) of your CouchDB server, as well as the name of the database you want to work on. The DSN is the URL of your CouchDB server, for example _http://localhost:5984_.
-        
-        $client = new CouchClient($couchdb_server_dsn, $couchdb_database_name);
-
-3. Use it !
-        
-        try {
-            $client->createDatabase();
-        } catch (Exception $e) {
-            echo "Unable to create database : ".$e->getMessage();
-        }
-        
-        $doc = new CouchDocument($client);
-        $doc->set( array('_id'=>'some_doc_id', 'type'=>'story','title'=>"First story") );
-        
-        $view = $client->limit(10)->descending(true)->getView('some_design_doc','viewname');
+$view = $client->limit(10)->descending(true)->getView('some_design_doc','viewname');
+```
 
 
 ## Example
 
-Some code first :
+For full examples, refer to the [database example](examples/01_databases.php) or the [document example](examples/02_documents_basics.php).
+
+
 
 At first, you need to import the main components through their namespace. If you use composer, I suggest you to use their autoload wich is easy to setup. Otherwise, you can use your own autoload function or a basic require with some namespace escaping.
 
-```
-use PHPOnCouch\Couch, //The core of PHP-on-Couch
-    PHPOnCouch\CouchAdmin, //The object to handle admins
-    PHPOnCouch\CouchClient; //The CouchDB client object
+```php
+use  PHPOnCouch\CouchClient; //The CouchDB client object
 
 ```
 
 Here's an example for basic operations
 
-```
+```php
 // Set a new connector to the CouchDB server
 $client = new CouchClient('http://my.couch.server.com:5984', 'my_database');
 
@@ -164,7 +174,7 @@ try {
 
 Here's a quick example of how to fetch a view
 
-```
+```php
 // view fetching, using the view option limit
 try {
     $view = $client->limit(100)->getView('orders', 'by-date');
@@ -175,7 +185,7 @@ try {
 
 Finally, how to use the CouchDocument class.
 
-```
+```php
 //using couch_document class :
 $doc = new CouchDocument($client);
 $doc->set(array('_id' => 'JohnSmith', 'name' => 'Smith', 'firstname' => 'John')); //create a document and store it in the database

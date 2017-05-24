@@ -1,6 +1,9 @@
 PHP on Couch Ignited class
 ==========================
 
+# Note : This is DEPRECATED. Create an issue if you want the following framework adapter working again
+
+
 The following is a proposed implementation of PHP on Couch to be used with the Code Igniter PHP framework.
 
 It relies on two files : couchdb.php, a CI compatible library, and couchdb.php (!), a configuration file.

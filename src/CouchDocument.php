@@ -22,7 +22,7 @@ namespace PHPOnCouch;
 use stdClass;
 use Exception;
 use InvalidArgumentException;
-use PHPOnCouch\CouchReplicator;
+//use PHPOnCouch\CouchReplicator;
 
 /**
  * Class used to manipulate Couch document easily. Allow to auto update the changes.
@@ -352,7 +352,7 @@ class CouchDocument
 		}
 		$repl = new CouchReplicator($this->_couchData->client);
 		if ($createTarget) {
-			$repl->createTarget();
+			$repl->create_target();
 		}
 		try {
 			$repl->doc_ids([$this->_id])->to($url);
@@ -374,7 +374,7 @@ class CouchDocument
 	{
 		$repl = new CouchReplicator($this->_couchData->client);
 		if ($createTarget) {
-			$repl->createTarget();
+			$repl->create_target();
 		}
 		try {
 			$repl->doc_ids([$id])->from($url);

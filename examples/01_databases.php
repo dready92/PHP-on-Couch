@@ -8,31 +8,31 @@
 
 */
 
+ //Setup an autoloader (using src/autoload.php)
+ $srcDir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'src';
+ require $srcDir . DIRECTORY_SEPARATOR . 'autoload.php';
+
 ### ANON DSN
-$couch_dsn = "http://localhost:5984/";
+//$couchDsn = "http://localhost:5984/";
 ### AUTHENTICATED DSN
-### $couch_dsn = "http://user:password@localhost:5984/"
-$couch_db = "example";
+$couchDsn = "http://admin:adminPwd@localhost:5984/";
+$couchDB = "example";
 
 
-/**
-* include the library
-*/
-
-require_once "../lib/couch.php";
-require_once "../lib/couchClient.php";
-require_once "../lib/couchDocument.php";
+//Import required libraries
+use PHPOnCouch\CouchClient;
+use PHPOnCouch\Exceptions\CouchException;
 
 /**
 * create the client
 */
-$client = new couchClient($couch_dsn,$couch_db);
+$client = new CouchClient($couchDsn,$couchDB);
 
 
 
 /**
 * first of all, let's list databases on the server.
-* This ensure server connectivity and that $couch_db does not exist
+* This ensure server connectivity and that $couchDB does not exist
 *
 * note the use of a "try {} catch () {}" block to allow gracefull error handling
 *
@@ -43,13 +43,13 @@ echo 'Getting databases infos : $databases = $client->listDatabases();'."\n";
 try {
 	$databases = $client->listDatabases();
 } catch ( Exception $e) {
-	echo "Some error happened during the request. This is certainly because your couch_dsn ($couch_dsn) does not point to a CouchDB server...\n";
+	echo "Some error happened during the request. This is certainly because your couch_dsn ($couchDsn) does not point to a CouchDB server...\n";
 	exit(1);
 }
 echo "Database list fetched : \n".print_r($databases,true)."\n";
 
-if ( in_array($couch_db,$databases) ) {
-	echo "Database $couch_db already exist. Please drop it or edit this script and set $couch_db to a non-existant database\n";
+if ( in_array($couchDB,$databases) ) {
+	echo "Database $couchDB already exist. Please drop it or edit this script and set $couchDB to a non-existant database\n";
 	exit(1);
 }
 
@@ -138,4 +138,4 @@ try {
 }
 echo "Database deleted. CouchDB response: ".print_r($result,true)."\n";
 
-echo "\nTo learn more database features : http://github.com/dready92/PHP-on-Couch/blob/master/doc/couch_client-database.md \n";
+echo "\nTo learn more database features : https://github.com/PHP-on-Couch/PHP-on-Couch/blob/master/doc/couch_client-database.md \n";
