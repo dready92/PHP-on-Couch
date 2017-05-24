@@ -1,6 +1,21 @@
 # Changelist
 
 ---
+#### [2.0.3]
+##### Added
+- CouchClient
+    + Added query parameters documentation for IDE
+- CouchAdmin
+    + setRolesToUser($user,$roles)
+- Added missing tests for the library(code covered at 92%)
+- Added detailed documentation for installation
+
+##### Updated
+- Fixed continuous stream (changes, continuous replication)
+- Update code examples
+
+
+---
 #### [2.0.2]
 ##### Added
 - Couch
