@@ -27,6 +27,8 @@ class config
 
 	private static $instance;
 	private $users;
+	private $host = 'localhost';
+	private $port = 5984;
 
 	private function __construct()
 	{
@@ -38,6 +40,13 @@ class config
 		} else {
 			$this->users = require $defaultPath;
 		}
+
+		$hostEnv = getenv('DB_HOST');
+		$portEnv = getenv('DB_PORT');
+		if ($hostEnv !== false)
+			$this->host = $hostEnv;
+		if ($portEnv !== false)
+			$this->port = $portEnv;
 	}
 
 	public function getFirstNormalUser()
@@ -67,6 +76,19 @@ class config
 	public function getUsers()
 	{
 		return $this->users;
+	}
+
+	public function getDSN()
+	{
+		return $this->host . ':' . $this->port;
+	}
+	
+	public function getPort(){
+		return $this->port;
+	}
+	
+	public function getHost(){
+		return $this->host;
 	}
 
 	public function execInBackground($cmd)

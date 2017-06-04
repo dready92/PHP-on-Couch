@@ -43,9 +43,9 @@ For the complete change list, head over [here](changelist.md)
 ## Installation and testing
 
 Install the library using composer : `composer require php-on-couch/php-on-couch`.
-You can find more detailed informations about installation [here](INSTALL.md)
+You can find more detailed informations about installation [here](INSTALL.md).
 
-Test instructions to be determined.
+To test the the application, see [this topic](TESTING.md).
 
 ## Components and documentation
 

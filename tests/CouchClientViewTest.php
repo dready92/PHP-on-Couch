@@ -11,6 +11,10 @@ use PHPOnCouch\CouchClient,
 
 require_once join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'config.php']);
 
+/**
+ * @backupGlobals disabled
+ * @backupStaticAttributes disabled
+ */
 class CouchClientViewTest extends PHPUnit_Framework_TestCase
 {
 
@@ -20,6 +24,8 @@ class CouchClientViewTest extends PHPUnit_Framework_TestCase
 	public function setUp()
 	{
 		$config = config::getInstance();
+		$this->host = $config->getHost();
+		$this->port = $config->getPort();
 		$url = $config->getUrl($this->host, $this->port, $config->getFirstNormalUser());
 		$aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
 		$this->aclient = new CouchClient($url, 'couchclienttest');

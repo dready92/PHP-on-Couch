@@ -1,12 +1,15 @@
 <?php
-
+/**
+ * You can change the CouchDB port and host used by setting the environment variables
+ */
 require __DIR__ . DIRECTORY_SEPARATOR . 'config.php';
 $config = config::getInstance();
 $users = $config->getUsers();
 
 //Loop through config
 $admins = [];
-$host = 'localhost:5984';
+
+$dsn = $config->getDSN();
 $nodeName = (sizeof($argv) > 1 && isset($argv[1])) ? $argv[1] : null;
 foreach ($users as $val) {
 	if ($val['isAdmin']) {
@@ -15,13 +18,12 @@ foreach ($users as $val) {
 	}
 //	createUser($host, $val['username'], $val['password']);
 }
-
-$adminHost = 'localhost:5984';
+$adminDsn = $dsn;
 foreach ($admins as $val) {
-	createAdmin($adminHost, $val['username'], $val['password'], $nodeName);
-	//We change the adminHost since we won't have any more the admin party.
-	if ($adminHost === $host)
-		$adminHost = urlencode($val['username']) . ':' . urlencode($val['password']) . '@' . $host;
+	createAdmin($adminDsn, $val['username'], $val['password'], $nodeName);
+	//We change the $adminDsn since we won't have any more the admin party.
+	if ($adminDsn === $dsn)
+		$adminDsn = urlencode($val['username']) . ':' . urlencode($val['password']) . '@' . $dsn;
 }
 
 /**

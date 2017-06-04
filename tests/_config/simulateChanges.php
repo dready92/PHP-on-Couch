@@ -5,7 +5,7 @@ $config = config::getInstance();
 $admin = $config->getFirstAdmin();
 $user = $admin['username'];
 $pass = $admin['password'];
-$host = "http://$user:$pass@localhost:5984/";
+$host = "http://$user:$pass@" . $config->getDSN() . "/";
 //We generate three dbs
 $dbNames = [];
 
