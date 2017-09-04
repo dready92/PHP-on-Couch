@@ -156,7 +156,8 @@ EOT
 			"a-zer_ty" => true,
 			"a(zert)y" => true,
 			"4azerty" => false,
-			"a_$()+-/test" => true
+            "a_$()+-/test" => true,
+            "_azerty" => true
 		);
 		foreach ($matches as $key => $val) {
 			$this->assertEquals($val, CouchClient::isValidDatabaseName($key));

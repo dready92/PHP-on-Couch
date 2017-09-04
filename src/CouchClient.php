@@ -287,9 +287,7 @@ class CouchClient extends Couch
 	 */
 	public static function isValidDatabaseName($dbname)
 	{
-		if ($dbname == '_users')
-			return true;
-		if (preg_match('/^[a-z][a-z0-9_$()+\/-]*$/', $dbname))
+		if (preg_match('/^[_a-z][a-z0-9_$()+\/-]*$/', $dbname))
 			return true;
 		return false;
 	}
