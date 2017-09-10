@@ -17,3 +17,7 @@ composer.lock
 
 #Misc
 setup.sh
+
+
+#Doc build files
+doc/_build

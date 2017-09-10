@@ -138,4 +138,4 @@ try {
 }
 echo "Database deleted. CouchDB response: ".print_r($result,true)."\n";
 
-echo "\nTo learn more database features : https://github.com/PHP-on-Couch/PHP-on-Couch/blob/master/doc/couch_client-database.md \n";
+echo "\nTo learn more database features : https://github.com/PHP-on-Couch/PHP-on-Couch/blob/master/doc/database.rst \n";
