@@ -22,18 +22,18 @@
 
 ## Recent changes
 
-For the complete change list, head over [here](http://php-on-couch.readthedocs.io/en/stable/overview/changelist/index.html)
+For the complete change list, head over [here](http://php-on-couch.readthedocs.io/en/latest/overview/changelist/index.html)
 
 ## Installation and testing
 
 Install the library using composer : `composer require php-on-couch/php-on-couch`.
-You can find more detailed informations about installation [here](http://php-on-couch.readthedocs.io/en/stable/quickstart/installation.html).
+You can find more detailed informations about installation [here](http://php-on-couch.readthedocs.io/en/latest/quickstart/installation.html).
 
-To test the the application, see [this topic](http://php-on-couch.readthedocs.io/en/stable/quickstart/testing.html).
+To test the the application, see [this topic](http://php-on-couch.readthedocs.io/en/latest/quickstart/testing.html).
 
 ## Components and documentation
 
-For the full API document, please visite [this link](http://php-on-couch.readthedocs.io/en/stable/api/index.html)
+For the full API document, please visite [this link](http://php-on-couch.readthedocs.io/en/latest/api/index.html)
 
 ## Example
 
@@ -91,7 +91,7 @@ $doc->name = "Brown"; // set document property "name" to "Brown" and store the u
 
 ### Contributions
 
-Feel free to make any contributions. All contributions must follow the [code style](http://php-on-couch.readthedocs.io/en/stable/quickstart/codestyle.html) and must also comes with valid and complete tests. 
+Feel free to make any contributions. All contributions must follow the [code style](http://php-on-couch.readthedocs.io/en/latest/quickstart/codestyle.html) and must also comes with valid and complete tests. 
 
 Help is really appreciated to complete add more tests.
 
