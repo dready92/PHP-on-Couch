@@ -1,0 +1,62 @@
+/** -- PHPDOMAIN OPTIMIZATIONS -- **/
+
+.rst-content dl dd {
+    margin: 24px 24px 24px 24px;
+}
+
+.rst-content dl > dt {
+    width: 100%;
+}
+
+.rst-content dl:not(.docutils) {
+    margin-top: 36px;
+}
+
+.rst-content .hidden {
+    display: none !important;
+}
+
+nav .hidden, div.section#maintoc .hidden {
+    display: unset !important;
+    visibility: visible !important;
+}
+
+div.section#maintoc h2 {
+    display: none !important;
+}
+
+.wy-table-bordered-all, .rst-content table.docutils {
+    border: 1px solid #e1e4e5;
+}
+
+.wy-table td p, .rst-content table.docutils td p, .rst-content table.field-list td p {
+    line-height: unset;
+}
+
+.rst-content table.field-list td {
+    border: none;
+    padding-top: 8px;
+}
+
+tr.field-odd.field {
+    background-color: whitesmoke;
+}
+
+tr.field-odd.field:hover, tr.field-even.field:hover {
+    background-color: lightyellow;
+}
+
+.wy-table-bordered-all tbody > tr:last-child td, .rst-content table.docutils tbody > tr:last-child td {
+    padding-bottom: 0;
+}
+
+.rst-content table.field-list td {
+    padding-bottom: 0;
+}
+
+.wy-table td, .rst-content table.docutils td, .rst-content table.field-list td {
+    background-color: transparent;
+    vertical-align: baseline;
+}
+
+/** -- END PHPDOMAIN OPTIMIZATIONS -- **/
