@@ -33,6 +33,8 @@ script:
     - vendor/bin/phpunit --coverage-clover=coverage.xml --configuration ./phpunit.xml  --testsuite Ordered
     - php vendor/phpcheckstyle/phpcheckstyle/run.php --src src --config ./php-on-couch-style.xml
 
+env:
+  - HTTP_ADAPTER=curl
     
 after_success:
 - bash <(curl -s https://codecov.io/bash)

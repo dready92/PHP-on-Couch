@@ -23,6 +23,7 @@ use Exception;
 use InvalidArgumentException;
 use PHPOnCouch\Exceptions\CouchException;
 use PHPOnCouch\Exceptions\ConflictException;
+use PHPOnCouch\Exceptions\CouchNoResponseException;
 use PHPOnCouch\Exceptions\ForbiddenException;
 use PHPOnCouch\Exceptions\NotFoundException;
 use PHPOnCouch\Exceptions\UnauthorizedException;
@@ -30,6 +31,7 @@ use PHPOnCouch\Exceptions\ExpectationException;
 use PHPOnCouch\Adapter\CouchHttpAdapterInterface;
 use PHPOnCouch\Adapter\CouchHttpAdapterCurl;
 use PHPOnCouch\Adapter\CouchHttpAdapterSocket;
+
 
 /**
  * couch class
@@ -61,7 +63,7 @@ class Couch
      * @param string $dsn CouchDB Data Source Name
      * @param array $options Couch options
      */
-    public function __construct($dsn, $options = array())
+    public function __construct($dsn, $options = [])
     {
         $this->dsn = preg_replace('@/+$@', '', $dsn);
         $this->options = $options;
@@ -94,16 +96,32 @@ class Couch
 
     /**
      * Init the HTTP Adapter with cURL if available.
-     * @param Array $options An array of options.
-     * @return \PHPOnCouch\CouchHttpAdapterSocket
+     * @param array $options An array of options.
+     * @return \PHPOnCouch\Adapter\CouchHttpAdapterSocket
      */
     public function initAdapter($options)
     {
         if (!isset($options))
             $options = $this->options;
-        if (function_exists('curl_init'))
+
+        $config = Config::getInstance();
+
+        if ($config->getAdapter() == 'curl' && function_exists('curl_init')) {
+            //We add curl options from config
+            if (!array_key_exists('curl', $options) || !is_array($options['curl']))
+                $options['curl'] = [];
+            $options['curl'] = array_merge($config->getCurlOpts(), $options['curl']);
+
+            //Convert options to int
+            $newOpts = [];
+            foreach ($options['curl'] as $key => $val) {
+                if (is_string($key))
+                    $key = constant($key);
+                $newOpts[$key] = $val;
+            }
+            $options['curl'] = $newOpts;
             $adapter = new CouchHttpAdapterCurl($this->dsn, $options);
-        else
+        } else
             $adapter = new CouchHttpAdapterSocket($this->dsn, $options);
         $this->adapter = $adapter;
         return $adapter;
@@ -122,7 +140,7 @@ class Couch
     /**
      * returns the options array
      *
-     * @return string DSN
+     * @return array containing the option
      */
     public function options()
     {
@@ -156,7 +174,7 @@ class Couch
      * if $part parameter is empty, returns dns array
      *
      * @param string $part part to return
-     * @return string DSN part
+     * @return string|array DSN part
      */
     public function dsnPart($part = null)
     {
@@ -166,6 +184,7 @@ class Couch
         if (isset($this->dsnParsed[$part])) {
             return $this->dsnParsed[$part];
         }
+        return $this->dsnParsed;
     }
 
     /**
@@ -192,7 +211,7 @@ class Couch
         while (!substr_compare($rawData, $httpHeader, 0, 25)) {
             $rawData = substr($rawData, 25);
         }
-        $response = array('body' => null);
+        $response = ['body' => null];
         list($headers, $body) = explode("\r\n\r\n", $rawData, 2);
         $headersArray = explode("\n", $headers);
         $statusLine = reset($headersArray);

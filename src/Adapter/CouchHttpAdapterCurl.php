@@ -22,24 +22,30 @@ namespace PHPOnCouch\Adapter;
 use Exception;
 use InvalidArgumentException;
 
+
 /**
  * Description of CouchAdapterCurl
  *
  * @author alexis
  */
-class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttpAdapterInterface {
+class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttpAdapterInterface
+{
+
 
     /**
      * We need a socket to use the continuous query.
-     * @var CouchHttpAdapterSocket 
+     * @var CouchHttpAdapterSocket
      */
     protected $socketAdapter;
 
-    protected function initSocketAdapter() {
+
+    protected function initSocketAdapter()
+    {
         $this->socketAdapter = new CouchHttpAdapterSocket($this->getDsn(), $this->getOptions());
     }
 
-    public function continuousQuery($callable, $method, $url, $parameters = [], $data = null) {
+    public function continuousQuery($callable, $method, $url, $parameters = [], $data = null)
+    {
         if ($this->socketAdapter == null) {
             $this->initSocketAdapter();
         }
@@ -49,7 +55,8 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttp
     /**
      * add user-defined options to Curl resource
      */
-    protected function addCustomOptions($res) {
+    protected function addCustomOptions($res)
+    {
         if (array_key_exists("curl", $this->options) && is_array($this->options["curl"])) {
             curl_setopt_array($res, $this->options["curl"]);
         }
@@ -65,7 +72,8 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttp
      * @param string $contentType the content type of the sent data (defaults to application/json)
      * @return resource CURL request resource
      */
-    protected function buildRequest($method, $url, $data, $contentType) {
+    protected function buildRequest($method, $url, $data, $contentType)
+    {
         $http = curl_init($url);
         $httpHeaders = ['Accept: application/json,text/html,text/plain,*/*'];
         if (is_object($data) || is_array($data)) {
@@ -105,7 +113,8 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttp
      *
      * @throws Exception
      */
-    public function query($method, $url, $parameters = [], $data = null, $contentType = null) {
+    public function query($method, $url, $parameters = [], $data = null, $contentType = null)
+    {
         if (!in_array($method, $this->httpMethods))
             throw new Exception("Bad HTTP method: $method");
 
@@ -120,7 +129,6 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttp
 
         $response = curl_exec($http);
         curl_close($http);
-
         return $response;
     }
 
@@ -136,7 +144,8 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttp
      *
      * @throws InvalidArgumentException
      */
-    public function storeFile($url, $file, $contentType) {
+    public function storeFile($url, $file, $contentType)
+    {
         if (!strlen($url))
             throw new InvalidArgumentException("Attachment URL can't be empty");
         if (!strlen($file) || !is_file($file) || !is_readable($file))
@@ -181,7 +190,8 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttp
      *
      * @throws InvalidArgumentException
      */
-    public function storeAsFile($url, $data, $contentType) {
+    public function storeAsFile($url, $data, $contentType)
+    {
         if (!strlen($url))
             throw new InvalidArgumentException("Attachment URL can't be empty");
         if (!strlen($contentType))

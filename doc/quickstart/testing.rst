@@ -36,17 +36,27 @@ Recommended way
 
 PHP-on-Couch provides bash scripts that setup a CouchDB instance via docker and let you test the library. If you're on Windows, you have to install Git Bash which comes with Git when you install it.
 
+The scripts for testing execute the following:
+
+- Installs latest composer packages
+- Starts the docker image
+- Creates the databases required
+- Seeds the database and setup users
+- Runs the tests
+- Validates the codestyle
+
+
 .. warning:: Before running the scripts, make sure the port 5984 is free. Otherwise, the docker image won't be able to run and the tests will fail. Also, if you already have a local CouchDB, it's not recommended to use it for test. Tests will interact with the database and change it's current state.
 
 For Windows users :
 
 .. code-block :: bash
 
-    sh _runLocalWin.sh
+    sh bin/_runLocalWin.sh
 
 
 For Unix/OSX users :
 
 .. code-block:: bash
 
-    sh _runLocalUnix.sh
+    sh bin/_runLocalUnix.sh

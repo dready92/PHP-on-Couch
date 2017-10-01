@@ -3,9 +3,9 @@
 namespace PHPOnCouch;
 
 use InvalidArgumentException,
-	PHPOnCouch\Exceptions,
-	PHPUnit_Framework_TestCase,
-	stdClass;
+    PHPOnCouch\Exceptions,
+    PHPUnit_Framework_TestCase,
+    stdClass;
 
 require_once join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'config.php']);
 
@@ -17,174 +17,174 @@ require_once join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'config.php']);
 class CouchTest extends PHPUnit_Framework_TestCase
 {
 
-	private $host = 'localhost';
-	private $port = '5984';
-	private $dbname = 'couchclienttest';
+    private $host = 'localhost';
+    private $port = '5984';
+    private $dbname = 'couchclienttest';
 
-	/**
-	 *
-	 * @var PHPOnCouch\Couch
-	 */
-	private $couch;
+    /**
+     *
+     * @var \PHPOnCouch\Couch
+     */
+    private $couch;
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 */
-	protected function setUp()
-	{
-		$config = \config::getInstance();
-		$this->host = $config->getHost();
-		$this->port = $config->getPort();
-		$this->aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
-		$this->couch_server = 'http://' . $this->host . ':' . $this->port . '/';
+    /**
+     * Sets up the fixture, for example, opens a network connection.
+     * This method is called before a test is executed.
+     */
+    protected function setUp()
+    {
+        $config = \config::getInstance();
+        $this->host = $config->getHost();
+        $this->port = $config->getPort();
+        $this->aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
+        $this->couch_server = 'http://' . $this->host . ':' . $this->port . '/';
 
-		$this->couch = new Couch($this->aUrl);
-		$this->aclient = new CouchClient($this->aUrl, $this->dbname);
-		try {
-			$this->aclient->deleteDatabase();
-		} catch (\Exception $e) {
-			
-		}
-		$this->aclient->createDatabase();
-	}
+        $this->couch = new Couch($this->aUrl);
+        $this->aclient = new CouchClient($this->aUrl, $this->dbname);
+        try {
+            $this->aclient->deleteDatabase();
+        } catch (\Exception $e) {
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 */
-	protected function tearDown()
-	{
-		$this->couch = null;
-	}
+        }
+        $this->aclient->createDatabase();
+    }
 
-	/**
-	 * @covers PHPOnCouch\Couch::__construct
-	 */
-	public function testCouchConstructor()
-	{
-		$couch = new Couch('http://something.com');
-		$this->assertEquals(80, $couch->dsnPart('port'));
-	}
+    /**
+     * Tears down the fixture, for example, closes a network connection.
+     * This method is called after a test is executed.
+     */
+    protected function tearDown()
+    {
+        $this->couch = null;
+    }
 
-	/**
-	 * @covers PHPOnCouch\Couch::getAdapter()
-	 * @covers PHPOnCouch\Couch::setAdapter()
-	 */
-	public function testAdapterGetterSetter()
-	{
-		$adapter = $this->couch->getAdapter();
+    /**
+     * @covers \PHPOnCouch\Couch::__construct
+     */
+    public function testCouchConstructor()
+    {
+        $couch = new Couch('http://something.com');
+        $this->assertEquals(80, $couch->dsnPart('port'));
+    }
 
-		//Should be Curl by default
-		$this->assertEquals("PHPOnCouch\Adapter\CouchHttpAdapterCurl", get_class($adapter));
+    /**
+     * @covers \PHPOnCouch\Couch::getAdapter()
+     * @covers \PHPOnCouch\Couch::setAdapter()
+     */
+    public function testAdapterGetterSetter()
+    {
+        $adapter = $this->couch->getAdapter();
 
-		$socketAdapter = new Adapter\CouchHttpAdapterSocket("http://localhost:5984", []);
-		$this->couch->setAdapter($socketAdapter);
-		$this->assertEquals("PHPOnCouch\Adapter\CouchHttpAdapterSocket", get_class($this->couch->getAdapter()));
-	}
+        //Should be Curl by default
+        $this->assertEquals("PHPOnCouch\Adapter\CouchHttpAdapterCurl", get_class($adapter));
 
-	/**
-	 * @covers PHPOnCouch\Couch::initAdapter()
-	 */
-	public function testInitAdapter()
-	{
-		//By default, it should be curl
-		$newCouch1 = new Couch("randomdsn");
-		$this->assertEquals("PHPOnCouch\Adapter\CouchHttpAdapterCurl", get_class($newCouch1->getAdapter()));
+        $socketAdapter = new Adapter\CouchHttpAdapterSocket("http://localhost:5984", []);
+        $this->couch->setAdapter($socketAdapter);
+        $this->assertEquals("PHPOnCouch\Adapter\CouchHttpAdapterSocket", get_class($this->couch->getAdapter()));
+    }
 
-		$opts = ['test' => 'optionIsSet'];
-		$newCouch1->initAdapter($opts);
-		$this->assertEquals($newCouch1->getAdapter()->getOptions(), $opts);
-	}
+    /**
+     * @covers \PHPOnCouch\Couch::initAdapter()
+     */
+    public function testInitAdapter()
+    {
+        //By default, it should be curl
+        $newCouch1 = new Couch("randomdsn");
+        $this->assertEquals("PHPOnCouch\Adapter\CouchHttpAdapterCurl", get_class($newCouch1->getAdapter()));
 
-	/**
-	 * @covers PHPOnCouch\Couch::dsn()
-	 */
-	public function testDsn()
-	{
-		$dsn = "dsnTest";
-		$couch1 = new Couch($dsn);
-		$this->assertEquals($dsn, $couch1->dsn());
-	}
+        $opts = ['test' => 'optionIsSet'];
+        $newCouch1->initAdapter($opts);
+        $this->assertEquals($newCouch1->getAdapter()->getOptions()['test'], $opts['test']);
+    }
 
-	/**
-	 * @covers PHPOnCouch\Couch::options()
-	 */
-	public function testOptions()
-	{
-		$opts = ['param' => 'value'];
-		$couch = new Couch("dsnTest", $opts);
-		$this->assertEquals($opts, $couch->options());
-	}
+    /**
+     * @covers \PHPOnCouch\Couch::dsn()
+     */
+    public function testDsn()
+    {
+        $dsn = "dsnTest";
+        $couch1 = new Couch($dsn);
+        $this->assertEquals($dsn, $couch1->dsn());
+    }
 
-	public function testSessionAccessors()
-	{
-		$session = "Y291Y2g6NENGNDgzNz ";
-		$this->couch->setSessionCookie($session);
-		$this->assertEquals($session, $this->couch->getSessionCookie());
-	}
+    /**
+     * @covers \PHPOnCouch\Couch::options()
+     */
+    public function testOptions()
+    {
+        $opts = ['param' => 'value'];
+        $couch = new Couch("dsnTest", $opts);
+        $this->assertEquals($opts, $couch->options());
+    }
 
-	/**
-	 * @covers PHPOnCouch\Couch::dsnPart
-	 */
-	public function testDsnPart()
-	{
-		$config = \config::getInstance();
-		$admin = $config->getFirstAdmin();
-		$expectedParts = [
-			'scheme' => 'http',
-			'host' => $this->host,
-			'port' => $this->port,
-			'user' => $admin['username'],
-			'pass' => $admin['password']
-		];
-		$parts = $this->couch->dsnPart();
-		$this->assertEquals($expectedParts, $parts);
+    public function testSessionAccessors()
+    {
+        $session = "Y291Y2g6NENGNDgzNz ";
+        $this->couch->setSessionCookie($session);
+        $this->assertEquals($session, $this->couch->getSessionCookie());
+    }
 
-		//Test for certain part
-		$this->assertEquals($this->host, $this->couch->dsnPart('host'));
-	}
+    /**
+     * @covers \PHPOnCouch\Couch::dsnPart
+     */
+    public function testDsnPart()
+    {
+        $config = \config::getInstance();
+        $admin = $config->getFirstAdmin();
+        $expectedParts = [
+            'scheme' => 'http',
+            'host' => $this->host,
+            'port' => $this->port,
+            'user' => $admin['username'],
+            'pass' => $admin['password']
+        ];
+        $parts = $this->couch->dsnPart();
+        $this->assertEquals($expectedParts, $parts);
 
-	public function testStoreFile()
-	{
-		$doc = (object) ['_id' => 'couch_test_store_as_file'];
+        //Test for certain part
+        $this->assertEquals($this->host, $this->couch->dsnPart('host'));
+    }
 
-		$file = join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']);
-		$filename = 'couch_GoogleHomepage.html';
-		$contentType = 'text/html';
+    public function testStoreFile()
+    {
+        $doc = (object)['_id' => 'couch_test_store_as_file'];
 
-		$url = '/' . $this->dbname . '/' . urlencode($doc->_id) . '/' . urlencode($filename);
+        $file = join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']);
+        $filename = 'couch_GoogleHomepage.html';
+        $contentType = 'text/html';
 
-		$rawResponse = $this->couch->storeFile($url, $file, $contentType);
-		$parsedResponse = \PhpOnCouch\Couch::parseRawResponse($rawResponse);
-		$this->assertArrayHasKey('status_code', $parsedResponse);
-		$this->assertArrayHasKey('status_message', $parsedResponse);
-		$this->assertEquals('201', $parsedResponse['status_code']);
-		$this->assertEquals('Created', $parsedResponse['status_message']);
+        $url = '/' . $this->dbname . '/' . urlencode($doc->_id) . '/' . urlencode($filename);
 
-		$this->expectException("\Exception");
-		$this->couch->storeFile("NOEXISTING", "something", "");
-	}
+        $rawResponse = $this->couch->storeFile($url, $file, $contentType);
+        $parsedResponse = \PhpOnCouch\Couch::parseRawResponse($rawResponse);
+        $this->assertArrayHasKey('status_code', $parsedResponse);
+        $this->assertArrayHasKey('status_message', $parsedResponse);
+        $this->assertEquals('201', $parsedResponse['status_code']);
+        $this->assertEquals('Created', $parsedResponse['status_message']);
 
-	public function testStoreAsFile()
-	{
-		$doc = (object) ['_id' => 'couch_test_store_as_file'];
+        $this->expectException("\Exception");
+        $this->couch->storeFile("NOEXISTING", "something", "");
+    }
 
-		$data = file_get_contents('http://www.google.com/');
-		$filename = 'couch_GoogleHomepage.html';
-		$contentType = 'text/html';
+    public function testStoreAsFile()
+    {
+        $doc = (object)['_id' => 'couch_test_store_as_file'];
 
-		$url = '/' . $this->dbname . '/' . urlencode($doc->_id) . '/' . urlencode($filename);
+        $data = file_get_contents('http://www.google.com/');
+        $filename = 'couch_GoogleHomepage.html';
+        $contentType = 'text/html';
 
-		$rawResponse = $this->couch->storeAsFile($url, $data, $contentType);
-		$parsedResponse = \PhpOnCouch\Couch::parseRawResponse($rawResponse);
-		$this->assertArrayHasKey('status_code', $parsedResponse);
-		$this->assertArrayHasKey('status_message', $parsedResponse);
-		$this->assertEquals('201', $parsedResponse['status_code']);
-		$this->assertEquals('Created', $parsedResponse['status_message']);
+        $url = '/' . $this->dbname . '/' . urlencode($doc->_id) . '/' . urlencode($filename);
 
-		$this->expectException("\Exception");
-		$this->couch->storeAsFile("NOEXISTING", "something", "");
-	}
+        $rawResponse = $this->couch->storeAsFile($url, $data, $contentType);
+        $parsedResponse = \PhpOnCouch\Couch::parseRawResponse($rawResponse);
+        $this->assertArrayHasKey('status_code', $parsedResponse);
+        $this->assertArrayHasKey('status_message', $parsedResponse);
+        $this->assertEquals('201', $parsedResponse['status_code']);
+        $this->assertEquals('Created', $parsedResponse['status_message']);
+
+        $this->expectException("\Exception");
+        $this->couch->storeAsFile("NOEXISTING", "something", "");
+    }
 
 }

@@ -19,7 +19,6 @@
 
 namespace PHPOnCouch\Adapter;
 
-use InvalidException;
 use InvalidArgumentException;
 use PHPOnCouch\Exceptions\CouchException;
 use Exception;
@@ -34,17 +33,16 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
 
 	protected $socket;
 
-	/**
-	 * open the connection to the CouchDB server
-	 * 
-	 * @param bool $stream True to setup a stream client, otherwise false.
-	 *
-	 * This function can throw an Exception if it fails
-	 *
-	 * @return boolean Weither the connection is successful
-	 *
-	 * @throws Exception
-	 */
+    /**
+     * open the connection to the CouchDB server
+     * @return bool Weither the connection is successful
+     *
+     * @throws Exception
+     * @internal param bool $stream True to setup a stream client, otherwise false.
+     *
+     * This function can throw an Exception if it fails
+     *
+     */
 	protected function connect()
 	{
 		$ssl = $this->dsnPart('scheme') == 'https' ? 'ssl://' : '';
@@ -168,12 +166,9 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
 		$request = $this->buildRequest($method, $url, $data, $contentType);
 		if (!$this->connect())
 			return false;
-// 		echo "DEBUG: Request ------------------ \n$request\n";
 		$rawResponse = $this->execute($request);
 		$this->disconnect();
 
-// 		echo 'debug',"COUCH : Executed query $method $url";
-// 		echo 'debug',"COUCH : ".$raw_response;
 		return $rawResponse;
 	}
 
@@ -210,7 +205,7 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
 			$url = $url . '?' . http_build_query($parameters);
 		//Send the request to the socket
 		$request = $this->buildRequest($method, $url, $data, null);
-		if (!$this->connect(true))
+		if (!$this->connect())
 			return false;
 
 		fwrite($this->socket, $request);

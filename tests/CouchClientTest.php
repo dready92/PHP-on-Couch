@@ -15,11 +15,11 @@ require_once join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'config.php']);
 class CouchClientTest extends PHPUnit_Framework_TestCase
 {
 
-	private $host = 'localhost';
-	private $port = '5984';
-	private $dbname = 'couchclienttest';
-	private $continuousQueryTriggerFile = __DIR__ . DIRECTORY_SEPARATOR . 'continuousquery.lock';
-	private $updateFn = <<<EOT
+    private $host = 'localhost';
+    private $port = '5984';
+    private $dbname = 'couchclienttest';
+    private $continuousQueryTriggerFile = __DIR__ . DIRECTORY_SEPARATOR . 'continuousquery.lock';
+    private $updateFn = <<<EOT
 function(doc,req) {
 	var resp = {query:null,form:null};
 	if ( "query" in req ) {
@@ -33,1036 +33,1046 @@ function(doc,req) {
 			body: JSON.stringify(resp)
 		}];
 }
-EOT
+EOT;
 
-	;
+    /**
+     *
+     * @var PHPOnCouch\CouchClient
+     */
+    private $client;
 
-	/**
-	 *
-	 * @var PHPOnCouch\CouchClient
-	 */
-	private $client;
+    /**
+     *
+     * @var PHPOnCouch\CouchClient
+     */
+    private $aclient;
 
-	/**
-	 *
-	 * @var PHPOnCouch\CouchClient
-	 */
-	private $aclient;
+    /**
+     * Sets up the fixture, for example, opens a network connection.
+     * This method is called before a test is executed.
+     */
+    protected function setUp()
+    {
+        $config = \config::getInstance();
+        $this->host = $config->getHost();
+        $this->port = $config->getPort();
+        $this->url = $config->getUrl($this->host, $this->port, null);
+        $this->aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
+        $this->couch_server = 'http://' . $this->host . ':' . $this->port . '/';
 
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 */
-	protected function setUp()
-	{
-		$config = \config::getInstance();
-		$this->host = $config->getHost();
-		$this->port = $config->getPort();
-		$this->url = $config->getUrl($this->host, $this->port, null);
-		$this->aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
-		$this->couch_server = 'http://' . $this->host . ':' . $this->port . '/';
+        $this->client = new CouchClient($this->url, $this->dbname);
+        $this->aclient = new CouchClient($this->aUrl, $this->dbname);
+        $this->setupClient($this->aclient);
+    }
 
-		$this->client = new CouchClient($this->url, $this->dbname);
-		$this->aclient = new CouchClient($this->aUrl, $this->dbname);
-		$this->setupClient($this->aclient);
-	}
+    protected function setupClient($client)
+    {
+        try {
+            $client->deleteDatabase();
+        } catch (Exceptions\CouchNotFoundException $e) {
 
-	protected function setupClient($client)
-	{
-		try {
-			$client->deleteDatabase();
-		} catch (Exceptions\CouchNotFoundException $e) {
-			
-		}
-		$client->createDatabase();
-	}
+        }
+        $client->createDatabase();
+    }
 
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 */
-	protected function tearDown()
-	{
-		try {
-			$this->aclient->deleteDatabase();
-		} catch (\Exception $e) {
-			
-		}
-		$this->client = null;
-		$this->aclient = null;
-	}
+    /**
+     * Tears down the fixture, for example, closes a network connection.
+     * This method is called after a test is executed.
+     */
+    protected function tearDown()
+    {
+        try {
+            $this->aclient->deleteDatabase();
+        } catch (\Exception $e) {
 
-	public function testContructor()
-	{
-		$options = ['cookie_auth' => true];
-		$client = new CouchClient($this->aUrl, 'couchclienttest', $options);
+        }
+        $this->client = null;
+        $this->aclient = null;
+    }
 
-		$cookie = $client->getSessionCookie();
-		$this->assertNotEmpty($cookie);
-	}
+    public function testContructor()
+    {
+        $options = ['cookie_auth' => true];
+        $client = new CouchClient($this->aUrl, 'couchclienttest', $options);
 
-	/**
-	 * 
-	 */
-	public function testRevs()
-	{
-		$cd = new CouchDocument($this->client);
-		$cd->set(array(
-			'_id' => 'somedoc'
-		));
-		$cd->property1 = "one";
-		$cd->property2 = "two";
-		$doc = $this->client->revs()->revs_info()->getDoc("somedoc");
-		$this->assertObjectHasAttribute("_revisions", $doc);
-		$this->assertObjectHasAttribute("ids", $doc->_revisions);
-		$this->assertEquals(count($doc->_revisions->ids), 3);
-		$this->assertObjectHasAttribute("_revs_info", $doc);
-		$this->assertEquals(count($doc->_revs_info), 3);
-	}
+        $cookie = $client->getSessionCookie();
+        $this->assertNotEmpty($cookie);
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::setQueryParameters
-	 */
-	public function testSetQueryParameters()
-	{
-		$refl = new \ReflectionClass(CouchClient::class);
-		$param = $refl->getProperty('queryParameters');
-		$param->setAccessible(true);
+    public function testAuthParams()
+    {
+        $user = 'steve';
+        $pass = 'blabla/*/*';
 
-		$params = ['limit' => 1, 'skip' => 2];
+        $client = new CouchClient($this->aUrl, 'couchclienttest', ['username' => $user, 'password' => $pass]);
+        $parts = $client->dsnPart();
+        $default = parse_url($this->aUrl);
+        $this->assertEquals($parts['user'], urlencode($user));
+        $this->assertEquals($parts['pass'], urlencode($pass));
+        $this->assertEquals($parts['host'], $default['host']);
+    }
 
-		$this->assertEmpty($param->getValue($this->aclient));
-		$this->assertEquals($this->aclient, $this->aclient->setQueryParameters($params));
-		$this->assertEquals($param->getValue($this->aclient), $params);
-	}
+    /**
+     *
+     */
+    public function testRevs()
+    {
+        $cd = new CouchDocument($this->client);
+        $cd->set(array(
+            '_id' => 'somedoc'
+        ));
+        $cd->property1 = "one";
+        $cd->property2 = "two";
+        $doc = $this->client->revs()->revs_info()->getDoc("somedoc");
+        $this->assertObjectHasAttribute("_revisions", $doc);
+        $this->assertObjectHasAttribute("ids", $doc->_revisions);
+        $this->assertEquals(count($doc->_revisions->ids), 3);
+        $this->assertObjectHasAttribute("_revs_info", $doc);
+        $this->assertEquals(count($doc->_revs_info), 3);
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::useDatabase
-	 */
-	public function testUseDatabase()
-	{
-		$this->expectException(InvalidArgumentException::class);
-		$this->aclient->useDatabase('_THIS_IS_INVALID');
-	}
+    /**
+     * @covers PHPOnCouch\CouchClient::setQueryParameters
+     */
+    public function testSetQueryParameters()
+    {
+        $refl = new \ReflectionClass(CouchClient::class);
+        $param = $refl->getProperty('queryParameters');
+        $param->setAccessible(true);
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::isValidDatabaseName
-	 * Create database failed: Name: '4akte'. Only lowercase characters (a-z), digits (0-9), and any of the characters _, $, (, ), +, -, and / are allowed. Must begin with a letter.
-	 */
-	public function testIsValidDatabaseName()
-	{
-		$matches = array(
-			"Azerty" => false,
-			"a-zer_ty" => true,
-			"a(zert)y" => true,
-			"4azerty" => false,
+        $params = ['limit' => 1, 'skip' => 2];
+
+        $this->assertEmpty($param->getValue($this->aclient));
+        $this->assertEquals($this->aclient, $this->aclient->setQueryParameters($params));
+        $this->assertEquals($param->getValue($this->aclient), $params);
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchClient::useDatabase
+     */
+    public function testUseDatabase()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->aclient->useDatabase('_THIS_IS_INVALID');
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchClient::isValidDatabaseName
+     * Create database failed: Name: '4akte'. Only lowercase characters (a-z), digits (0-9), and any of the characters _, $, (, ), +, -, and / are allowed. Must begin with a letter.
+     */
+    public function testIsValidDatabaseName()
+    {
+        $matches = array(
+            "Azerty" => false,
+            "a-zer_ty" => true,
+            "a(zert)y" => true,
+            "4azerty" => false,
             "a_$()+-/test" => true,
             "_azerty" => true
-		);
-		foreach ($matches as $key => $val) {
-			$this->assertEquals($val, CouchClient::isValidDatabaseName($key));
-		}
-	}
+        );
+        foreach ($matches as $key => $val) {
+            $this->assertEquals($val, CouchClient::isValidDatabaseName($key));
+        }
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::listDatabases
-	 */
-	public function testListDatabases()
-	{
-		$expectedDBS = ['_users', $this->dbname, '_replicator', '_global_changes'];
-		$dbs = $this->aclient->listDatabases();
-		foreach ($expectedDBS as $val) {
-			$this->assertContains($val, $dbs);
-		}
-	}
+    /**
+     * @covers PHPOnCouch\CouchClient::listDatabases
+     */
+    public function testListDatabases()
+    {
+        $expectedDBS = ['_users', $this->dbname, '_replicator', '_global_changes'];
+        $dbs = $this->aclient->listDatabases();
+        foreach ($expectedDBS as $val) {
+            $this->assertContains($val, $dbs);
+        }
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::createDatabase
-	 */
-	public function testCreateDatabase()
-	{
-		$this->aclient->useDatabase('testcreatedb');
-		$this->assertFalse($this->aclient->databaseExists());
-		$this->aclient->createDatabase();
-		$this->assertTrue($this->aclient->databaseExists());
-	}
+    /**
+     * @covers PHPOnCouch\CouchClient::createDatabase
+     */
+    public function testCreateDatabase()
+    {
+        $this->aclient->useDatabase('testcreatedb');
+        $this->assertFalse($this->aclient->databaseExists());
+        $this->aclient->createDatabase();
+        $this->assertTrue($this->aclient->databaseExists());
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::deleteDatabase
-	 */
-	public function testDeleteDatabase()
-	{
-		$back = $this->aclient->deleteDatabase();
-		$this->assertInternalType("object", $back);
-		$this->assertObjectHasAttribute("ok", $back);
-		$this->assertEquals(true, $back->ok);
-	}
+    /**
+     * @covers PHPOnCouch\CouchClient::deleteDatabase
+     */
+    public function testDeleteDatabase()
+    {
+        $back = $this->aclient->deleteDatabase();
+        $this->assertInternalType("object", $back);
+        $this->assertObjectHasAttribute("ok", $back);
+        $this->assertEquals(true, $back->ok);
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::getDatabaseInfos
-	 */
-	public function testGetDatabaseInfos()
-	{
-		$infos = $this->client->getDatabaseInfos();
-		$this->assertInternalType("object", $infos);
-		$tsts = array(
-			'db_name' => "couchclienttest",
-			"doc_count" => 0,
-			"doc_del_count" => 0,
-			"purge_seq" => 0,
-			"compact_running" => false,
-			"disk_size" => false,
-			"instance_start_time" => false,
-			"disk_format_version" => false
-		);
-		foreach ($tsts as $attr => $value) {
-			$this->assertObjectHasAttribute($attr, $infos);
-			if ($value !== false) {
-				$this->assertEquals($value, $infos->$attr);
-			}
-		}
-	}
+    /**
+     * @covers PHPOnCouch\CouchClient::getDatabaseInfos
+     */
+    public function testGetDatabaseInfos()
+    {
+        $infos = $this->client->getDatabaseInfos();
+        $this->assertInternalType("object", $infos);
+        $tsts = array(
+            'db_name' => "couchclienttest",
+            "doc_count" => 0,
+            "doc_del_count" => 0,
+            "purge_seq" => 0,
+            "compact_running" => false,
+            "disk_size" => false,
+            "instance_start_time" => false,
+            "disk_format_version" => false
+        );
+        foreach ($tsts as $attr => $value) {
+            $this->assertObjectHasAttribute($attr, $infos);
+            if ($value !== false) {
+                $this->assertEquals($value, $infos->$attr);
+            }
+        }
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::getDatabaseUri
-	 */
-	public function testGetDatabaseUri()
-	{
-		$this->assertEquals($this->couch_server . "couchclienttest", $this->client->getDatabaseUri());
-	}
+    /**
+     * @covers PHPOnCouch\CouchClient::getDatabaseUri
+     */
+    public function testGetDatabaseUri()
+    {
+        $this->assertEquals($this->couch_server . "couchclienttest", $this->client->getDatabaseUri());
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::getDatabaseName
-	 */
-	public function testGetDatabaseName()
-	{
-		$this->assertEquals("couchclienttest", $this->client->getDatabaseName());
-	}
+    /**
+     * @covers PHPOnCouch\CouchClient::getDatabaseName
+     */
+    public function testGetDatabaseName()
+    {
+        $this->assertEquals("couchclienttest", $this->client->getDatabaseName());
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::getServerUri
-	 */
-	public function testGetServerUri()
-	{
-		$this->assertEquals($this->couch_server . "couchclienttest", $this->client->getDatabaseUri());
-		$expected = trim($this->aUrl, '/');
-		$actual = $this->aclient->getServerUri();
-		$this->assertEquals($actual, $expected);
-	}
+    /**
+     * @covers PHPOnCouch\CouchClient::getServerUri
+     */
+    public function testGetServerUri()
+    {
+        $this->assertEquals($this->couch_server . "couchclienttest", $this->client->getDatabaseUri());
+        $expected = trim($this->aUrl, '/');
+        $actual = $this->aclient->getServerUri();
+        $this->assertEquals($actual, $expected);
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::databaseExists
-	 */
-	public function testDatabaseExists()
-	{
-		$exist = $this->client->databaseExists();
-		$this->assertTrue($exist, "testing against an existing database");
+    /**
+     * @covers PHPOnCouch\CouchClient::databaseExists
+     */
+    public function testDatabaseExists()
+    {
+        $exist = $this->client->databaseExists();
+        $this->assertTrue($exist, "testing against an existing database");
 
-		$client = new CouchClient($this->couch_server, "foofoofooidontexist");
-		$this->assertFalse($client->databaseExists(), "testing against a non-existing database");
+        $client = new CouchClient($this->couch_server, "foofoofooidontexist");
+        $this->assertFalse($client->databaseExists(), "testing against a non-existing database");
 
 
-		$adm = new CouchAdmin($this->aclient);
-		$adm->addDatabaseMemberUser('admin');
-		$this->expectException(\Exception::class);
-		$this->client->databaseExists();
-	}
+        $adm = new CouchAdmin($this->aclient);
+        $adm->addDatabaseMemberUser('admin');
+        $this->expectException(\Exception::class);
+        $this->client->databaseExists();
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::compactDatabase
-	 */
-	public function testCompactDatabase()
-	{
-		$resp = $this->aclient->compactDatabase();
-		$this->assertTrue($resp->ok);
-	}
+    /**
+     * @covers PHPOnCouch\CouchClient::compactDatabase
+     */
+    public function testCompactDatabase()
+    {
+        $resp = $this->aclient->compactDatabase();
+        $this->assertTrue($resp->ok);
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::getMemberShip
-	 */
-	public function testGetMemberShip()
-	{
-		$memberShip = $this->aclient->getMemberShip();
-		$this->assertInternalType('object', $memberShip);
-		$this->assertObjectHasAttribute('all_nodes', $memberShip);
-		$this->assertObjectHasAttribute('cluster_nodes', $memberShip);
+    /**
+     * @covers PHPOnCouch\CouchClient::getMemberShip
+     */
+    public function testGetMemberShip()
+    {
+        $memberShip = $this->aclient->getMemberShip();
+        $this->assertInternalType('object', $memberShip);
+        $this->assertObjectHasAttribute('all_nodes', $memberShip);
+        $this->assertObjectHasAttribute('cluster_nodes', $memberShip);
 
 //Must know itself
-		$this->assertInternalType('array', $memberShip->all_nodes);
-		$this->assertGreaterThanOrEqual(1, sizeof($memberShip->all_nodes));
+        $this->assertInternalType('array', $memberShip->all_nodes);
+        $this->assertGreaterThanOrEqual(1, sizeof($memberShip->all_nodes));
 
 //Must have itself
-		$this->assertInternalType('array', $memberShip->cluster_nodes);
-		$this->assertGreaterThanOrEqual(1, sizeof($memberShip->cluster_nodes));
-	}
+        $this->assertInternalType('array', $memberShip->cluster_nodes);
+        $this->assertGreaterThanOrEqual(1, sizeof($memberShip->cluster_nodes));
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::getConfig
-	 * @dataProvider testGetconfigExceptionsProvider
-	 * @depends testGetMemberShip
-	 */
-	public function testGetConfigExceptions($args, $exception)
-	{
-		$this->expectException($exception);
-		call_user_func_array([$this->aclient, "getConfig"], $args);
-	}
+    /**
+     * @covers       PHPOnCouch\CouchClient::getConfig
+     * @dataProvider testGetconfigExceptionsProvider
+     * @depends      testGetMemberShip
+     */
+    public function testGetConfigExceptions($args, $exception)
+    {
+        $this->expectException($exception);
+        call_user_func_array([$this->aclient, "getConfig"], $args);
+    }
 
-	public function testGetConfigExceptionsProvider()
-	{
-		return [
-			[
-				[null], InvalidArgumentException::class
-			],
-			[
-				["", null, ""], InvalidArgumentException::class
-			]
-		];
-	}
+    public function testGetConfigExceptionsProvider()
+    {
+        return [
+            [
+                [null], InvalidArgumentException::class
+            ],
+            [
+                ["", null, ""], InvalidArgumentException::class
+            ]
+        ];
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::getConfig
-	 * @depends testGetConfigExceptions
-	 */
-	public function testGetConfig()
-	{
-		$memberShip = $this->aclient->getMemberShip();
-		$firstNode = $memberShip->all_nodes[0];
-		$config1 = $this->aclient->getConfig($firstNode);
+    /**
+     * @covers  PHPOnCouch\CouchClient::getConfig
+     * @depends testGetConfigExceptions
+     */
+    public function testGetConfig()
+    {
+        $memberShip = $this->aclient->getMemberShip();
+        $firstNode = $memberShip->all_nodes[0];
+        $config1 = $this->aclient->getConfig($firstNode);
 
 //Returns a JSON object
-		$this->assertInternalType("object", $config1);
+        $this->assertInternalType("object", $config1);
 
 //Tests based on basic configuration
-		$this->assertObjectHasAttribute('log', $config1);
-		$this->assertObjectHasAttribute('level', $config1->log);
-		$this->assertEquals('info', $config1->log->level);
+        $this->assertObjectHasAttribute('log', $config1);
+        $this->assertObjectHasAttribute('level', $config1->log);
+        $this->assertEquals('info', $config1->log->level);
 
-		$log = $this->aclient->getConfig($firstNode, 'log');
-		$this->assertInternalType('object', $log);
-		$this->assertObjectHasAttribute('level', $log);
-		$this->assertEquals($log->level, 'info');
+        $log = $this->aclient->getConfig($firstNode, 'log');
+        $this->assertInternalType('object', $log);
+        $this->assertObjectHasAttribute('level', $log);
+        $this->assertEquals($log->level, 'info');
 
-		$level = $this->aclient->getConfig($firstNode, 'log', 'level');
-		$this->assertEquals('info', $level);
+        $level = $this->aclient->getConfig($firstNode, 'log', 'level');
+        $this->assertEquals('info', $level);
 
-		$this->expectException("PHPOnCouch\Exceptions\CouchNotFoundException");
-		$this->aclient->getconfig($firstNode, 'not', 'existing');
-	}
+        $this->expectException("PHPOnCouch\Exceptions\CouchNotFoundException");
+        $this->aclient->getconfig($firstNode, 'not', 'existing');
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::setConfig
-	 * @depends testGetConfig
-	 * @dataProvider testSetConfigExceptionsProvider
-	 */
-	public function testSetConfigExceptions($args, $exception)
-	{
-		$this->expectException($exception);
-		call_user_func_array([$this->aclient, "setConfig"], $args);
-	}
+    /**
+     * @covers       PHPOnCouch\CouchClient::setConfig
+     * @depends      testGetConfig
+     * @dataProvider testSetConfigExceptionsProvider
+     */
+    public function testSetConfigExceptions($args, $exception)
+    {
+        $this->expectException($exception);
+        call_user_func_array([$this->aclient, "setConfig"], $args);
+    }
 
-	public function testSetConfigExceptionsProvider()
-	{
-		return [
-			[
-				[null, "", "", ""], InvalidArgumentException::class
-			],
-			[
-				["", null, "", ""], InvalidArgumentException::class
-			],
-			[
-				["", "", null, ""], InvalidArgumentException::class
-			]
-		];
-	}
+    public function testSetConfigExceptionsProvider()
+    {
+        return [
+            [
+                [null, "", "", ""], InvalidArgumentException::class
+            ],
+            [
+                ["", null, "", ""], InvalidArgumentException::class
+            ],
+            [
+                ["", "", null, ""], InvalidArgumentException::class
+            ]
+        ];
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::setConfig
-	 * @depends testSetConfigExceptions
-	 */
-	public function testSetConfig()
-	{
-		$node = $this->aclient->getMemberShip()->all_nodes[0];
-		$oldValue = $this->aclient->setConfig($node, 'log', 'level', "debug");
-		$this->assertEquals('info', $oldValue);
+    /**
+     * @covers  PHPOnCouch\CouchClient::setConfig
+     * @depends testSetConfigExceptions
+     */
+    public function testSetConfig()
+    {
+        $node = $this->aclient->getMemberShip()->all_nodes[0];
+        $oldValue = $this->aclient->setConfig($node, 'log', 'level', "debug");
+        $this->assertEquals('info', $oldValue);
 
-		$currValue = $this->aclient->getConfig($node, 'log', 'level');
-		$this->assertEquals('debug', $currValue);
+        $currValue = $this->aclient->getConfig($node, 'log', 'level');
+        $this->assertEquals('debug', $currValue);
 
 //Undo changes
-		$oldValue2 = $this->aclient->setConfig($node, 'log', 'level', 'info');
-		$this->assertEquals('debug', $oldValue2);
+        $oldValue2 = $this->aclient->setConfig($node, 'log', 'level', 'info');
+        $this->assertEquals('debug', $oldValue2);
 
-		$currValue2 = $this->aclient->getConfig($node, 'log', 'level');
-		$this->assertEquals('info', $currValue2);
-	}
+        $currValue2 = $this->aclient->getConfig($node, 'log', 'level');
+        $this->assertEquals('info', $currValue2);
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::deleteConfig
-	 * @depends testSetConfig
-	 * @dataProvider testDeleteConfigExceptionsProvider
-	 * @param array $args The arguments to be passed to the deleteConfig()
-	 * @param Exception $ex The exception exepected
-	 */
-	public function testDeleteConfigExceptions($args, $ex)
-	{
-		$this->expectException($ex);
-		call_user_func_array([$this->aclient, "deleteConfig"], $args);
-	}
+    /**
+     * @covers       PHPOnCouch\CouchClient::deleteConfig
+     * @depends      testSetConfig
+     * @dataProvider testDeleteConfigExceptionsProvider
+     * @param array $args The arguments to be passed to the deleteConfig()
+     * @param Exception $ex The exception exepected
+     */
+    public function testDeleteConfigExceptions($args, $ex)
+    {
+        $this->expectException($ex);
+        call_user_func_array([$this->aclient, "deleteConfig"], $args);
+    }
 
-	public function testDeleteConfigExceptionsProvider()
-	{
-		return [
-			[
-				[null, "", "", ""], InvalidArgumentException::class
-			],
-			[
-				["", null, "", ""], InvalidArgumentException::class
-			],
-			[
-				["", "", null, ""], InvalidArgumentException::class
-			],
-		];
-	}
+    public function testDeleteConfigExceptionsProvider()
+    {
+        return [
+            [
+                [null, "", "", ""], InvalidArgumentException::class
+            ],
+            [
+                ["", null, "", ""], InvalidArgumentException::class
+            ],
+            [
+                ["", "", null, ""], InvalidArgumentException::class
+            ],
+        ];
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::deleteConfig
-	 * @depends testDeleteConfigExceptions
-	 */
-	public function testDeleteConfig()
-	{
+    /**
+     * @covers  PHPOnCouch\CouchClient::deleteConfig
+     * @depends testDeleteConfigExceptions
+     */
+    public function testDeleteConfig()
+    {
 //We add a random config entry
-		$node = $this->aclient->getMemberShip()->all_nodes[0];
+        $node = $this->aclient->getMemberShip()->all_nodes[0];
 
-		$this->aclient->setConfig($node, 'testing', 'stuff', 'here');
-		$oldValue = $this->aclient->deleteConfig($node, 'testing', 'stuff');
-		$this->assertEquals($oldValue, 'here');
-
-
-		$this->expectException("PHPOnCouch\Exceptions\CouchNotFoundException");
-		$this->aclient->getConfig($node, 'testing', 'stuff');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchClient::cleanupDatabaseViews
-	 */
-	public function testCleanupDatabaseViews()
-	{
-		$resp = $this->aclient->cleanupDatabaseViews();
-		$this->assertTrue($resp->ok);
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchClient::feed
-	 */
-	public function testFeed()
-	{
-		$reflectionClass = new \ReflectionClass(CouchClient::class);
-		$params = $reflectionClass->getProperty('queryParameters');
-		$params->setAccessible(true);
-		$longpoll = 'longpoll';
-
-		//Longpoll
-		$this->assertEquals($this->aclient->feed($longpoll), $this->aclient);
-		$this->assertEquals($params->getValue($this->aclient)['feed'], $longpoll);
-
-		//Continuous
-		$cb = function($doc, $client) {
-			return $doc == $client;
-		};
-		$continuous = 'continuous';
-		$this->assertEquals($this->aclient, $this->aclient->feed($continuous, $cb));
-		$continuousParams = $params->getValue($this->aclient);
-		$this->assertEquals($continuousParams['feed'], $continuous);
-		$this->assertEquals($continuousParams['continuous_feed'], $cb);
+        $this->aclient->setConfig($node, 'testing', 'stuff', 'here');
+        $oldValue = $this->aclient->deleteConfig($node, 'testing', 'stuff');
+        $this->assertEquals($oldValue, 'here');
 
 
-		//Other param
-		$this->assertEquals($this->aclient->feed('eventsource'), $this->aclient);
-		$emptyParams = $params->getValue($this->aclient);
+        $this->expectException("PHPOnCouch\Exceptions\CouchNotFoundException");
+        $this->aclient->getConfig($node, 'testing', 'stuff');
+    }
 
-		$this->assertFalse(isset($emptyParams['feed']));
-		$this->assertFalse(isset($emptyParams['continuous_feed']));
-	}
+    /**
+     * @covers PHPOnCouch\CouchClient::cleanupDatabaseViews
+     */
+    public function testCleanupDatabaseViews()
+    {
+        $resp = $this->aclient->cleanupDatabaseViews();
+        $this->assertTrue($resp->ok);
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::filter
-	 */
-	public function testFilter()
-	{
-		$reflectedClass = new \ReflectionClass(CouchClient::class);
-		$params = $reflectedClass->getProperty('queryParameters');
-		$params->setAccessible(true);
-		//String validation
-		$this->assertEquals($this->aclient, $this->aclient->filter(false));
-		$this->assertFalse(isset($params->getValue($this->aclient)['filter']));
+    /**
+     * @covers PHPOnCouch\CouchClient::feed
+     */
+    public function testFeed()
+    {
+        $reflectionClass = new \ReflectionClass(CouchClient::class);
+        $params = $reflectionClass->getProperty('queryParameters');
+        $params->setAccessible(true);
+        $longpoll = 'longpoll';
 
-		//AditionnalQueryOptions
-		$value = 'smth';
-		$limit = 1;
-		$skip = 2;
-		$additionnalOpts = ['limit' => $limit, 'skip' => $skip];
-		$this->assertEquals($this->aclient, $this->aclient->filter($value, $additionnalOpts));
+        //Longpoll
+        $this->assertEquals($this->aclient->feed($longpoll), $this->aclient);
+        $this->assertEquals($params->getValue($this->aclient)['feed'], $longpoll);
 
-		$updatedParams = $params->getValue($this->aclient);
-		$this->assertEquals($updatedParams['filter'], $value);
-		$this->assertEquals($updatedParams['limit'], $limit);
-		$this->assertEquals($updatedParams['skip'], $skip);
-	}
+        //Continuous
+        $cb = function ($doc, $client) {
+            return $doc == $client;
+        };
+        $continuous = 'continuous';
+        $this->assertEquals($this->aclient, $this->aclient->feed($continuous, $cb));
+        $continuousParams = $params->getValue($this->aclient);
+        $this->assertEquals($continuousParams['feed'], $continuous);
+        $this->assertEquals($continuousParams['continuous_feed'], $cb);
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::getChanges
-	 */
-	public function testGetChanges()
-	{
-		$config = \config::getInstance();
-		if (file_exists($this->continuousQueryTriggerFile))
-			unlink($this->continuousQueryTriggerFile);
-		$db = 'getchanges';
-		$cookieClient = new CouchClient($this->aclient->dsn(), $db, ['cookie_auth' => true]);
-		try {
-			$cookieClient->deleteDatabase();
-		} catch (Exceptions\CouchNotFoundException $ex) {
-			
-		}
-		$cookieClient->createDatabase();
 
-		$cntr = new stdClass();
-		$cntr->cnt = 0;
-		$callable = function($row, $client) use ($cntr) {
-			$cntr->cnt++;
-			if ($cntr->cnt == 3)
-				return false;
-		};
+        //Other param
+        $this->assertEquals($this->aclient->feed('eventsource'), $this->aclient);
+        $emptyParams = $params->getValue($this->aclient);
 
-		$trigger = escapeshellarg($this->continuousQueryTriggerFile);
-		$path = escapeshellarg(join(DIRECTORY_SEPARATOR, [__DIR__, '_config', "simulateChanges.php"]));
-		$config->execInBackground("php $path $db $trigger >log.txt");
-		$cookieClient->feed('continuous', $callable);
-		touch($this->continuousQueryTriggerFile);
-		$response = $cookieClient->getChanges();
-		$this->assertEquals($cntr->cnt, 3);
-	}
+        $this->assertFalse(isset($emptyParams['feed']));
+        $this->assertFalse(isset($emptyParams['continuous_feed']));
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::open_revs
-	 */
-	public function testOpenRevs()
-	{
-		$reflectedClass = new \ReflectionClass(CouchClient::class);
-		$prop = $reflectedClass->getProperty('queryParameters');
-		$prop->setAccessible(true);
+    /**
+     * @covers PHPOnCouch\CouchClient::filter
+     */
+    public function testFilter()
+    {
+        $reflectedClass = new \ReflectionClass(CouchClient::class);
+        $params = $reflectedClass->getProperty('queryParameters');
+        $params->setAccessible(true);
+        //String validation
+        $this->assertEquals($this->aclient, $this->aclient->filter(false));
+        $this->assertFalse(isset($params->getValue($this->aclient)['filter']));
 
-		$this->assertEquals($this->aclient, $this->aclient->open_revs('not_all'));
-		$this->assertFalse(isset($prop->getValue($this->aclient)['open_revs']));
+        //AditionnalQueryOptions
+        $value = 'smth';
+        $limit = 1;
+        $skip = 2;
+        $additionnalOpts = ['limit' => $limit, 'skip' => $skip];
+        $this->assertEquals($this->aclient, $this->aclient->filter($value, $additionnalOpts));
 
-		//Set all
-		$this->assertEquals($this->aclient, $this->aclient->open_revs('all'));
-		$this->assertEquals($prop->getValue($this->aclient)['open_revs'], 'all');
+        $updatedParams = $params->getValue($this->aclient);
+        $this->assertEquals($updatedParams['filter'], $value);
+        $this->assertEquals($updatedParams['limit'], $limit);
+        $this->assertEquals($updatedParams['skip'], $skip);
+    }
 
-		//Many revs
-		$revs = ['rev1', 'rev2', 'rev3'];
-		$this->assertEquals($this->aclient, $this->aclient->open_revs($revs));
-		$updatedRevs = $prop->getValue($this->aclient)['open_revs'];
-		$this->assertTrue(is_string($updatedRevs));
-		$revsParsed = json_decode($updatedRevs);
-		$this->assertEquals($revs, $revsParsed);
-	}
+    /**
+     * @covers PHPOnCouch\CouchClient::getChanges
+     */
+    public function testGetChanges()
+    {
+        $config = \config::getInstance();
+        if (file_exists($this->continuousQueryTriggerFile))
+            unlink($this->continuousQueryTriggerFile);
+        $db = 'getchanges';
+        $cookieClient = new CouchClient($this->aclient->dsn(), $db, ['cookie_auth' => true]);
+        try {
+            $cookieClient->deleteDatabase();
+        } catch (Exceptions\CouchNotFoundException $ex) {
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::storeDoc
-	 */
-	public function testStoreDoc()
-	{
+        }
+        $cookieClient->createDatabase();
+
+        $cntr = new stdClass();
+        $cntr->cnt = 0;
+        $callable = function ($row, $client) use ($cntr) {
+            $cntr->cnt++;
+            if ($cntr->cnt == 3)
+                return false;
+        };
+
+        $trigger = escapeshellarg($this->continuousQueryTriggerFile);
+        $path = escapeshellarg(join(DIRECTORY_SEPARATOR, [__DIR__, '_config', "simulateChanges.php"]));
+        $config->execInBackground("php $path $db $trigger >log.txt");
+        $cookieClient->feed('continuous', $callable);
+        touch($this->continuousQueryTriggerFile);
+        $response = $cookieClient->getChanges();
+        $this->assertEquals($cntr->cnt, 3);
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchClient::open_revs
+     */
+    public function testOpenRevs()
+    {
+        $reflectedClass = new \ReflectionClass(CouchClient::class);
+        $prop = $reflectedClass->getProperty('queryParameters');
+        $prop->setAccessible(true);
+
+        $this->assertEquals($this->aclient, $this->aclient->open_revs('not_all'));
+        $this->assertFalse(isset($prop->getValue($this->aclient)['open_revs']));
+
+        //Set all
+        $this->assertEquals($this->aclient, $this->aclient->open_revs('all'));
+        $this->assertEquals($prop->getValue($this->aclient)['open_revs'], 'all');
+
+        //Many revs
+        $revs = ['rev1', 'rev2', 'rev3'];
+        $this->assertEquals($this->aclient, $this->aclient->open_revs($revs));
+        $updatedRevs = $prop->getValue($this->aclient)['open_revs'];
+        $this->assertTrue(is_string($updatedRevs));
+        $revsParsed = json_decode($updatedRevs);
+        $this->assertEquals($revs, $revsParsed);
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchClient::storeDoc
+     */
+    public function testStoreDoc()
+    {
 
 //Test 1
-		$test1 = array("_id" => "great", "type" => "array");
-		$this->expectException(InvalidArgumentException::class);
-		$this->client->storeDoc($test1);
+        $test1 = array("_id" => "great", "type" => "array");
+        $this->expectException(InvalidArgumentException::class);
+        $this->client->storeDoc($test1);
 
 //Test 2
-		$test2 = new \stdclass();
-		$test2->_id = "great";
-		$test2->_type = "object";
-		$this->expectException(InvalidArgumentException::class);
-		$this->client->storeDoc($test2);
+        $test2 = new \stdclass();
+        $test2->_id = "great";
+        $test2->_type = "object";
+        $this->expectException(InvalidArgumentException::class);
+        $this->client->storeDoc($test2);
 
 //Test 3
-		$infos = $this->client->getDatabaseInfos();
-		$test3 = new \stdclass();
-		$test3->_id = "great";
-		$test3->type = "object";
-		$this->client->storeDoc($test3);
-		$infos2 = $this->client->getDatabaseInfos();
-		$this->assertEquals($infos->doc_count + 1, $infos2->doc_count);
-		$doc = $this->client->getDoc("great");
-		$this->assertInternalType("object", $doc);
-		$this->assertObjectHasAttribute("type", $doc);
-		$this->assertEquals("object", $doc->type);
-	}
+        $infos = $this->client->getDatabaseInfos();
+        $test3 = new \stdclass();
+        $test3->_id = "great";
+        $test3->type = "object";
+        $this->client->storeDoc($test3);
+        $infos2 = $this->client->getDatabaseInfos();
+        $this->assertEquals($infos->doc_count + 1, $infos2->doc_count);
+        $doc = $this->client->getDoc("great");
+        $this->assertInternalType("object", $doc);
+        $this->assertObjectHasAttribute("type", $doc);
+        $this->assertEquals("object", $doc->type);
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::storeDocs
-	 */
-	public function testStoreDocs()
-	{
-		$data = array(
-			new \stdclass(),
-			new \stdclass(),
-			new \stdclass()
-		);
-		$infos = $this->client->getDatabaseInfos();
-		$this->assertEquals($infos->doc_count, 0);
+    /**
+     * @covers PHPOnCouch\CouchClient::storeDocs
+     */
+    public function testStoreDocs()
+    {
+        $data = array(
+            new \stdclass(),
+            new \stdclass(),
+            new \stdclass()
+        );
+        $infos = $this->client->getDatabaseInfos();
+        $this->assertEquals($infos->doc_count, 0);
 
-		$stored = $this->client->storeDocs($data);
+        $stored = $this->client->storeDocs($data);
 // 		print_r($stored);
-		$infos = $this->client->getDatabaseInfos();
-		$this->assertEquals($infos->doc_count, 3);
+        $infos = $this->client->getDatabaseInfos();
+        $this->assertEquals($infos->doc_count, 3);
 
-		$data[0]->_id = "test";
-		$data[0]->type = "male";
-		$data[1]->_id = "test";
-		$data[1]->type = "female";
-		$data[2]->_id = "test";
-		$data[2]->type = "both";
-		$stored = $this->client->storeDocs($data);
-		$infos = $this->client->getDatabaseInfos();
-		$this->assertEquals($infos->doc_count, 4);
+        $data[0]->_id = "test";
+        $data[0]->type = "male";
+        $data[1]->_id = "test";
+        $data[1]->type = "female";
+        $data[2]->_id = "test";
+        $data[2]->type = "both";
+        $stored = $this->client->storeDocs($data);
+        $infos = $this->client->getDatabaseInfos();
+        $this->assertEquals($infos->doc_count, 4);
 
-		$doc = $this->client->conflicts()->getDoc("test");
-		$this->assertInternalType("object", $doc);
-		$this->assertObjectNotHasAttribute("_conflicts", $doc);
-		$data[0]->_id = "test2";
-		$data[1]->_id = "test2";
-		$data[2]->_id = "test2";
-		$stored = $this->client->storeDocs($data);
-		$this->assertInternalType("array", $stored);
-		$this->assertEquals(count($stored), 3);
-		foreach ($stored as $s) {
-			if ($s == reset($stored))
-				continue; //Skip first document because he's legit.
-			$this->assertInternalType("object", $s);
-			$this->assertObjectHasAttribute("error", $s);
-			$this->assertEquals($s->error, "conflict");
-		}
-		$doc = $this->client->conflicts()->getDoc("test2");
-		$this->assertObjectNotHasAttribute("_conflicts", $doc);
+        $doc = $this->client->conflicts()->getDoc("test");
+        $this->assertInternalType("object", $doc);
+        $this->assertObjectNotHasAttribute("_conflicts", $doc);
+        $data[0]->_id = "test2";
+        $data[1]->_id = "test2";
+        $data[2]->_id = "test2";
+        $stored = $this->client->storeDocs($data);
+        $this->assertInternalType("array", $stored);
+        $this->assertEquals(count($stored), 3);
+        foreach ($stored as $s) {
+            if ($s == reset($stored))
+                continue; //Skip first document because he's legit.
+            $this->assertInternalType("object", $s);
+            $this->assertObjectHasAttribute("error", $s);
+            $this->assertEquals($s->error, "conflict");
+        }
+        $doc = $this->client->conflicts()->getDoc("test2");
+        $this->assertObjectNotHasAttribute("_conflicts", $doc);
 
 //Part 2
 
-		$data = array(
-			new \stdclass(),
-			new \stdclass(),
-			new \stdclass()
-		);
-		$infos = $this->client->getDatabaseInfos();
-		$this->assertEquals($infos->doc_count, 5);
+        $data = array(
+            new \stdclass(),
+            new \stdclass(),
+            new \stdclass()
+        );
+        $infos = $this->client->getDatabaseInfos();
+        $this->assertEquals($infos->doc_count, 5);
 
-		$data[0]->_id = "test";
-		$data[0]->type = "male";
-		$data[1]->_id = "test";
-		$data[1]->type = "female";
-		$data[2]->_id = "test";
-		$data[2]->type = "both";
-		$stored = $this->client->storeDocs($data);
-		$infos = $this->client->getDatabaseInfos();
-		$this->assertEquals($infos->doc_count, 5);
-		$doc = $this->client->conflicts()->getDoc("test");
-		$this->assertObjectNotHasAttribute("_conflicts", $doc); //No conflicts with the new bulk semantic
+        $data[0]->_id = "test";
+        $data[0]->type = "male";
+        $data[1]->_id = "test";
+        $data[1]->type = "female";
+        $data[2]->_id = "test";
+        $data[2]->type = "both";
+        $stored = $this->client->storeDocs($data);
+        $infos = $this->client->getDatabaseInfos();
+        $this->assertEquals($infos->doc_count, 5);
+        $doc = $this->client->conflicts()->getDoc("test");
+        $this->assertObjectNotHasAttribute("_conflicts", $doc); //No conflicts with the new bulk semantic
 
-		$data[0]->_id = "test2";
-		$data[0]->type = "male";
-		$data[1]->_id = "test2";
-		$data[1]->type = "female";
-		$data[2]->_id = "test2";
-		$data[2]->type = "both";
+        $data[0]->_id = "test2";
+        $data[0]->type = "male";
+        $data[1]->_id = "test2";
+        $data[1]->type = "female";
+        $data[2]->_id = "test2";
+        $data[2]->type = "both";
 
-		$stored = $this->client->storeDocs($data);
-		$infos = $this->client->getDatabaseInfos();
-		$this->assertEquals($infos->doc_count, 5);
-		$doc = $this->client->conflicts()->getDoc("test2");
-		$this->assertObjectNotHasAttribute("_conflicts", $doc);
-	}
+        $stored = $this->client->storeDocs($data);
+        $infos = $this->client->getDatabaseInfos();
+        $this->assertEquals($infos->doc_count, 5);
+        $doc = $this->client->conflicts()->getDoc("test2");
+        $this->assertObjectNotHasAttribute("_conflicts", $doc);
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::deleteDocs
-	 */
-	public function testDeleteDocs()
-	{
-		$docs = [(object) ['_id' => 'doc_1'], (object) ['_id' => 'doc_2']];
+    /**
+     * @covers PHPOnCouch\CouchClient::deleteDocs
+     */
+    public function testDeleteDocs()
+    {
+        $docs = [(object)['_id' => 'doc_1'], (object)['_id' => 'doc_2']];
 
-		//Add docs
-		$this->assertEquals(0, $this->aclient->getAllDocs()->total_rows);
-		$response = $this->aclient->storeDocs($docs);
-		$this->assertEquals(2, $this->aclient->getAllDocs()->total_rows);
-		for ($i = 0; $i < 2; $i++)
-			$docs[$i]->_rev = $response[$i]->rev;
+        //Add docs
+        $this->assertEquals(0, $this->aclient->getAllDocs()->total_rows);
+        $response = $this->aclient->storeDocs($docs);
+        $this->assertEquals(2, $this->aclient->getAllDocs()->total_rows);
+        for ($i = 0; $i < 2; $i++)
+            $docs[$i]->_rev = $response[$i]->rev;
 
-		//Delete them
-		$this->aclient->deleteDocs($docs);
-		$this->assertEquals(0, $this->aclient->getAllDocs()->total_rows);
-	}
+        //Delete them
+        $this->aclient->deleteDocs($docs);
+        $this->assertEquals(0, $this->aclient->getAllDocs()->total_rows);
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::updateDoc
-	 */
-	public function testUpdateDoc()
-	{
+    /**
+     * @covers PHPOnCouch\CouchClient::updateDoc
+     */
+    public function testUpdateDoc()
+    {
 
-		$ddoc = new stdClass();
-		$ddoc->_id = "_design/test";
-		$ddoc->updates = array("test" => $this->updateFn);
-		$this->aclient->storeDoc($ddoc);
-		$doc = new stdClass();
-		$doc->_id = "foo";
-		$this->client->storeDoc($doc);
-
-
-		$update = $this->aclient->updateDoc("test", "test", array());
-		$this->assertInternalType("object", $update);
-		$this->assertObjectHasAttribute("query", $update);
-		$this->assertInternalType("object", $update->query);
-		$this->assertEquals(0, count((array) $update->query));
-		$this->assertObjectHasAttribute("form", $update);
-		$this->assertInternalType("object", $update->form);
-		$this->assertEquals(0, count((array) $update->form));
-
-		$update = $this->aclient->updateDoc("test", "test", array("var1" => "val1/?\"", "var2" => "val2"));
-		$this->assertInternalType("object", $update);
-		$this->assertObjectHasAttribute("query", $update);
-		$this->assertInternalType("object", $update->query);
-		$this->assertEquals(2, count((array) $update->query));
-		$this->assertObjectHasAttribute("var1", $update->query);
-		$this->assertInternalType("string", $update->query->var1);
-		$this->assertEquals("val1/?\"", $update->query->var1);
+        $ddoc = new stdClass();
+        $ddoc->_id = "_design/test";
+        $ddoc->updates = array("test" => $this->updateFn);
+        $this->aclient->storeDoc($ddoc);
+        $doc = new stdClass();
+        $doc->_id = "foo";
+        $this->client->storeDoc($doc);
 
 
+        $update = $this->aclient->updateDoc("test", "test", array());
+        $this->assertInternalType("object", $update);
+        $this->assertObjectHasAttribute("query", $update);
+        $this->assertInternalType("object", $update->query);
+        $this->assertEquals(0, count((array)$update->query));
+        $this->assertObjectHasAttribute("form", $update);
+        $this->assertInternalType("object", $update->form);
+        $this->assertEquals(0, count((array)$update->form));
 
-		$this->assertObjectHasAttribute("form", $update);
-		$this->assertInternalType("object", $update->form);
-		$this->assertEquals(0, count((array) $update->form));
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchClient::updateDocFullAPI
-	 */
-	public function testUpdateDocFullAPI()
-	{
-		$ddoc = new stdClass();
-		$ddoc->_id = "_design/test";
-		$ddoc->updates = array("test" => $this->updateFn);
-		$this->aclient->storeDoc($ddoc);
-		$doc = new stdClass();
-		$doc->_id = "foo";
-		$this->client->storeDoc($doc);
-
-		$update = $this->aclient->updateDocFullAPI("test", "test", array(
-			"data" => array("var1" => "val1/?\"", "var2" => "val2")
-		));
-		$this->assertInternalType("object", $update);
-		$this->assertObjectHasAttribute("query", $update);
-		$this->assertInternalType("object", $update->query);
-		$this->assertEquals(0, count((array) $update->query));
-		$this->assertObjectHasAttribute("form", $update);
-		$this->assertInternalType("object", $update->form);
-		$this->assertEquals(2, count((array) $update->form));
-		$this->assertObjectHasAttribute("var1", $update->form);
-		$this->assertInternalType("string", $update->form->var1);
-		$this->assertEquals("val1/?\"", $update->form->var1);
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchClient::copyDoc
-	 */
-	public function testCopyDoc()
-	{
-		$doc = (object) ['_id' => 'doc_1', 'name' => 'copy_me'];
-		$this->aclient->storeDoc($doc);
-		$newId = 'doc_2';
-		$response = $this->aclient->copyDoc($doc->_id, $newId);
-		$this->assertTrue($response->ok);
-
-		$copiedDoc = $this->aclient->getDoc($newId);
-		$this->assertNotNull($copiedDoc);
-		$this->assertEquals($doc->name, $copiedDoc->name);
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchClient::copyDoc
-	 */
-	public function testCopyDocNoDocId()
-	{
-		$this->expectException(InvalidArgumentException::class);
-		$this->aclient->copyDoc('', 'valid_id');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchClient::copyDoc
-	 */
-	public function testCopyDocNoNewId()
-	{
-		$this->expectException(InvalidArgumentException::class);
-		$this->aclient->copyDoc('valid_id', '');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchClient::storeAsAttachment
-	 */
-	public function testStoreAsAttachment()
-	{
-		$cd = new CouchDocument($this->aclient);
-		$cd->set(array(
-			'_id' => 'somedoc'
-		));
-		$back = $cd->storeAsAttachment("This is the content", "file.txt", "text/plain");
-		$fields = $cd->getFields();
-
-		$this->assertInternalType("object", $back);
-		$this->assertObjectHasAttribute("ok", $back);
-		$this->assertEquals($back->ok, true);
-		$this->assertObjectHasAttribute("_attachments", $fields);
-		$this->assertObjectHasAttribute("file.txt", $fields->_attachments);
-
-		$cd = new CouchDocument($this->client);
-		$cd->set(array(
-			'_id' => 'somedoc2'
-		));
-		$back = $cd->storeAttachment(join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']), "text/plain", "file.txt");
-		$fields = $cd->getFields();
-
-		$this->assertInternalType("object", $back);
-		$this->assertObjectHasAttribute("ok", $back);
-		$this->assertEquals($back->ok, true);
-		$this->assertObjectHasAttribute("_attachments", $fields);
-		$this->assertObjectHasAttribute("file.txt", $fields->_attachments);
-
-		$back = $cd->deleteAttachment("file.txt");
-		$fields = $cd->getFields();
-		$this->assertInternalType("object", $back);
-		$this->assertObjectHasAttribute("ok", $back);
-		$this->assertEquals($back->ok, true);
-		$test = property_exists($fields, '_attachments');
-		$this->assertEquals($test, false);
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchClient::storeAttachment
-	 */
-	public function testStoreAttachmentInvalidDoc()
-	{
-		$this->expectException(InvalidArgumentException::class);
-		$this->aclient->storeAsAttachment(null, 'asdasdasd', 'asdsad');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchClient::storeAttachment
-	 */
-	public function testStoreAttachmentInvalidDocId()
-	{
-		$this->expectException(InvalidArgumentException::class);
-		$doc = (object) ['name' => 'no_id'];
-		$this->aclient->storeAsAttachment($doc, 'asdasdasd', 'asdsad');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchClient::storeAttachment
-	 */
-	public function testStoreAttachment()
-	{
-		$cd = new CouchDocument($this->aclient);
-		$cd->set(array(
-			'_id' => 'somedoc'
-		));
-		$back = $cd->storeAsAttachment("This is the content", "file.txt", "text/plain");
-		$fields = $cd->getFields();
-
-		$this->assertInternalType("object", $back);
-		$this->assertObjectHasAttribute("ok", $back);
-		$this->assertEquals($back->ok, true);
-		$this->assertObjectHasAttribute("_attachments", $fields);
-		$this->assertObjectHasAttribute("file.txt", $fields->_attachments);
-
-		$cd = new CouchDocument($this->client);
-		$cd->set(array(
-			'_id' => 'somedoc2'
-		));
-		$back = $cd->storeAttachment(join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']), "text/plain", "file.txt");
-		$fields = $cd->getFields();
-
-		$this->assertInternalType("object", $back);
-		$this->assertObjectHasAttribute("ok", $back);
-		$this->assertEquals($back->ok, true);
-		$this->assertObjectHasAttribute("_attachments", $fields);
-		$this->assertObjectHasAttribute("file.txt", $fields->_attachments);
-
-		$back = $cd->deleteAttachment("file.txt");
-		$fields = $cd->getFields();
-		$this->assertInternalType("object", $back);
-		$this->assertObjectHasAttribute("ok", $back);
-		$this->assertEquals($back->ok, true);
-		$test = property_exists($fields, '_attachments');
-		$this->assertEquals($test, false);
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchClient::deleteAttachment
-	 */
-	public function testDeleteAttachment()
-	{
-		$doc = (object) ['_id' => 'somedoc2'];
-		$resp = $this->aclient->storeDoc($doc);
-		$doc->_rev = $resp->rev;
-		$docName = 'file.txt';
-		$storeResponse = $this->aclient->storeAttachment($doc, join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']), "text/plain", $docName);
-		$doc->_rev = $storeResponse->rev;
-		$this->assertNotNull($this->aclient->getAttachment($doc, $docName));
-		//We delete it
-		$deleteResp = $this->aclient->deleteAttachment($doc, $docName);
-		$this->assertTrue($deleteResp->ok);
-		$doc->_rev = $deleteResp->rev;
-		$this->expectException(Exceptions\CouchNotFoundException::class);
-		$this->aclient->getAttachment($doc, $docName);
-	}
-
-	public function testGetAttachment()
-	{
-		$doc = (object) ['_id' => 'somedoc2'];
-		$resp = $this->aclient->storeDoc($doc);
-		$doc->_rev = $resp->rev;
-		$docName = 'file.txt';
-		$attFilename = join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']);
-		$resp1 = $this->aclient->storeAttachment($doc, $attFilename, "text/plain", $docName);
-		$doc->_rev = $resp1->rev;
-		$file = $this->aclient->getAttachment($doc, $docName);
-		$content = file_get_contents($attFilename);
-
-		$this->assertEquals($file, $content);
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchClient::deleteDoc
-	 * @dataProvider testDeleteDocProvider
-	 */
-	public function testDeleteDoc($doc, $ex)
-	{
-		if ($ex != null) {
-			$this->expectException($ex);
-			$this->aclient->deleteDoc($doc);
-		} else {
-			$validObject = (object) ['_id' => 'test2'];
-			$doc = $this->client->storeDoc($validObject);
-			$validObject->_rev = $doc->rev;
-			$doc = $validObject;
-			$result = $this->aclient->deleteDoc($doc);
-
-			$this->assertInternalType('object', $result);
-			$this->assertObjectHasAttribute('ok', $result);
-			$this->assertObjectHasAttribute('rev', $result);
-			$this->assertObjectHasAttribute('id', $result);
-			$this->assertEquals($doc->_id, $result->id);
-			$this->assertEquals(true, $result->ok);
-		}
-	}
-
-	public function testDeleteDocProvider()
-	{
-		$invalidObject = (object) ['_id' => 'test'];
-		$validObject = (object) ['_id' => 'test2', '_rev' => 'undefined'];
-
-		return [
-			["", InvalidArgumentException::class],
-			[$invalidObject, \Exception::class],
-			[null, null]
-		];
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchClient::asCouchDocuments
-	 */
-	public function testAsCouchDocuments()
-	{
-		$reflectedClass = new \ReflectionClass(CouchClient::class);
-		$resultAsCD = $reflectedClass->getProperty('resultsAsCouchDocs');
-		$resultAsCD->setAccessible(true);
-
-		$resultAsArr = $reflectedClass->getProperty('resultAsArray');
-		$resultAsArr->setAccessible(true);
-
-		$this->assertEquals($this->aclient, $this->aclient->asCouchDocuments());
-
-		$this->assertFalse($resultAsArr->getValue($this->aclient));
-		$this->assertTrue($resultAsCD->getValue($this->aclient));
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchClient::resultsToCouchDocuments
-	 */
-	public function testResultsToCouchDocuments()
-	{
-		$names = ['alexis', 'johnny'];
-
-		$indexedDocs = [];
-		$len = count($names);
-		for ($i = 0; $i < $len; $i++)
-			$indexedDocs[$names[$i]] = (object) ['_id' => 'doc_' . ($i + 1), 'name' => $names[$i]];
+        $update = $this->aclient->updateDoc("test", "test", array("var1" => "val1/?\"", "var2" => "val2"));
+        $this->assertInternalType("object", $update);
+        $this->assertObjectHasAttribute("query", $update);
+        $this->assertInternalType("object", $update->query);
+        $this->assertEquals(2, count((array)$update->query));
+        $this->assertObjectHasAttribute("var1", $update->query);
+        $this->assertInternalType("string", $update->query->var1);
+        $this->assertEquals("val1/?\"", $update->query->var1);
 
 
-		$dd = (object) ['_id' => '_design/test', 'type' => 'javascript', 'views' => (object) []];
-		$view = (object) ['map' => "function(doc){if(doc.name)emit(doc.name);}"];
-		$dd->views->byname = $view;
+        $this->assertObjectHasAttribute("form", $update);
+        $this->assertInternalType("object", $update->form);
+        $this->assertEquals(0, count((array)$update->form));
+    }
 
-		$docs = [$dd];
-		$docs = array_merge($docs, array_values($indexedDocs));
-		$this->aclient->storeDocs($docs);
+    /**
+     * @covers PHPOnCouch\CouchClient::updateDocFullAPI
+     */
+    public function testUpdateDocFullAPI()
+    {
+        $ddoc = new stdClass();
+        $ddoc->_id = "_design/test";
+        $ddoc->updates = array("test" => $this->updateFn);
+        $this->aclient->storeDoc($ddoc);
+        $doc = new stdClass();
+        $doc->_id = "foo";
+        $this->client->storeDoc($doc);
+
+        $update = $this->aclient->updateDocFullAPI("test", "test", array(
+            "data" => array("var1" => "val1/?\"", "var2" => "val2")
+        ));
+        $this->assertInternalType("object", $update);
+        $this->assertObjectHasAttribute("query", $update);
+        $this->assertInternalType("object", $update->query);
+        $this->assertEquals(0, count((array)$update->query));
+        $this->assertObjectHasAttribute("form", $update);
+        $this->assertInternalType("object", $update->form);
+        $this->assertEquals(2, count((array)$update->form));
+        $this->assertObjectHasAttribute("var1", $update->form);
+        $this->assertInternalType("string", $update->form->var1);
+        $this->assertEquals("val1/?\"", $update->form->var1);
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchClient::copyDoc
+     */
+    public function testCopyDoc()
+    {
+        $doc = (object)['_id' => 'doc_1', 'name' => 'copy_me'];
+        $this->aclient->storeDoc($doc);
+        $newId = 'doc_2';
+        $response = $this->aclient->copyDoc($doc->_id, $newId);
+        $this->assertTrue($response->ok);
+
+        $copiedDoc = $this->aclient->getDoc($newId);
+        $this->assertNotNull($copiedDoc);
+        $this->assertEquals($doc->name, $copiedDoc->name);
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchClient::copyDoc
+     */
+    public function testCopyDocNoDocId()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->aclient->copyDoc('', 'valid_id');
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchClient::copyDoc
+     */
+    public function testCopyDocNoNewId()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->aclient->copyDoc('valid_id', '');
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchClient::storeAsAttachment
+     */
+    public function testStoreAsAttachment()
+    {
+        $cd = new CouchDocument($this->aclient);
+        $cd->set(array(
+            '_id' => 'somedoc'
+        ));
+        $back = $cd->storeAsAttachment("This is the content", "file.txt", "text/plain");
+        $fields = $cd->getFields();
+
+        $this->assertInternalType("object", $back);
+        $this->assertObjectHasAttribute("ok", $back);
+        $this->assertEquals($back->ok, true);
+        $this->assertObjectHasAttribute("_attachments", $fields);
+        $this->assertObjectHasAttribute("file.txt", $fields->_attachments);
+
+        $cd = new CouchDocument($this->client);
+        $cd->set(array(
+            '_id' => 'somedoc2'
+        ));
+        $back = $cd->storeAttachment(join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']), "text/plain", "file.txt");
+        $fields = $cd->getFields();
+
+        $this->assertInternalType("object", $back);
+        $this->assertObjectHasAttribute("ok", $back);
+        $this->assertEquals($back->ok, true);
+        $this->assertObjectHasAttribute("_attachments", $fields);
+        $this->assertObjectHasAttribute("file.txt", $fields->_attachments);
+
+        $back = $cd->deleteAttachment("file.txt");
+        $fields = $cd->getFields();
+        $this->assertInternalType("object", $back);
+        $this->assertObjectHasAttribute("ok", $back);
+        $this->assertEquals($back->ok, true);
+        $test = property_exists($fields, '_attachments');
+        $this->assertEquals($test, false);
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchClient::storeAttachment
+     */
+    public function testStoreAttachmentInvalidDoc()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $this->aclient->storeAsAttachment(null, 'asdasdasd', 'asdsad');
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchClient::storeAttachment
+     */
+    public function testStoreAttachmentInvalidDocId()
+    {
+        $this->expectException(InvalidArgumentException::class);
+        $doc = (object)['name' => 'no_id'];
+        $this->aclient->storeAsAttachment($doc, 'asdasdasd', 'asdsad');
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchClient::storeAttachment
+     */
+    public function testStoreAttachment()
+    {
+        $cd = new CouchDocument($this->aclient);
+        $cd->set(array(
+            '_id' => 'somedoc'
+        ));
+        $back = $cd->storeAsAttachment("This is the content", "file.txt", "text/plain");
+        $fields = $cd->getFields();
+
+        $this->assertInternalType("object", $back);
+        $this->assertObjectHasAttribute("ok", $back);
+        $this->assertEquals($back->ok, true);
+        $this->assertObjectHasAttribute("_attachments", $fields);
+        $this->assertObjectHasAttribute("file.txt", $fields->_attachments);
+
+        $cd = new CouchDocument($this->client);
+        $cd->set(array(
+            '_id' => 'somedoc2'
+        ));
+        $back = $cd->storeAttachment(join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']), "text/plain", "file.txt");
+        $fields = $cd->getFields();
+
+        $this->assertInternalType("object", $back);
+        $this->assertObjectHasAttribute("ok", $back);
+        $this->assertEquals($back->ok, true);
+        $this->assertObjectHasAttribute("_attachments", $fields);
+        $this->assertObjectHasAttribute("file.txt", $fields->_attachments);
+
+        $back = $cd->deleteAttachment("file.txt");
+        $fields = $cd->getFields();
+        $this->assertInternalType("object", $back);
+        $this->assertObjectHasAttribute("ok", $back);
+        $this->assertEquals($back->ok, true);
+        $test = property_exists($fields, '_attachments');
+        $this->assertEquals($test, false);
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchClient::deleteAttachment
+     */
+    public function testDeleteAttachment()
+    {
+        $doc = (object)['_id' => 'somedoc2'];
+        $resp = $this->aclient->storeDoc($doc);
+        $doc->_rev = $resp->rev;
+        $docName = 'file.txt';
+        $storeResponse = $this->aclient->storeAttachment($doc, join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']), "text/plain", $docName);
+        $doc->_rev = $storeResponse->rev;
+        $this->assertNotNull($this->aclient->getAttachment($doc, $docName));
+        //We delete it
+        $deleteResp = $this->aclient->deleteAttachment($doc, $docName);
+        $this->assertTrue($deleteResp->ok);
+        $doc->_rev = $deleteResp->rev;
+        $this->expectException(Exceptions\CouchNotFoundException::class);
+        $this->aclient->getAttachment($doc, $docName);
+    }
+
+    public function testGetAttachment()
+    {
+        $doc = (object)['_id' => 'somedoc2'];
+        $resp = $this->aclient->storeDoc($doc);
+        $doc->_rev = $resp->rev;
+        $docName = 'file.txt';
+        $attFilename = join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']);
+        $resp1 = $this->aclient->storeAttachment($doc, $attFilename, "text/plain", $docName);
+        $doc->_rev = $resp1->rev;
+        $file = $this->aclient->getAttachment($doc, $docName);
+        $content = file_get_contents($attFilename);
+
+        $this->assertEquals($file, $content);
+    }
+
+    /**
+     * @covers       PHPOnCouch\CouchClient::deleteDoc
+     * @dataProvider testDeleteDocProvider
+     */
+    public function testDeleteDoc($doc, $ex)
+    {
+        if ($ex != null) {
+            $this->expectException($ex);
+            $this->aclient->deleteDoc($doc);
+        } else {
+            $validObject = (object)['_id' => 'test2'];
+            $doc = $this->client->storeDoc($validObject);
+            $validObject->_rev = $doc->rev;
+            $doc = $validObject;
+            $result = $this->aclient->deleteDoc($doc);
+
+            $this->assertInternalType('object', $result);
+            $this->assertObjectHasAttribute('ok', $result);
+            $this->assertObjectHasAttribute('rev', $result);
+            $this->assertObjectHasAttribute('id', $result);
+            $this->assertEquals($doc->_id, $result->id);
+            $this->assertEquals(true, $result->ok);
+        }
+    }
+
+    public function testDeleteDocProvider()
+    {
+        $invalidObject = (object)['_id' => 'test'];
+        $validObject = (object)['_id' => 'test2', '_rev' => 'undefined'];
+
+        return [
+            ["", InvalidArgumentException::class],
+            [$invalidObject, \Exception::class],
+            [null, null]
+        ];
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchClient::asCouchDocuments
+     */
+    public function testAsCouchDocuments()
+    {
+        $reflectedClass = new \ReflectionClass(CouchClient::class);
+        $resultAsCD = $reflectedClass->getProperty('resultsAsCouchDocs');
+        $resultAsCD->setAccessible(true);
+
+        $resultAsArr = $reflectedClass->getProperty('resultAsArray');
+        $resultAsArr->setAccessible(true);
+
+        $this->assertEquals($this->aclient, $this->aclient->asCouchDocuments());
+
+        $this->assertFalse($resultAsArr->getValue($this->aclient));
+        $this->assertTrue($resultAsCD->getValue($this->aclient));
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchClient::resultsToCouchDocuments
+     */
+    public function testResultsToCouchDocuments()
+    {
+        $names = ['alexis', 'johnny'];
+
+        $indexedDocs = [];
+        $len = count($names);
+        for ($i = 0; $i < $len; $i++)
+            $indexedDocs[$names[$i]] = (object)['_id' => 'doc_' . ($i + 1), 'name' => $names[$i]];
 
 
-		$result = $this->aclient->asCouchDocuments()->include_docs()->getView('test', 'byname');
-		$this->assertCount(2, $result);
+        $dd = (object)['_id' => '_design/test', 'type' => 'javascript', 'views' => (object)[]];
+        $view = (object)['map' => "function(doc){if(doc.name)emit(doc.name);}"];
+        $dd->views->byname = $view;
 
-		foreach ($result as $key => $val) {
-			$this->assertArrayHasKey($key, $indexedDocs);
-			$tmp = $indexedDocs[$key];
-			$this->assertEquals($tmp->name, $val->name);
-			$this->assertEquals($tmp->_id, $val->_id);
-			$this->assertInstanceOf(CouchDocument::class, $val);
-		}
-	}
+        $docs = [$dd];
+        $docs = array_merge($docs, array_values($indexedDocs));
+        $this->aclient->storeDocs($docs);
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::asArray
-	 */
-	public function testAsArray()
-	{
-		$infos = $this->client->getDatabaseInfos();
-		$test = new \stdclass();
-		$test->_id = "great";
-		$test->type = "object";
-		$this->client->storeDoc($test);
-		$infos2 = $this->client->getDatabaseInfos();
-		$this->assertEquals($infos->doc_count + 1, $infos2->doc_count);
-		$doc = $this->client->asArray()->getDoc("great");
-		$this->assertInternalType("array", $doc);
-		$this->assertArrayHasKey("type", $doc);
-		$this->assertEquals("object", $doc['type']);
-	}
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::getList
-	 */
-	public function testGetList()
-	{
-		$doc = new CouchDocument($this->aclient);
-		$doc->_id = "_design/test";
-		$views = array(
-			"simple" => array(
-				"map" => "function (doc) {
+        $result = $this->aclient->asCouchDocuments()->include_docs()->getView('test', 'byname');
+        $this->assertCount(2, $result);
+
+        foreach ($result as $key => $val) {
+            $this->assertArrayHasKey($key, $indexedDocs);
+            $tmp = $indexedDocs[$key];
+            $this->assertEquals($tmp->name, $val->name);
+            $this->assertEquals($tmp->_id, $val->_id);
+            $this->assertInstanceOf(CouchDocument::class, $val);
+        }
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchClient::asArray
+     */
+    public function testAsArray()
+    {
+        $infos = $this->client->getDatabaseInfos();
+        $test = new \stdclass();
+        $test->_id = "great";
+        $test->type = "object";
+        $this->client->storeDoc($test);
+        $infos2 = $this->client->getDatabaseInfos();
+        $this->assertEquals($infos->doc_count + 1, $infos2->doc_count);
+        $doc = $this->client->asArray()->getDoc("great");
+        $this->assertInternalType("array", $doc);
+        $this->assertArrayHasKey("type", $doc);
+        $this->assertEquals("object", $doc['type']);
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchClient::getList
+     */
+    public function testGetList()
+    {
+        $doc = new CouchDocument($this->aclient);
+        $doc->_id = "_design/test";
+        $views = array(
+            "simple" => array(
+                "map" => "function (doc) {
 					if ( doc.type ) {
 						emit( [ doc.type, doc._id ] , doc);
 					}
 				}"
-			)
-		);
-		$lists = array(
-			"list1" => "function (head, req) {
+            )
+        );
+        $lists = array(
+            "list1" => "function (head, req) {
 				var back = [];
 				var row;
 				while ( row = getRow() ) {
@@ -1070,14 +1080,14 @@ EOT
 				}
 				send(JSON.stringify(back));
 			}"
-		);
-		$doc->views = $views;
-		$doc->lists = $lists;
+        );
+        $doc->views = $views;
+        $doc->lists = $lists;
 
-		$doc = new CouchDocument($this->aclient);
-		$doc->_id = '_design/test2';
-		$lists = array(
-			"list2" => "function (head, req) {
+        $doc = new CouchDocument($this->aclient);
+        $doc->_id = '_design/test2';
+        $lists = array(
+            "list2" => "function (head, req) {
 				var back = [];
 				var row;
 				var stopVal = req.query.stop;
@@ -1087,54 +1097,54 @@ EOT
 				}
 				send(JSON.stringify(back));
 			}"
-		);
-		$doc->lists = $lists;
+        );
+        $doc->lists = $lists;
 
-		$docs = array(
-			array('_id' => 'first', 'type' => 'test', 'param' => 'hello'),
-			array('_id' => 'second', 'type' => 'test2', 'param' => 'hello2'),
-			array('_id' => 'third', 'type' => 'test', 'param' => 'hello3')
-		);
-		$this->client->storeDocs($docs);
-		$test = $this->client->getList('test', 'list1', 'simple', ['stop' => 'test2']);
-		$this->assertInternalType("array", $test);
-		$this->assertEquals(count($test), 3);
-		foreach ($test as $row) {
-			$this->assertInternalType("object", $row);
-			$this->assertObjectHasAttribute('id', $row);
-			$this->assertObjectHasAttribute('key', $row);
-			$this->assertObjectHasAttribute('value', $row);
-		}
+        $docs = array(
+            array('_id' => 'first', 'type' => 'test', 'param' => 'hello'),
+            array('_id' => 'second', 'type' => 'test2', 'param' => 'hello2'),
+            array('_id' => 'third', 'type' => 'test', 'param' => 'hello3')
+        );
+        $this->client->storeDocs($docs);
+        $test = $this->client->getList('test', 'list1', 'simple', ['stop' => 'test2']);
+        $this->assertInternalType("array", $test);
+        $this->assertEquals(count($test), 3);
+        foreach ($test as $row) {
+            $this->assertInternalType("object", $row);
+            $this->assertObjectHasAttribute('id', $row);
+            $this->assertObjectHasAttribute('key', $row);
+            $this->assertObjectHasAttribute('value', $row);
+        }
 
-		$test = $this->client->startkey(array('test'))->endkey(array('test', array()))->getList('test', 'list1', 'simple');
-		$this->assertInternalType("array", $test);
-		$this->assertEquals(count($test), 2);
-		foreach ($test as $row) {
-			$this->assertInternalType("object", $row);
-			$this->assertObjectHasAttribute('id', $row);
-			$this->assertObjectHasAttribute('key', $row);
-			$this->assertObjectHasAttribute('value', $row);
-		}
-	}
+        $test = $this->client->startkey(array('test'))->endkey(array('test', array()))->getList('test', 'list1', 'simple');
+        $this->assertInternalType("array", $test);
+        $this->assertEquals(count($test), 2);
+        foreach ($test as $row) {
+            $this->assertInternalType("object", $row);
+            $this->assertObjectHasAttribute('id', $row);
+            $this->assertObjectHasAttribute('key', $row);
+            $this->assertObjectHasAttribute('value', $row);
+        }
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::getForeignList
-	 */
-	public function testGetForeignList()
-	{
-		$doc = new CouchDocument($this->aclient);
-		$doc->_id = "_design/test";
-		$views = array(
-			"simple" => array(
-				"map" => "function (doc) {
+    /**
+     * @covers PHPOnCouch\CouchClient::getForeignList
+     */
+    public function testGetForeignList()
+    {
+        $doc = new CouchDocument($this->aclient);
+        $doc->_id = "_design/test";
+        $views = array(
+            "simple" => array(
+                "map" => "function (doc) {
 					if ( doc.type ) {
 						emit( [ doc.type, doc._id ] , doc);
 					}
 				}"
-			)
-		);
-		$lists = array(
-			"list1" => "function (head, req) {
+            )
+        );
+        $lists = array(
+            "list1" => "function (head, req) {
 				var back = [];
 				var row;
 				while ( row = getRow() ) {
@@ -1142,20 +1152,20 @@ EOT
 				}
 				send(JSON.stringify(back));
 			}"
-		);
-		$doc->views = $views;
-		$doc->lists = $lists;
-		$docs = array(
-			array('_id' => 'first', 'type' => 'test', 'param' => 'hello'),
-			array('_id' => 'second', 'type' => 'test2', 'param' => 'hello2'),
-			array('_id' => 'third', 'type' => 'test', 'param' => 'hello3')
-		);
-		$this->client->storeDocs($docs);
+        );
+        $doc->views = $views;
+        $doc->lists = $lists;
+        $docs = array(
+            array('_id' => 'first', 'type' => 'test', 'param' => 'hello'),
+            array('_id' => 'second', 'type' => 'test2', 'param' => 'hello2'),
+            array('_id' => 'third', 'type' => 'test', 'param' => 'hello3')
+        );
+        $this->client->storeDocs($docs);
 
-		$doc = new CouchDocument($this->aclient);
-		$doc->_id = '_design/test2';
-		$lists = array(
-			"list2" => "function (head, req) {
+        $doc = new CouchDocument($this->aclient);
+        $doc->_id = '_design/test2';
+        $lists = array(
+            "list2" => "function (head, req) {
 				var back = [];
 				var row;
 				var stopVal = req.query.stop;
@@ -1165,49 +1175,49 @@ EOT
 				}
 				send(JSON.stringify(back));
 			}"
-		);
-		$doc->lists = $lists;
+        );
+        $doc->lists = $lists;
 
-		$test = $this->client->startkey(array('test2'))->endkey(array('test2', array()))->getForeignList('test2', 'list2', 'test', 'simple', ['stop' => 'test2']);
-		$this->assertInternalType("array", $test);
-		$this->assertEquals(1, count($test));
-		foreach ($test as $row) {
-			$this->assertInternalType("object", $row);
-			$this->assertObjectHasAttribute('id', $row);
-			$this->assertObjectHasAttribute('key', $row);
-			$this->assertObjectHasAttribute('value', $row);
-			$this->assertEquals($row->value, 'test2');
-		}
+        $test = $this->client->startkey(array('test2'))->endkey(array('test2', array()))->getForeignList('test2', 'list2', 'test', 'simple', ['stop' => 'test2']);
+        $this->assertInternalType("array", $test);
+        $this->assertEquals(1, count($test));
+        foreach ($test as $row) {
+            $this->assertInternalType("object", $row);
+            $this->assertObjectHasAttribute('id', $row);
+            $this->assertObjectHasAttribute('key', $row);
+            $this->assertObjectHasAttribute('value', $row);
+            $this->assertEquals($row->value, 'test2');
+        }
 
-		$test = $this->client
-				->startkey(array('test2'))
-				->endkey(array('test2', array()))
-				->include_docs(true)
-				->getForeignList('test2', 'list2', 'test', 'simple', ['stop' => 'test2']);
-		$this->assertInternalType("array", $test);
-		$this->assertEquals(count($test), 1);
-		foreach ($test as $row) {
-			$this->assertInternalType("object", $row);
-			$this->assertObjectHasAttribute('id', $row);
-			$this->assertObjectHasAttribute('key', $row);
-			$this->assertObjectHasAttribute('value', $row);
-			$this->assertObjectHasAttribute('doc', $row);
-			$this->assertInternalType("object", $row->doc);
-			$this->assertObjectHasAttribute('_id', $row->doc);
-			$this->assertObjectHasAttribute('_rev', $row->doc);
-			$this->assertEquals($row->value, 'test2');
-		}
-	}
+        $test = $this->client
+            ->startkey(array('test2'))
+            ->endkey(array('test2', array()))
+            ->include_docs(true)
+            ->getForeignList('test2', 'list2', 'test', 'simple', ['stop' => 'test2']);
+        $this->assertInternalType("array", $test);
+        $this->assertEquals(count($test), 1);
+        foreach ($test as $row) {
+            $this->assertInternalType("object", $row);
+            $this->assertObjectHasAttribute('id', $row);
+            $this->assertObjectHasAttribute('key', $row);
+            $this->assertObjectHasAttribute('value', $row);
+            $this->assertObjectHasAttribute('doc', $row);
+            $this->assertInternalType("object", $row->doc);
+            $this->assertObjectHasAttribute('_id', $row->doc);
+            $this->assertObjectHasAttribute('_rev', $row->doc);
+            $this->assertEquals($row->value, 'test2');
+        }
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::getShow
-	 */
-	public function testGetShow()
-	{
-		$doc = new CouchDocument($this->aclient);
-		$doc->_id = "_design/test";
-		$show = array(
-			"simple" => "function (doc, ctx) {
+    /**
+     * @covers PHPOnCouch\CouchClient::getShow
+     */
+    public function testGetShow()
+    {
+        $doc = new CouchDocument($this->aclient);
+        $doc->_id = "_design/test";
+        $show = array(
+            "simple" => "function (doc, ctx) {
 				ro = {body: ''};
 				if ( ! doc ) {
 					ro.body = 'no document';
@@ -1222,7 +1232,7 @@ EOT
 				ro.body += len;
 				return ro;
 			}",
-			"json" => "function (doc, ctx) {
+            "json" => "function (doc, ctx) {
 				ro = {body: ''};
 				back = {doc: null};
 				if ( doc ) {
@@ -1237,344 +1247,344 @@ EOT
 				ro.headers = { \"content-type\": 'application/json' };
 				return ro;
 			}"
-		);
-		$doc->shows = $show;
-		$test = $this->client->getShow("test", "simple", "_design/test");
-		$this->assertEquals($test, "document: _design/test 0");
-		$test = $this->client->getShow("test", "simple", "_design/test", array("param1" => "value1"));
-		$this->assertEquals($test, "document: _design/test 1");
-		$test = $this->client->getShow("test", "simple", null);
-		$this->assertEquals($test, "no document 0");
-		$test = $this->client->getShow("test", "simple", null, array("param1" => "value1"));
-		$this->assertEquals($test, "no document 1");
-		$test = $this->client->getShow("test", "json", null);
-		$this->assertInternalType("object", $test);
-		$this->assertObjectHasAttribute("doc", $test);
-		$this->assertObjectHasAttribute("query_length", $test);
-	}
+        );
+        $doc->shows = $show;
+        $test = $this->client->getShow("test", "simple", "_design/test");
+        $this->assertEquals($test, "document: _design/test 0");
+        $test = $this->client->getShow("test", "simple", "_design/test", array("param1" => "value1"));
+        $this->assertEquals($test, "document: _design/test 1");
+        $test = $this->client->getShow("test", "simple", null);
+        $this->assertEquals($test, "no document 0");
+        $test = $this->client->getShow("test", "simple", null, array("param1" => "value1"));
+        $this->assertEquals($test, "no document 1");
+        $test = $this->client->getShow("test", "json", null);
+        $this->assertInternalType("object", $test);
+        $this->assertObjectHasAttribute("doc", $test);
+        $this->assertObjectHasAttribute("query_length", $test);
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::getViewInfos
-	 */
-	public function testGetViewInfos()
-	{
-		$dd = (object) ['_id' => '_design/testView', 'language' => 'javascript', 'views' => (object) []];
-		$this->aclient->storeDoc($dd);
+    /**
+     * @covers PHPOnCouch\CouchClient::getViewInfos
+     */
+    public function testGetViewInfos()
+    {
+        $dd = (object)['_id' => '_design/testView', 'language' => 'javascript', 'views' => (object)[]];
+        $this->aclient->storeDoc($dd);
 
-		$result = $this->aclient->getViewInfos('testView');
-		$this->assertInternalType('object', $result);
-		$this->assertObjectHasAttribute('name', $result);
-		$this->assertObjectHasAttribute('view_index', $result);
-		$this->assertInternalType('object', $result->view_index);
-		$this->assertEquals('testView', $result->name);
-		$this->assertEquals('javascript', $result->view_index->language);
+        $result = $this->aclient->getViewInfos('testView');
+        $this->assertInternalType('object', $result);
+        $this->assertObjectHasAttribute('name', $result);
+        $this->assertObjectHasAttribute('view_index', $result);
+        $this->assertInternalType('object', $result->view_index);
+        $this->assertEquals('testView', $result->name);
+        $this->assertEquals('javascript', $result->view_index->language);
 
-		$this->expectException(InvalidArgumentException::class);
-		$this->aclient->getViewInfos(null);
-	}
+        $this->expectException(InvalidArgumentException::class);
+        $this->aclient->getViewInfos(null);
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::compactViews
-	 */
-	public function testCompactViews()
-	{
-		$dd = (object) ['_id' => '_design/testView', 'language' => 'javascript', 'views' => (object) []];
-		$this->aclient->storeDoc($dd);
-		$result = $this->aclient->compactViews('testView');
-		$this->assertInternalType('object', $result);
-		$this->assertObjectHasAttribute('ok', $result);
-		$this->assertEquals(true, $result->ok);
-	}
+    /**
+     * @covers PHPOnCouch\CouchClient::compactViews
+     */
+    public function testCompactViews()
+    {
+        $dd = (object)['_id' => '_design/testView', 'language' => 'javascript', 'views' => (object)[]];
+        $this->aclient->storeDoc($dd);
+        $result = $this->aclient->compactViews('testView');
+        $this->assertInternalType('object', $result);
+        $this->assertObjectHasAttribute('ok', $result);
+        $this->assertEquals(true, $result->ok);
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::compactAllViews
-	 */
-	public function testCompactAllViews()
-	{
-		$cd = new CouchDocument($this->aclient);
-		$cd->set(array(
-			'_id' => '_design/test',
-			'language' => 'javascript'
-		));
-		$this->aclient->compactAllViews();
-	}
+    /**
+     * @covers PHPOnCouch\CouchClient::compactAllViews
+     */
+    public function testCompactAllViews()
+    {
+        $cd = new CouchDocument($this->aclient);
+        $cd->set(array(
+            '_id' => '_design/test',
+            'language' => 'javascript'
+        ));
+        $this->aclient->compactAllViews();
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::getAllDocs
-	 * @depends testStoreDoc
-	 */
-	public function testGetAllDocs()
-	{
-		$doc = (object) ['_id' => 'test1'];
-		$this->aclient->storeDoc($doc);
+    /**
+     * @covers  PHPOnCouch\CouchClient::getAllDocs
+     * @depends testStoreDoc
+     */
+    public function testGetAllDocs()
+    {
+        $doc = (object)['_id' => 'test1'];
+        $this->aclient->storeDoc($doc);
 
-		$result = $this->aclient->getAllDocs();
+        $result = $this->aclient->getAllDocs();
 
-		$this->assertInternalType('object', $result);
-		$this->assertObjectHasAttribute('total_rows', $result);
-		$this->assertObjectHasAttribute('rows', $result);
-		$this->assertInternalType('array', $result->rows);
-		$this->assertInternalType('int', $result->total_rows);
+        $this->assertInternalType('object', $result);
+        $this->assertObjectHasAttribute('total_rows', $result);
+        $this->assertObjectHasAttribute('rows', $result);
+        $this->assertInternalType('array', $result->rows);
+        $this->assertInternalType('int', $result->total_rows);
 
-		$this->assertCount(1, $result->rows);
-	}
+        $this->assertCount(1, $result->rows);
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::getUuids
-	 */
-	public function testGetUuids()
-	{
-		$result = $this->aclient->getUuids();
-		$this->assertInternalType('array', $result);
-		$this->assertCount(1, $result);
+    /**
+     * @covers PHPOnCouch\CouchClient::getUuids
+     */
+    public function testGetUuids()
+    {
+        $result = $this->aclient->getUuids();
+        $this->assertInternalType('array', $result);
+        $this->assertCount(1, $result);
 
-		$this->expectException(InvalidArgumentException::class);
-		$this->aclient->getUuids(-1);
-	}
+        $this->expectException(InvalidArgumentException::class);
+        $this->aclient->getUuids(-1);
+    }
 
-	/**
-	 * @link http://docs.couchdb.org/en/2.0.0/api/database/compact.html#post--db-_ensure_full_commit
-	 * @covers PHPOnCouch\CouchClient::ensureFullCommit
-	 */
-	public function testEnsureFullCommit()
-	{
-		$result = $this->aclient->ensureFullCommit();
-		$this->assertInternalType('object', $result);
-		$this->assertObjectHasAttribute('ok', $result);
-		$this->assertObjectHasAttribute('instance_start_time', $result);
-		$this->assertEquals(true, $result->ok);
-	}
+    /**
+     * @link http://docs.couchdb.org/en/2.0.0/api/database/compact.html#post--db-_ensure_full_commit
+     * @covers PHPOnCouch\CouchClient::ensureFullCommit
+     */
+    public function testEnsureFullCommit()
+    {
+        $result = $this->aclient->ensureFullCommit();
+        $this->assertInternalType('object', $result);
+        $this->assertObjectHasAttribute('ok', $result);
+        $this->assertObjectHasAttribute('instance_start_time', $result);
+        $this->assertEquals(true, $result->ok);
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::createIndex
-	 */
-	public function testCreateIndex()
-	{
-		$response1 = $this->aclient->createIndex(["firstName", "lastName"]);
-		$expectedResults = ["created", "exists"];
-		$this->assertContains($response1->result, $expectedResults);
-		$this->assertNotEmpty($response1->name);
-		$this->assertNotEmpty($response1->id);
+    /**
+     * @covers PHPOnCouch\CouchClient::createIndex
+     */
+    public function testCreateIndex()
+    {
+        $response1 = $this->aclient->createIndex(["firstName", "lastName"]);
+        $expectedResults = ["created", "exists"];
+        $this->assertContains($response1->result, $expectedResults);
+        $this->assertNotEmpty($response1->name);
+        $this->assertNotEmpty($response1->id);
 
 //Create index without a valid ddoc
-		$ddocId = 'indexes';
-		$expectedName = 'globalIdx';
-		$response2 = $this->aclient->createIndex(['firstName', 'birthDate', 'lastName'], $expectedName, $ddocId);
-		$this->assertEquals($response2->name, $expectedName);
-		$this->assertStringStartsWith('_design/' . $ddocId, $response2->id);
+        $ddocId = 'indexes';
+        $expectedName = 'globalIdx';
+        $response2 = $this->aclient->createIndex(['firstName', 'birthDate', 'lastName'], $expectedName, $ddocId);
+        $this->assertEquals($response2->name, $expectedName);
+        $this->assertStringStartsWith('_design/' . $ddocId, $response2->id);
 
-		$doc = $this->aclient->getDoc('_design/' . $ddocId);
-		$this->assertNotEmpty($doc);
+        $doc = $this->aclient->getDoc('_design/' . $ddocId);
+        $this->assertNotEmpty($doc);
 
-		$this->expectException("\BadMethodCallException");
-		$this->aclient->createIndex([], "exceptionIdx", "exception", "text");
-	}
+        $this->expectException("\BadMethodCallException");
+        $this->aclient->createIndex([], "exceptionIdx", "exception", "text");
+    }
 
-	/**
-	 * @depends testCreateIndex
-	 * @covers PHPOnCouch\CouchClient::getIndexes
-	 */
-	public function testGetIndexes()
-	{
-		$indexNames = ['_all_docs'];
-		for ($i = 0; $i < 5; $i++) {
-			$indexNames[] = 'indexName' . $i;
-			$this->aclient->createIndex(["firstName", "lastName"], $indexNames[$i]);
-		}
+    /**
+     * @depends testCreateIndex
+     * @covers  PHPOnCouch\CouchClient::getIndexes
+     */
+    public function testGetIndexes()
+    {
+        $indexNames = ['_all_docs'];
+        for ($i = 0; $i < 5; $i++) {
+            $indexNames[] = 'indexName' . $i;
+            $this->aclient->createIndex(["firstName", "lastName"], $indexNames[$i]);
+        }
 
-		$indexes = $this->aclient->getIndexes();
+        $indexes = $this->aclient->getIndexes();
 //_id index + the new one
-		$this->assertCount(6, $indexes);
-		foreach ($indexes as $val) {
-			$this->assertContains($val->name, $indexNames);
-		}
-	}
+        $this->assertCount(6, $indexes);
+        foreach ($indexes as $val) {
+            $this->assertContains($val->name, $indexNames);
+        }
+    }
 
-	public function testDeleteIndex()
-	{
-		$indexName = 'my_super_index';
-		$initialIndexCnt = count($this->aclient->getIndexes());
-		$dd = (object) ['_id' => 'delete', 'type' => 'javascript'];
-		$this->aclient->storeDoc($dd);
+    public function testDeleteIndex()
+    {
+        $indexName = 'my_super_index';
+        $initialIndexCnt = count($this->aclient->getIndexes());
+        $dd = (object)['_id' => 'delete', 'type' => 'javascript'];
+        $this->aclient->storeDoc($dd);
 
-		$this->aclient->createIndex(["firstName", "lastName"], $indexName, $dd->_id);
-		$this->aclient->deleteIndex($dd->_id, $indexName);
-		$this->assertCount($initialIndexCnt, $this->aclient->getIndexes());
-	}
+        $this->aclient->createIndex(["firstName", "lastName"], $indexName, $dd->_id);
+        $this->aclient->deleteIndex($dd->_id, $indexName);
+        $this->assertCount($initialIndexCnt, $this->aclient->getIndexes());
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::find
-	 */
-	public function testFind()
-	{
-		$response = $this->aclient->createIndex(['firstName', 'age', 'lastName', 'gender'], 'person');
-		$this->assertObjectHasAttribute('id', $response);
-		$docs = [
-			[
-				'firstName' => 'John',
-				'lastName' => 'Smith',
-				'age' => 35,
-				'gender' => 'Male'
-			],
-			[
-				'firstName' => 'Jimmy',
-				'lastName' => 'Neutron',
-				'age' => 13,
-				'gender' => 'Male'
-			],
-			[
-				'firstName' => 'Jenny',
-				'lastName' => 'Rugby',
-				'age' => 23,
-				'gender' => 'Female'
-			]
-		];
-		$this->aclient->storedocs($docs);
+    /**
+     * @covers PHPOnCouch\CouchClient::find
+     */
+    public function testFind()
+    {
+        $response = $this->aclient->createIndex(['firstName', 'age', 'lastName', 'gender'], 'person');
+        $this->assertObjectHasAttribute('id', $response);
+        $docs = [
+            [
+                'firstName' => 'John',
+                'lastName' => 'Smith',
+                'age' => 35,
+                'gender' => 'Male'
+            ],
+            [
+                'firstName' => 'Jimmy',
+                'lastName' => 'Neutron',
+                'age' => 13,
+                'gender' => 'Male'
+            ],
+            [
+                'firstName' => 'Jenny',
+                'lastName' => 'Rugby',
+                'age' => 23,
+                'gender' => 'Female'
+            ]
+        ];
+        $this->aclient->storedocs($docs);
 
-		$response1 = $this->aclient->fields(['age'])->find(['firstName' => ['$eq' => 'John']]);
-		$this->assertCount(1, $response1);
-		$this->assertEquals($response1[0]->age, 35);
-		$this->assertFalse(isset($response1[0]->firstName));
+        $response1 = $this->aclient->fields(['age'])->find(['firstName' => ['$eq' => 'John']]);
+        $this->assertCount(1, $response1);
+        $this->assertEquals($response1[0]->age, 35);
+        $this->assertFalse(isset($response1[0]->firstName));
 
-		$selector2 = [
-			'$and' =>
-			[
-				['age' => ['$gt' => 16]],
-				['gender' => ['$eq' => 'Female']]
-			]
-		];
-		$response2 = $this->aclient->find($selector2);
-		$this->assertcount(1, $response2);
-		$this->assertObjectHasAttribute('firstName', $response2[0]);
-		$this->assertObjectHasAttribute('lastName', $response2[0]);
-		$this->assertObjectHasAttribute('gender', $response2[0]);
-		$this->assertEquals('Jenny', $response2[0]->firstName);
-
-//Test limit and skip options
-		$selector3 = [
-			'age' => ['$gt' => 16]
-		];
-		$response3 = $this->aclient->limit(1)->find($selector3);
-		$this->assertCount(1, $response3);
-		$response4 = $this->aclient->skip(1)->find($selector3);
-		$this->assertCount(1, $response4);
-
-		$response5 = $this->aclient->limit(1)->sort([['firstName' => 'desc'], ['age' => 'desc']])->find(['firstName' => ['$gt' => null]]);
-		$this->assertObjectHasAttribute('age', $response5[0]);
-		$this->assertEquals(35, $response5[0]->age);
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchClient::_find
-	 */
-	public function testProtectedFind()
-	{
-		$reflectedClass = new \ReflectionClass(CouchClient::class);
-		$method = $reflectedClass->getMethod('_find');
-		$method->setAccessible(true);
-
-		$response = $this->aclient->createIndex(['firstName', 'age', 'lastName', 'gender'], 'person');
-		$this->assertObjectHasAttribute('id', $response);
-		$docs = [
-			[
-				'firstName' => 'John',
-				'lastName' => 'Smith',
-				'age' => 35,
-				'gender' => 'Male'
-			],
-			[
-				'firstName' => 'Jimmy',
-				'lastName' => 'Neutron',
-				'age' => 13,
-				'gender' => 'Male'
-			],
-			[
-				'firstName' => 'Jenny',
-				'lastName' => 'Rugby',
-				'age' => 23,
-				'gender' => 'Female'
-			]
-		];
-		$this->aclient->storedocs($docs);
-
-		$this->aclient->fields(['age']);
-		$response1 = $method->invoke($this->aclient, '_find', ['firstName' => ['$eq' => 'John']])->docs;
-		$this->assertCount(1, $response1);
-		$this->assertEquals($response1[0]->age, 35);
-		$this->assertFalse(isset($response1[0]->firstName));
-
-		$selector2 = [
-			'$and' =>
-			[
-				['age' => ['$gt' => 16]],
-				['gender' => ['$eq' => 'Female']]
-			]
-		];
-		$response2 = $method->invoke($this->aclient, '_find', $selector2)->docs;
-		$this->assertcount(1, $response2);
-		$this->assertObjectHasAttribute('firstName', $response2[0]);
-		$this->assertObjectHasAttribute('lastName', $response2[0]);
-		$this->assertObjectHasAttribute('gender', $response2[0]);
-		$this->assertEquals('Jenny', $response2[0]->firstName);
+        $selector2 = [
+            '$and' =>
+                [
+                    ['age' => ['$gt' => 16]],
+                    ['gender' => ['$eq' => 'Female']]
+                ]
+        ];
+        $response2 = $this->aclient->find($selector2);
+        $this->assertcount(1, $response2);
+        $this->assertObjectHasAttribute('firstName', $response2[0]);
+        $this->assertObjectHasAttribute('lastName', $response2[0]);
+        $this->assertObjectHasAttribute('gender', $response2[0]);
+        $this->assertEquals('Jenny', $response2[0]->firstName);
 
 //Test limit and skip options
-		$selector3 = [
-			'age' => ['$gt' => 16]
-		];
-		$this->aclient->limit(1);
-		$response3 = $method->invoke($this->aclient, '_find', $selector3)->docs;
-		$this->assertCount(1, $response3);
-		$this->aclient->skip(1);
-		$response4 = $method->invoke($this->aclient, '_find', $selector3)->docs;
-		$this->assertCount(1, $response4);
+        $selector3 = [
+            'age' => ['$gt' => 16]
+        ];
+        $response3 = $this->aclient->limit(1)->find($selector3);
+        $this->assertCount(1, $response3);
+        $response4 = $this->aclient->skip(1)->find($selector3);
+        $this->assertCount(1, $response4);
 
-		$this->aclient->limit(1)->sort([['firstName' => 'desc'], ['age' => 'desc']]);
-		$response5 = $method->invoke($this->aclient, '_find', ['firstName' => ['$gt' => null]])->docs;
-		$this->assertObjectHasAttribute('age', $response5[0]);
-		$this->assertEquals(35, $response5[0]->age);
-	}
+        $response5 = $this->aclient->limit(1)->sort([['firstName' => 'desc'], ['age' => 'desc']])->find(['firstName' => ['$gt' => null]]);
+        $this->assertObjectHasAttribute('age', $response5[0]);
+        $this->assertEquals(35, $response5[0]->age);
+    }
 
-	/**
-	 * @covers PHPOnCouch\CouchClient::explain
-	 */
-	public function testExplain()
-	{
-		$fullIdx = $this->aclient->createIndex(['firstName', 'age', 'lastName', 'gender'], 'person');
-		$indexObj = $this->aclient->createIndex(['firstName'], 'firstName');
-		$docs = [
-			[
-				'firstName' => 'John',
-				'lastName' => 'Smith',
-				'age' => 35,
-				'gender' => 'Male'
-			],
-			[
-				'firstName' => 'Jimmy',
-				'lastName' => 'Neutron',
-				'age' => 13,
-				'gender' => 'Male'
-			],
-			[
-				'firstName' => 'Jenny',
-				'lastName' => 'Rugby',
-				'age' => 23,
-				'gender' => 'Female'
-			]
-		];
-		$this->aclient->storeDocs($docs);
+    /**
+     * @covers PHPOnCouch\CouchClient::_find
+     */
+    public function testProtectedFind()
+    {
+        $reflectedClass = new \ReflectionClass(CouchClient::class);
+        $method = $reflectedClass->getMethod('_find');
+        $method->setAccessible(true);
 
-		$response = $this->aclient->limit(1)->skip(1)->fields(['firstName'])->sort([['firstName' => 'desc'], ['age' => 'desc']])->explain(['firstName' => ['$gt' => null]], $fullIdx->id);
-		$this->assertObjectHasAttribute('dbname', $response);
-		$this->assertObjectHasAttribute('index', $response);
-		$this->assertObjectHasAttribute('selector', $response);
-		$this->assertObjectHasAttribute('opts', $response);
-		$this->assertObjectHasAttribute('limit', $response);
-		$this->assertObjectHasAttribute('skip', $response);
-		$this->assertObjectHasAttribute('fields', $response);
-		$this->assertObjectHasAttribute('range', $response);
-		$this->assertObjectHasAttribute('name', $response->index);
-		$this->assertEquals('person', $response->index->name);
-		$this->assertEquals($this->aclient->getDatabaseName(), $response->dbname);
-	}
+        $response = $this->aclient->createIndex(['firstName', 'age', 'lastName', 'gender'], 'person');
+        $this->assertObjectHasAttribute('id', $response);
+        $docs = [
+            [
+                'firstName' => 'John',
+                'lastName' => 'Smith',
+                'age' => 35,
+                'gender' => 'Male'
+            ],
+            [
+                'firstName' => 'Jimmy',
+                'lastName' => 'Neutron',
+                'age' => 13,
+                'gender' => 'Male'
+            ],
+            [
+                'firstName' => 'Jenny',
+                'lastName' => 'Rugby',
+                'age' => 23,
+                'gender' => 'Female'
+            ]
+        ];
+        $this->aclient->storedocs($docs);
+
+        $this->aclient->fields(['age']);
+        $response1 = $method->invoke($this->aclient, '_find', ['firstName' => ['$eq' => 'John']])->docs;
+        $this->assertCount(1, $response1);
+        $this->assertEquals($response1[0]->age, 35);
+        $this->assertFalse(isset($response1[0]->firstName));
+
+        $selector2 = [
+            '$and' =>
+                [
+                    ['age' => ['$gt' => 16]],
+                    ['gender' => ['$eq' => 'Female']]
+                ]
+        ];
+        $response2 = $method->invoke($this->aclient, '_find', $selector2)->docs;
+        $this->assertcount(1, $response2);
+        $this->assertObjectHasAttribute('firstName', $response2[0]);
+        $this->assertObjectHasAttribute('lastName', $response2[0]);
+        $this->assertObjectHasAttribute('gender', $response2[0]);
+        $this->assertEquals('Jenny', $response2[0]->firstName);
+
+//Test limit and skip options
+        $selector3 = [
+            'age' => ['$gt' => 16]
+        ];
+        $this->aclient->limit(1);
+        $response3 = $method->invoke($this->aclient, '_find', $selector3)->docs;
+        $this->assertCount(1, $response3);
+        $this->aclient->skip(1);
+        $response4 = $method->invoke($this->aclient, '_find', $selector3)->docs;
+        $this->assertCount(1, $response4);
+
+        $this->aclient->limit(1)->sort([['firstName' => 'desc'], ['age' => 'desc']]);
+        $response5 = $method->invoke($this->aclient, '_find', ['firstName' => ['$gt' => null]])->docs;
+        $this->assertObjectHasAttribute('age', $response5[0]);
+        $this->assertEquals(35, $response5[0]->age);
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchClient::explain
+     */
+    public function testExplain()
+    {
+        $fullIdx = $this->aclient->createIndex(['firstName', 'age', 'lastName', 'gender'], 'person');
+        $indexObj = $this->aclient->createIndex(['firstName'], 'firstName');
+        $docs = [
+            [
+                'firstName' => 'John',
+                'lastName' => 'Smith',
+                'age' => 35,
+                'gender' => 'Male'
+            ],
+            [
+                'firstName' => 'Jimmy',
+                'lastName' => 'Neutron',
+                'age' => 13,
+                'gender' => 'Male'
+            ],
+            [
+                'firstName' => 'Jenny',
+                'lastName' => 'Rugby',
+                'age' => 23,
+                'gender' => 'Female'
+            ]
+        ];
+        $this->aclient->storeDocs($docs);
+
+        $response = $this->aclient->limit(1)->skip(1)->fields(['firstName'])->sort([['firstName' => 'desc'], ['age' => 'desc']])->explain(['firstName' => ['$gt' => null]], $fullIdx->id);
+        $this->assertObjectHasAttribute('dbname', $response);
+        $this->assertObjectHasAttribute('index', $response);
+        $this->assertObjectHasAttribute('selector', $response);
+        $this->assertObjectHasAttribute('opts', $response);
+        $this->assertObjectHasAttribute('limit', $response);
+        $this->assertObjectHasAttribute('skip', $response);
+        $this->assertObjectHasAttribute('fields', $response);
+        $this->assertObjectHasAttribute('range', $response);
+        $this->assertObjectHasAttribute('name', $response->index);
+        $this->assertEquals('person', $response->index->name);
+        $this->assertEquals($this->aclient->getDatabaseName(), $response->dbname);
+    }
 
 }

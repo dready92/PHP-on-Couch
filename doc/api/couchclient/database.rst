@@ -47,6 +47,31 @@ General functions
 
 .. php:class:: CouchClient
 
+:hidden:`__construct`
+"""""""""""""""""""""
+
+    .. php:method:: __construct($dsn, $dbname, $options = [])
+
+        :params string: The complete url to the  host. You can enter the credentials directly in it if they don't required to be encoded.
+        :params string: The database name to use
+        :params array: An array of options that can be pass. You can pass the following parameters : username, password, cookie_auth.
+
+        You can pass credentials to be encoded correctly.
+        Example:
+
+        .. code-block:: php
+
+            $client = new CouchClient('http://localhost:5984/','mydb',['username'=>'myuser','password'=>'complicated/*pwd']);
+
+        You can also specify to use the cookie authentification by passing the 'cookie_auth' key.
+
+        Example:
+
+        .. code-block:: php
+
+            $client = new CouchClient('http://localhost:5984/','mydb',['cookie_auth'=>true]);
+            $cookie = $client->getSessionCookie();
+
 
 :hidden:`dsn`
 """"""""""""""

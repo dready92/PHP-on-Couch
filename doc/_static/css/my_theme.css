@@ -16,6 +16,11 @@
     display: none !important;
 }
 
+.toctree-wrapper .hidden {
+    display: unset !important;
+    visibility: visible !important;
+}
+
 nav .hidden, div.section#maintoc .hidden {
     display: unset !important;
     visibility: visible !important;

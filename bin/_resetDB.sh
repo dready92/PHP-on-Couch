@@ -1,6 +1,7 @@
 #!/bin/sh
 
 #Composer update
+cd "${BASH_SOURCE%/*}/.."
 composer install
 composer dump-autoload
 
