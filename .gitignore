@@ -1,6 +1,8 @@
 #Netbean project folders
 /nbproject/private/
 /nbproject
+.idea/
+
 
 #Checkstyle reports
 /style-report

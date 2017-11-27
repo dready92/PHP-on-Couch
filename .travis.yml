@@ -19,7 +19,7 @@ sudo:
   required
 
 before_install:
-    - docker run -d -it -p 5984:5984 klaemo/couchdb:latest
+    - docker run -d -it -p 5984:5984 couchdb:latest
     - sleep 5
     - curl -X PUT http://127.0.0.1:5984/_users  && curl -X PUT http://127.0.0.1:5984/_replicator && curl -X PUT http://127.0.0.1:5984/_global_changes
 

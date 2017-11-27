@@ -1417,7 +1417,8 @@ EOT;
      */
     public function testFind()
     {
-        $response = $this->aclient->createIndex(['firstName', 'age', 'lastName', 'gender'], 'person');
+        $response = $this->aclient->createIndex(['age', 'firstName', 'lastName', 'gender'], 'person');
+        $this->aclient->createIndex(['age','firstName']);
         $this->assertObjectHasAttribute('id', $response);
         $docs = [
             [
@@ -1460,7 +1461,7 @@ EOT;
         $this->assertObjectHasAttribute('gender', $response2[0]);
         $this->assertEquals('Jenny', $response2[0]->firstName);
 
-//Test limit and skip options
+        //Test limit and skip options
         $selector3 = [
             'age' => ['$gt' => 16]
         ];
@@ -1469,7 +1470,7 @@ EOT;
         $response4 = $this->aclient->skip(1)->find($selector3);
         $this->assertCount(1, $response4);
 
-        $response5 = $this->aclient->limit(1)->sort([['firstName' => 'desc'], ['age' => 'desc']])->find(['firstName' => ['$gt' => null]]);
+        $response5 = $this->aclient->limit(1)->sort([['age' => 'desc']])->find(['firstName' => ['$gt' => null]]);
         $this->assertObjectHasAttribute('age', $response5[0]);
         $this->assertEquals(35, $response5[0]->age);
     }
@@ -1483,7 +1484,8 @@ EOT;
         $method = $reflectedClass->getMethod('_find');
         $method->setAccessible(true);
 
-        $response = $this->aclient->createIndex(['firstName', 'age', 'lastName', 'gender'], 'person');
+        $this->aclient->createIndex(['age', 'firstName']);
+        $response = $this->aclient->createIndex(['age', 'firstName', 'lastName', 'gender'], 'person');
         $this->assertObjectHasAttribute('id', $response);
         $docs = [
             [
@@ -1527,7 +1529,7 @@ EOT;
         $this->assertObjectHasAttribute('gender', $response2[0]);
         $this->assertEquals('Jenny', $response2[0]->firstName);
 
-//Test limit and skip options
+        //Test limit and skip options
         $selector3 = [
             'age' => ['$gt' => 16]
         ];
@@ -1538,7 +1540,7 @@ EOT;
         $response4 = $method->invoke($this->aclient, '_find', $selector3)->docs;
         $this->assertCount(1, $response4);
 
-        $this->aclient->limit(1)->sort([['firstName' => 'desc'], ['age' => 'desc']]);
+        $this->aclient->limit(1)->sort([['age' => 'desc']]);
         $response5 = $method->invoke($this->aclient, '_find', ['firstName' => ['$gt' => null]])->docs;
         $this->assertObjectHasAttribute('age', $response5[0]);
         $this->assertEquals(35, $response5[0]->age);
@@ -1549,8 +1551,8 @@ EOT;
      */
     public function testExplain()
     {
-        $fullIdx = $this->aclient->createIndex(['firstName', 'age', 'lastName', 'gender'], 'person');
-        $indexObj = $this->aclient->createIndex(['firstName'], 'firstName');
+        $indexId = $this->aclient->createIndex(['firstName'],'firstName')->id;
+
         $docs = [
             [
                 'firstName' => 'John',
@@ -1573,7 +1575,7 @@ EOT;
         ];
         $this->aclient->storeDocs($docs);
 
-        $response = $this->aclient->limit(1)->skip(1)->fields(['firstName'])->sort([['firstName' => 'desc'], ['age' => 'desc']])->explain(['firstName' => ['$gt' => null]], $fullIdx->id);
+        $response = $this->aclient->limit(1)->skip(1)->fields(['firstName'])->explain(['firstName' => ['$gt' => null]]);
         $this->assertObjectHasAttribute('dbname', $response);
         $this->assertObjectHasAttribute('index', $response);
         $this->assertObjectHasAttribute('selector', $response);
@@ -1581,9 +1583,8 @@ EOT;
         $this->assertObjectHasAttribute('limit', $response);
         $this->assertObjectHasAttribute('skip', $response);
         $this->assertObjectHasAttribute('fields', $response);
-        $this->assertObjectHasAttribute('range', $response);
         $this->assertObjectHasAttribute('name', $response->index);
-        $this->assertEquals('person', $response->index->name);
+        $this->assertEquals('firstName', $response->index->name);
         $this->assertEquals($this->aclient->getDatabaseName(), $response->dbname);
     }
 

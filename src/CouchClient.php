@@ -55,7 +55,7 @@ use PHPOnCouch\Exceptions\CouchNotFoundException;
  * @method CouchClient include_docs(boolean $val) Include the associated document with each result. If there are conflicts, only the winning revision is returned.
  * @method CouchClient inclusive_end(boolean $val) Specifies wheter the specified end key should be included in the result.
  * @method CouchClient attachments(boolean $val)  Include the Base64-encoded content of attachments in the documents that are included if include_docs is true.
- * @method CouchClient sort(object $sortObj)  JSON array following sort syntax.
+ * @method CouchClient sort(array|object $sortObj)  JSON array following sort syntax.
  * @method CouchClient fields(array | string $fields) SON array specifying which fields of each object should be returned. If it is omitted, the entire object is returned. More information provided in the section on filtering fields.
  *
  */
@@ -652,7 +652,7 @@ class CouchClient extends Couch
             $method = 'PUT';
             $url .= '/' . urlencode($doc->_id);
         }
-        return $this->queryAndTest($method, $url, [200, 201], [], $doc);
+        return $this->queryAndTest($method, $url, [200, 201, 202], [], $doc);
     }
 
     /**
@@ -1141,18 +1141,18 @@ class CouchClient extends Couch
      * @param string $id design document name (without _design)
      * @param string $name show name
      * @param string $docId id of the couchDB document (can be null !)
-     * @param array $additoinalParams some other parameters to send in the query
+     * @param array $additionalParams some other parameters to send in the query
      * @return object CouchDB list query response
      * @throws InvalidArgumentException
      */
-    public function getShow($id, $name, $docId = null, $additoinalParams = [])
+    public function getShow($id, $name, $docId = null, $additionalParams = [])
     {
         if (!$id || !$name)
             throw new InvalidArgumentException('You should specify list id and name');
         $url = '/' . urlencode($this->dbname) . '/_design/' . urlencode($id) . '/_show/' . urlencode($name);
         if ($docId)
             $url .= '/' . urlencode($docId);
-        return $this->queryAndTest('GET', $url, [200], $additoinalParams);
+        return $this->queryAndTest('GET', $url, [200], $additionalParams);
     }
 
     /**
