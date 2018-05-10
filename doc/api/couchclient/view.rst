@@ -68,7 +68,7 @@ The CoucClient implements chainable methods to add query parameters. The method 
 * endkey
 * endkey_docid
 * limit
-* stale
+* stale (Deprecated from 2.1.1 and will be removed in 3.0)
 * descending
 * skip
 * group
@@ -77,6 +77,8 @@ The CoucClient implements chainable methods to add query parameters. The method 
 * include_docs
 * inclusive_end
 * attachments
+* stable (New from 2.1.1)
+* update (New from 2.1.1)
 
 Example querying a view with a startkey, a limit and include_docs
 

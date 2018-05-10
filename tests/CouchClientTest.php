@@ -47,9 +47,14 @@ EOT;
      */
     private $aclient;
 
+    private $aUrl;
+    private $url;
+    private $couch_server;
+
     /**
      * Sets up the fixture, for example, opens a network connection.
      * This method is called before a test is executed.
+     * @throws Exception
      */
     protected function setUp()
     {
@@ -1586,6 +1591,33 @@ EOT;
         $this->assertObjectHasAttribute('name', $response->index);
         $this->assertEquals('firstName', $response->index->name);
         $this->assertEquals($this->aclient->getDatabaseName(), $response->dbname);
+    }
+
+    public function testStableAndUpdateOption(){
+        $names = ['alexis', 'johnny'];
+
+        $indexedDocs = [];
+        $len = count($names);
+        for ($i = 0; $i < $len; $i++)
+            $indexedDocs[$names[$i]] = (object)['_id' => 'doc_' . ($i + 1), 'name' => $names[$i], 'stable' => true];
+
+        $designDoc = (object)['_id' => '_design/stable_test', 'type' => 'javascript', 'views' => (object)[]];
+        $view = (object)['map' => "function(doc){if(doc.stable)emit(doc.name);}"];
+        $designDoc->views->stable = $view;
+
+        $docs = [$designDoc];
+        $docs = array_merge($docs, array_values($indexedDocs));
+        $this->aclient->storeDocs($docs);
+
+        //Now if we query the view with lazy, it shouldnt return any results
+        $response = $this->aclient->update("lazy")->getView('stable_test','stable');
+        $this->assertObjectHasAttribute('total_rows',$response);
+        $this->assertEquals(0,$response->total_rows);
+
+        //It should now has computed the views
+        $updatedViewResponse = $this->aclient->getView('stable_test','stable');
+        $this->assertObjectHasAttribute('total_rows',$updatedViewResponse);
+        $this->assertEquals(2,$updatedViewResponse->total_rows);
     }
 
 }
