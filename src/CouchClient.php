@@ -215,7 +215,7 @@ class CouchClient extends Couch
      * @throws CouchException
      * @return object
      */
-    protected function queryAndTest($method, $url, $allowedStatusCodes, $parameters = [], $data = null, $contentType = null)
+    public function queryAndValid($method, $url, $allowedStatusCodes, $parameters = [], $data = null, $contentType = null)
     {
         $raw = $this->query($method, $url, $parameters, $data, $contentType);
         $response = $this->parseRawResponse($raw, $this->resultAsArray);
@@ -338,7 +338,7 @@ class CouchClient extends Couch
      */
     public function listDatabases()
     {
-        return $this->queryAndTest('GET', '/_all_dbs', [200]);
+        return $this->queryAndValid('GET', '/_all_dbs', [200]);
     }
 
     /**
@@ -349,7 +349,7 @@ class CouchClient extends Couch
      */
     public function createDatabase()
     {
-        return $this->queryAndTest('PUT', '/' . urlencode($this->dbname), [201]);
+        return $this->queryAndValid('PUT', '/' . urlencode($this->dbname), [201]);
     }
 
     /**
@@ -360,7 +360,7 @@ class CouchClient extends Couch
      */
     public function deleteDatabase()
     {
-        return $this->queryAndTest('DELETE', '/' . urlencode($this->dbname), [200]);
+        return $this->queryAndValid('DELETE', '/' . urlencode($this->dbname), [200]);
     }
 
     /**
@@ -371,7 +371,7 @@ class CouchClient extends Couch
      */
     public function getDatabaseInfos()
     {
-        return $this->queryAndTest('GET', '/' . urlencode($this->dbname), [200]);
+        return $this->queryAndValid('GET', '/' . urlencode($this->dbname), [200]);
     }
 
     /**
@@ -437,7 +437,7 @@ class CouchClient extends Couch
      */
     public function compactDatabase()
     {
-        return $this->queryAndTest('POST', '/' . urlencode($this->dbname) . '/_compact', [202]);
+        return $this->queryAndValid('POST', '/' . urlencode($this->dbname) . '/_compact', [202]);
     }
 
     /**
@@ -447,7 +447,7 @@ class CouchClient extends Couch
      */
     public function getMemberShip()
     {
-        return $this->queryAndTest('GET', '/_membership', [200]);
+        return $this->queryAndValid('GET', '/_membership', [200]);
     }
 
     /**
@@ -478,7 +478,7 @@ class CouchClient extends Couch
             if (!empty($key) && is_string($key))
                 $url .= '/' . urlencode($key);
         }
-        return $this->queryAndTest('GET', $url . '/', [200]);
+        return $this->queryAndValid('GET', $url . '/', [200]);
     }
 
     /**
@@ -501,7 +501,7 @@ class CouchClient extends Couch
         $nodeUrl = '/_node/' . urlencode($nodeName) . '/';
         $configUrl = urlencode($section) . '/' . urlencode($key);
         $encodedValue = json_encode($value);
-        return $this->queryAndTest('PUT', $nodeUrl . '_config/' . $configUrl, [200], [], $encodedValue);
+        return $this->queryAndValid('PUT', $nodeUrl . '_config/' . $configUrl, [200], [], $encodedValue);
     }
 
     /**
@@ -522,7 +522,7 @@ class CouchClient extends Couch
             throw new InvalidArgumentException('You must supply a section and key parameter.');
         $nodeUrl = '/_node/' . urlencode($nodeName) . '/';
         $configUrl = urlencode($section) . '/' . urlencode($key);
-        return $this->queryAndTest('DELETE', $nodeUrl . '_config/' . $configUrl, [200]);
+        return $this->queryAndValid('DELETE', $nodeUrl . '_config/' . $configUrl, [200]);
     }
 
     /**
@@ -534,7 +534,7 @@ class CouchClient extends Couch
      */
     public function cleanupDatabaseViews()
     {
-        return $this->queryAndTest('POST', '/' . urlencode($this->dbname) . '/_view_cleanup', [202]);
+        return $this->queryAndValid('POST', '/' . urlencode($this->dbname) . '/_view_cleanup', [202]);
     }
 
     /**
@@ -601,7 +601,7 @@ class CouchClient extends Couch
         $url = '/' . urlencode($this->dbname) . '/_changes';
         $opts = $this->queryParameters;
         $this->queryParameters = [];
-        return $this->queryAndTest('GET', $url, [200, 201], $opts);
+        return $this->queryAndValid('GET', $url, [200, 201], $opts);
     }
 
     /**
@@ -643,7 +643,7 @@ class CouchClient extends Couch
         $docQuery = $this->queryParameters;
         $this->queryParameters = [];
 
-        $back = $this->queryAndTest('GET', $url, [200], $docQuery);
+        $back = $this->queryAndValid('GET', $url, [200], $docQuery);
         if (!$this->resultsAsCouchDocs) {
             return $back;
         }
@@ -676,7 +676,7 @@ class CouchClient extends Couch
             $method = 'PUT';
             $url .= '/' . urlencode($doc->_id);
         }
-        return $this->queryAndTest($method, $url, [200, 201, 202], [], $doc);
+        return $this->queryAndValid($method, $url, [200, 201, 202], [], $doc);
     }
 
     /**
@@ -706,7 +706,7 @@ class CouchClient extends Couch
         }
 
         $url = '/' . urlencode($this->dbname) . '/_bulk_docs';
-        return $this->queryAndTest('POST', $url, [200, 201, 202], [], $request);
+        return $this->queryAndValid('POST', $url, [200, 201, 202], [], $request);
     }
 
     /**
@@ -742,7 +742,7 @@ class CouchClient extends Couch
         }
 
         $url = '/' . urlencode($this->dbname) . '/_bulk_docs';
-        return $this->queryAndTest('POST', $url, [200, 201, 202], [], $request);
+        return $this->queryAndValid('POST', $url, [200, 201, 202], [], $request);
     }
 
     /**
@@ -819,7 +819,7 @@ class CouchClient extends Couch
             }
         }
 
-        return $this->queryAndTest($method, $url, [200, 201, 202], $params, $data, $contentType);
+        return $this->queryAndValid($method, $url, [200, 201, 202], $params, $data, $contentType);
     }
 
     /**
@@ -841,7 +841,7 @@ class CouchClient extends Couch
         $method = 'COPY';
         $url = '/' . urlencode($this->dbname);
         $url .= '/' . urlencode($id);
-        return $this->queryAndTest($method, $url, [200, 201, 202], [], $newId);
+        return $this->queryAndValid($method, $url, [200, 201, 202], [], $newId);
     }
 
     /**
@@ -888,7 +888,7 @@ class CouchClient extends Couch
         $url = '/' . urlencode($this->dbname) . '/' . urlencode($doc->_id) . '/' . $attName;
         if ($doc->_rev)
             $url .= '?rev=' . urlencode($doc->_rev);
-        return $this->queryAndTest('GET', $url, [200]);
+        return $this->queryAndValid('GET', $url, [200]);
     }
 
     /**
@@ -940,7 +940,7 @@ class CouchClient extends Couch
         $url = '/' . urlencode($this->dbname) .
             '/' . urlencode($doc->_id) .
             '/' . urlencode($attachmentName);
-        return $this->queryAndTest('DELETE', $url, [200, 202], ['rev' => $doc->_rev]);
+        return $this->queryAndValid('DELETE', $url, [200, 202], ['rev' => $doc->_rev]);
     }
 
     /**
@@ -959,7 +959,7 @@ class CouchClient extends Couch
             throw new Exception('Document should contain _id and _rev');
         }
         $url = '/' . urlencode($this->dbname) . '/' . urlencode($doc->_id) . '?rev=' . urlencode($doc->_rev);
-        return $this->queryAndTest('DELETE', $url, [200, 202]);
+        return $this->queryAndValid('DELETE', $url, [200, 202]);
     }
 
     /**
@@ -1039,10 +1039,10 @@ class CouchClient extends Couch
         list($method, $viewQuery, $data) = $this->prepareViewQuery();
 
         if (!$resultsAsCouchDocs)
-            return $this->queryAndTest($method, $url, [200], $viewQuery, $data);
+            return $this->queryAndValid($method, $url, [200], $viewQuery, $data);
 
         return $this->resultsToCouchDocuments(
-            $this->queryAndTest($method, $url, [200], $viewQuery, $data)
+            $this->queryAndValid($method, $url, [200], $viewQuery, $data)
         );
     }
 
@@ -1125,7 +1125,7 @@ class CouchClient extends Couch
         if (is_array($additionalParameters) && count($additionalParameters)) {
             $viewQuery = array_merge($additionalParameters, $viewQuery);
         }
-        return $this->queryAndTest($method, $url, [200], $viewQuery, $data);
+        return $this->queryAndValid($method, $url, [200], $viewQuery, $data);
     }
 
     /**
@@ -1165,7 +1165,7 @@ class CouchClient extends Couch
         if (is_array($additionalParams) && count($additionalParams)) {
             $viewQuery = array_merge($additionalParams, $viewQuery);
         }
-        return $this->queryAndTest($method, $url, [200], $viewQuery, $data);
+        return $this->queryAndValid($method, $url, [200], $viewQuery, $data);
     }
 
     /**
@@ -1187,7 +1187,7 @@ class CouchClient extends Couch
         $url = '/' . urlencode($this->dbname) . '/_design/' . urlencode($id) . '/_show/' . urlencode($name);
         if ($docId)
             $url .= '/' . urlencode($docId);
-        return $this->queryAndTest('GET', $url, [200], $additionalParams);
+        return $this->queryAndValid('GET', $url, [200], $additionalParams);
     }
 
     /**
@@ -1204,7 +1204,7 @@ class CouchClient extends Couch
         if (!$id)
             throw new InvalidArgumentException('You should specify view id');
         $url = '/' . urlencode($this->dbname) . '/_design/' . urlencode($id) . '/_info';
-        return $this->queryAndTest('GET', $url, [200]);
+        return $this->queryAndValid('GET', $url, [200]);
     }
 
     /**
@@ -1220,7 +1220,7 @@ class CouchClient extends Couch
     {
         $formattedId = preg_replace('@^_design/@', '', $id);
         $url = '/' . urlencode($this->dbname) . '/_compact/' . urlencode($formattedId);
-        return $this->queryAndTest('POST', $url, [202]);
+        return $this->queryAndValid('POST', $url, [202]);
     }
 
     /**
@@ -1252,7 +1252,7 @@ class CouchClient extends Couch
     {
         $url = '/' . urlencode($this->dbname) . '/_all_docs';
         list($method, $viewQuery, $data) = $this->prepareViewQuery();
-        return $this->queryAndTest($method, $url, [200], $viewQuery, $data);
+        return $this->queryAndValid($method, $url, [200], $viewQuery, $data);
     }
 
     /**
@@ -1272,7 +1272,7 @@ class CouchClient extends Couch
 
         $url = '/_uuids';
 
-        $back = $this->queryAndTest('GET', $url, [200], ['count' => $validCount]);
+        $back = $this->queryAndValid('GET', $url, [200], ['count' => $validCount]);
         if ($back && property_exists($back, 'uuids')) {
             return $back->uuids;
         }
@@ -1289,7 +1289,7 @@ class CouchClient extends Couch
     {
         $method = 'POST';
         $url = '/' . urlencode($this->dbname) . '/_ensure_full_commit';
-        return $this->queryAndTest($method, $url, [200, 201]);
+        return $this->queryAndValid($method, $url, [200, 201]);
     }
 
     /**
@@ -1323,7 +1323,7 @@ class CouchClient extends Couch
 
 
         $url = '/' . urlencode($this->dbname) . '/_index';
-        return $this->queryAndTest($method, $url, [200], [], $request);
+        return $this->queryAndValid($method, $url, [200], [], $request);
     }
 
     /**
@@ -1335,7 +1335,7 @@ class CouchClient extends Couch
     {
         $method = 'GET';
         $url = '/' . urlencode($this->dbname) . '/_index';
-        $result = $this->queryAndTest($method, $url, [200]);
+        $result = $this->queryAndValid($method, $url, [200]);
         return $result->indexes;
     }
 
@@ -1356,7 +1356,7 @@ class CouchClient extends Couch
         $method = 'DELETE';
         $urlEnd = urlencode($ddoc) . '/json/' . urlencode($name);
         $url = '/' . urlencode($this->dbname) . '/_index/' . $urlEnd;
-        return $this->queryAndTest($method, $url, [200]);
+        return $this->queryAndValid($method, $url, [200]);
     }
 
     /**
@@ -1411,7 +1411,7 @@ class CouchClient extends Couch
 
         if (isset($index) && (is_array($index) || is_string($index)))
             $request['use_index'] = $index;
-        return $this->queryAndTest($method, $url, [200], [], $request);
+        return $this->queryAndValid($method, $url, [200], [], $request);
     }
 
     /**
