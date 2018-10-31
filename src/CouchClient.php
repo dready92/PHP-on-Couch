@@ -1371,7 +1371,17 @@ class CouchClient extends Couch
      */
     public function find($selector, $index = null)
     {
-        return $this->_find('_find', $selector, $index)->docs;
+        /*  TODO: Next major version: Return the response object instead of the docs.
+            find() call can returns warnings or bookmarks.
+        */
+        $asArray = $this->resultAsArray;
+        $result = $this->_find('_find', $selector, $index);
+
+        if ($asArray) {
+            return $result['docs'];
+        } else {
+            return $result->docs;
+        }
     }
 
     /**

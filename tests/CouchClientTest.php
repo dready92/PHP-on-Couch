@@ -1423,7 +1423,7 @@ EOT;
     public function testFind()
     {
         $response = $this->aclient->createIndex(['age', 'firstName', 'lastName', 'gender'], 'person');
-        $this->aclient->createIndex(['age','firstName']);
+        $this->aclient->createIndex(['age', 'firstName']);
         $this->assertObjectHasAttribute('id', $response);
         $docs = [
             [
@@ -1478,6 +1478,34 @@ EOT;
         $response5 = $this->aclient->limit(1)->sort([['age' => 'desc']])->find(['firstName' => ['$gt' => null]]);
         $this->assertObjectHasAttribute('age', $response5[0]);
         $this->assertEquals(35, $response5[0]->age);
+    }
+
+
+    /**
+     * @covers PHPOnCouch\CouchClient::find
+     */
+    public function testFindAsArray()
+    {
+        $docs = [
+            [
+                'firstName' => 'John',
+                'lastName' => 'Smith',
+                'age' => 35,
+                'gender' => 'Male'
+            ],
+            [
+                'firstName' => 'Bob',
+                'lastName' => 'Jackson',
+                'age' => 38,
+                'gender' => 'Others'
+            ],
+        ];
+        $this->aclient->storeDocs($docs);
+
+        $response1 = $this->aclient->asArray()->find(['firstName' => 'John']);
+        $this->assertCount(1, $response1);
+        $this->assertEquals($response1[0]['age'], 35);
+        $this->assertTrue(isset($response1[0]['firstName']));
     }
 
     /**
@@ -1556,7 +1584,7 @@ EOT;
      */
     public function testExplain()
     {
-        $indexId = $this->aclient->createIndex(['firstName'],'firstName')->id;
+        $indexId = $this->aclient->createIndex(['firstName'], 'firstName')->id;
 
         $docs = [
             [
@@ -1593,7 +1621,8 @@ EOT;
         $this->assertEquals($this->aclient->getDatabaseName(), $response->dbname);
     }
 
-    public function testStableAndUpdateOption(){
+    public function testStableAndUpdateOption()
+    {
         $names = ['alexis', 'johnny'];
 
         $indexedDocs = [];
@@ -1610,14 +1639,14 @@ EOT;
         $this->aclient->storeDocs($docs);
 
         //Now if we query the view with lazy, it shouldnt return any results
-        $response = $this->aclient->update("lazy")->getView('stable_test','stable');
-        $this->assertObjectHasAttribute('total_rows',$response);
-        $this->assertEquals(0,$response->total_rows);
+        $response = $this->aclient->update("lazy")->getView('stable_test', 'stable');
+        $this->assertObjectHasAttribute('total_rows', $response);
+        $this->assertEquals(0, $response->total_rows);
 
         //It should now has computed the views
-        $updatedViewResponse = $this->aclient->getView('stable_test','stable');
-        $this->assertObjectHasAttribute('total_rows',$updatedViewResponse);
-        $this->assertEquals(2,$updatedViewResponse->total_rows);
+        $updatedViewResponse = $this->aclient->getView('stable_test', 'stable');
+        $this->assertObjectHasAttribute('total_rows', $updatedViewResponse);
+        $this->assertEquals(2, $updatedViewResponse->total_rows);
     }
 
 }
