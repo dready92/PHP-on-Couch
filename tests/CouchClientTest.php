@@ -1417,6 +1417,23 @@ EOT;
         $this->assertCount($initialIndexCnt, $this->aclient->getIndexes());
     }
 
+    public function testFindWithConflicts()
+    {
+        //Validate that their is not docs
+        $query = ['_conflicts' => ['$exists' => true]];
+        $firstResponse = $this->aclient->conflicts(true)->find($query);
+
+        $this->assertCount(0, $firstResponse);
+
+        $this->aclient->storeDoc((object)['_id' => 'doc', 'a' => 1]);
+        $this->aclient->storeDoc((object)['_id' => 'doc', 'a' => 2, '_rev' => "2-23202479633c2b380f79507a776743d5"], false);
+
+        //Validate that we have a conflict
+        $response = $this->aclient->conflicts(true)->find($query);
+        $this->assertCount(1, $response);
+
+    }
+
     /**
      * @covers PHPOnCouch\CouchClient::find
      */
