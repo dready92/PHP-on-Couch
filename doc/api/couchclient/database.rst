@@ -497,7 +497,7 @@ The following methods allow a fine grained control on the **changes** request to
 
         Feed type to use. In case of "continuous" feed type, $callback should be set and should be a PHP callable object (so *is_callable($callback)* should be true)
 
-        The callable function or method will receive two arguments : the JSON object decoded as a PHP object, and a couchClient instance, allowing developers to issue CouchDB queries from inside the callback.
+        The callable function or method will receive two arguments : the JSON object decoded as a PHP object, and a cloned CouchClient instance, allowing developers to issue CouchDB queries from inside the callback.
 
         :params string $value: The feed value.
         :params callable $callback: The callback function to execute for each document received.

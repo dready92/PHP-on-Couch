@@ -527,6 +527,7 @@ EOT;
 
     /**
      * @covers PHPOnCouch\CouchClient::getChanges
+     * @throws Exception
      */
     public function testGetChanges()
     {
@@ -542,11 +543,12 @@ EOT;
         }
         $cookieClient->createDatabase();
 
-        $cntr = new stdClass();
-        $cntr->cnt = 0;
-        $callable = function ($row, $client) use ($cntr) {
-            $cntr->cnt++;
-            if ($cntr->cnt == 3)
+        $counter = new stdClass();
+        $counter->cnt = 0;
+        $callable = function ($row, $client) use ($counter) {
+            $this->assertInstanceOf(CouchClient::class, $client);
+            $counter->cnt++;
+            if ($counter->cnt == 3)
                 return false;
         };
 
@@ -556,7 +558,7 @@ EOT;
         $cookieClient->feed('continuous', $callable);
         touch($this->continuousQueryTriggerFile);
         $response = $cookieClient->getChanges();
-        $this->assertEquals($cntr->cnt, 3);
+        $this->assertEquals($counter->cnt, 3);
     }
 
     /**

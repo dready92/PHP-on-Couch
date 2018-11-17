@@ -239,6 +239,7 @@ class Couch
      *  (defaults to application/json)
      *
      * @return string|false server response on success, false on error
+     * @throws Exception
      */
     public function query($method, $url, $parameters = [], $data = null, $contentType = null)
     {
@@ -288,16 +289,18 @@ class Couch
      * @param callable $callable PHP function name / callable array ( see http://php.net/is_callable )
      * @param string $method HTTP method to use (GET, POST, ...)
      * @param string $url URL to fetch
-     * @param array $parameters additionnal parameters to send with the request
+     * @param array $parameters additional parameters to send with the request
      * @param string|array|object $data request body
      *
+     * @param null $caller The caller object that will be passed to the continuousQuery callback. By default, it's the Couch instance.
      * @return string|false server response on success, false on error
      *
-     * @throws Exception|InvalidArgumentException|CouchException|CouchNoResponseException
+     * @throws CouchException
      */
-    public function continuousQuery($callable, $method, $url, $parameters = [], $data = null)
+    public function continuousQuery($callable, $method, $url, $parameters = [], $data = null, $caller = null)
     {
-        return $this->getAdapter()->continuousQuery($callable, $method, $url, $parameters, $data);
+        $callerVal = empty($caller) ? $this : $caller;
+        return $this->getAdapter()->continuousQuery($callable, $method, $url, $parameters, $data, $callerVal);
     }
 
 }

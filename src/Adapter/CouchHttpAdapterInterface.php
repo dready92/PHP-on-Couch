@@ -20,12 +20,12 @@
 namespace PHPOnCouch\Adapter;
 
 
-
 /**
  *
  * @author alexis
  */
-interface CouchHttpAdapterInterface {
+interface CouchHttpAdapterInterface
+{
 
     const METHOD_PUT = 'PUT';
     const METHOD_POST = 'POST';
@@ -47,7 +47,7 @@ interface CouchHttpAdapterInterface {
 
     public function storeFile($url, $file, $contentType);
 
-    public function continuousQuery($callable, $method, $url, $parameters = [], $data = null);
+    public function continuousQuery($callable, $method, $url, $parameters = [], $data = null, $caller = null);
 
     public function setSessionCookie($cookie);
 

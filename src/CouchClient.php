@@ -596,7 +596,7 @@ class CouchClient extends Couch
             $this->queryParameters = [];
             $callable = $opts['continuous_feed'];
             unset($opts['continuous_feed']);
-            return $this->continuousQuery($callable, 'GET', $url, $opts);
+            return $this->continuousQuery($callable, 'GET', $url, $opts, null, $this);
         }
         $url = '/' . urlencode($this->dbname) . '/_changes';
         $opts = $this->queryParameters;

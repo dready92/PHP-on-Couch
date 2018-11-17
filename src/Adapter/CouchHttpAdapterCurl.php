@@ -44,12 +44,12 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttp
         $this->socketAdapter = new CouchHttpAdapterSocket($this->getDsn(), $this->getOptions());
     }
 
-    public function continuousQuery($callable, $method, $url, $parameters = [], $data = null)
+    public function continuousQuery($callable, $method, $url, $parameters = [], $data = null, $caller = null)
     {
         if ($this->socketAdapter == null) {
             $this->initSocketAdapter();
         }
-        return $this->socketAdapter->continuousQuery($callable, $method, $url, $parameters, $data);
+        return $this->socketAdapter->continuousQuery($callable, $method, $url, $parameters, $data, $caller);
     }
 
     /**
