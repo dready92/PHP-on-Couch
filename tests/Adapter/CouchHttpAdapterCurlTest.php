@@ -219,4 +219,63 @@ class CouchHttpAdapterCurlTest extends PHPUnit_Framework_TestCase
 		$this->adapter->storeAsFile("NOEXISTING", "something", "");
 	}
 
+
+    public function testInitSocketAdapter(){
+        $adapter = $this->adapter;
+        $options = ['test'=> true];
+        $cookie = "AuthSession=laksdlaksldkasldkalskd";
+
+        $adapter->setOptions($options);
+        $adapter->setSessionCookie($cookie);
+
+        $initSocketAdapter = new \ReflectionMethod($adapter, 'initSocketAdapter');
+        $initSocketAdapter->setAccessible(true);
+        $initSocketAdapter->invokeArgs($adapter,[]);
+
+        $reflectedAdapter = new \ReflectionClass(CouchHttpAdapterCurl::class);
+        $socketAdapterProp = $reflectedAdapter->getProperty('socketAdapter');
+        $socketAdapterProp->setAccessible(true);
+        $socketAdapter = $socketAdapterProp->getValue($adapter);
+
+        $this->assertEquals($cookie,$socketAdapter->getSessionCookie());
+        $this->assertEquals($options,$socketAdapter->getOptions());
+    }
+
+	public function testSetCookie(){
+        $adapter = $this->adapter;
+        $cookie = "AuthSession=laksdlaksldkasldkalskd";
+
+        $initSocketAdapter = new \ReflectionMethod($adapter, 'initSocketAdapter');
+        $initSocketAdapter->setAccessible(true);
+        $initSocketAdapter->invokeArgs($adapter,[]);
+
+        $adapter->setSessionCookie($cookie);
+
+        $reflectedAdapter = new \ReflectionClass(CouchHttpAdapterCurl::class);
+        $socketAdapterProp = $reflectedAdapter->getProperty('socketAdapter');
+        $socketAdapterProp->setAccessible(true);
+        $socketAdapter = $socketAdapterProp->getValue($adapter);
+
+        $this->assertEquals($cookie,$socketAdapter->getSessionCookie());
+    }
+
+    public function testSetOptions(){
+        $adapter = $this->adapter;
+        $options = ['test'=> true];
+
+        $initSocketAdapter = new \ReflectionMethod($adapter, 'initSocketAdapter');
+        $initSocketAdapter->setAccessible(true);
+        $initSocketAdapter->invokeArgs($adapter,[]);
+
+        $adapter->setOptions($options);
+
+        $reflectedAdapter = new \ReflectionClass(CouchHttpAdapterCurl::class);
+        $socketAdapterProp = $reflectedAdapter->getProperty('socketAdapter');
+        $socketAdapterProp->setAccessible(true);
+        $socketAdapter = $socketAdapterProp->getValue($adapter);
+
+        $this->assertEquals($options,$socketAdapter->getOptions());
+    }
+
+
 }

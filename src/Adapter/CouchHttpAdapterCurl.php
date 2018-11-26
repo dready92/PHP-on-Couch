@@ -42,6 +42,9 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttp
     protected function initSocketAdapter()
     {
         $this->socketAdapter = new CouchHttpAdapterSocket($this->getDsn(), $this->getOptions());
+        if ($this->hasSessionCookie()) {
+            $this->socketAdapter->setSessionCookie($this->getSessionCookie());
+        }
     }
 
     public function continuousQuery($callable, $method, $url, $parameters = [], $data = null, $caller = null)
@@ -219,4 +222,19 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttp
         return $response;
     }
 
+    public function setSessionCookie($cookie)
+    {
+        if ($this->socketAdapter) {
+            $this->socketAdapter->setSessionCookie($cookie);
+        }
+        return parent::setSessionCookie($cookie);
+    }
+
+    public function setOptions($options)
+    {
+        if ($this->socketAdapter) {
+            $this->socketAdapter->setOptions($options);
+        }
+        parent::setOptions($options);
+    }
 }
