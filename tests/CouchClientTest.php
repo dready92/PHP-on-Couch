@@ -221,21 +221,39 @@ EOT;
     {
         $infos = $this->client->getDatabaseInfos();
         $this->assertInternalType("object", $infos);
-        $tsts = array(
+        $propsToCheckValues = [
             'db_name' => "couchclienttest",
             "doc_count" => 0,
             "doc_del_count" => 0,
-            "purge_seq" => 0,
             "compact_running" => false,
-            "disk_size" => false,
-            "instance_start_time" => false,
-            "disk_format_version" => false
+        ];
+
+        $seqProps = [
+            'purge_seq',
+            'update_seq',
+        ];
+
+        $otherProps = ['disk_size','instance_start_time', 'disk_format_version'];
+        $propsThatShouldBePresent = array_merge(
+            array_keys($propsToCheckValues),
+            $seqProps,
+            $otherProps
         );
-        foreach ($tsts as $attr => $value) {
+
+        // Check presence of properties
+        foreach ($propsThatShouldBePresent as $attr) {
             $this->assertObjectHasAttribute($attr, $infos);
-            if ($value !== false) {
-                $this->assertEquals($value, $infos->$attr);
-            }
+        }
+
+        // Check values that should be exact
+        foreach ($propsToCheckValues as $attr => $val) {
+            $this->assertEquals($val, $infos->$attr);
+        }
+
+        // Make sure the sequences start at 0
+        foreach ($seqProps as $attr) {
+            $val = strval($infos->$attr);
+            $this->assertStringStartsWith('0', $val);
         }
     }
 
@@ -244,7 +262,10 @@ EOT;
      */
     public function testGetDatabaseUri()
     {
-        $this->assertEquals($this->couch_server . "couchclienttest", $this->client->getDatabaseUri());
+        $this->assertEquals(
+            $this->couch_server . "couchclienttest",
+            $this->client->getDatabaseUri()
+        );
     }
 
     /**
