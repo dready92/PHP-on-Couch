@@ -233,7 +233,7 @@ EOT;
             'update_seq',
         ];
 
-        $otherProps = ['disk_size','instance_start_time', 'dist_format_version'];
+        $otherProps = ['disk_size','instance_start_time', 'disk_format_version'];
         $propsThatShouldBePresent = array_merge(
             array_keys($propsToCheckValues),
             $seqProps,
