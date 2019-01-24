@@ -5,6 +5,7 @@ namespace PHPOnCouch;
 use InvalidArgumentException,
     PHPOnCouch\Exceptions,
     PHPUnit_Framework_TestCase,
+    RuntimeException,
     stdClass;
 
 require_once join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'config.php']);
@@ -143,6 +144,98 @@ class CouchTest extends PHPUnit_Framework_TestCase
 
         //Test for certain part
         $this->assertEquals($this->host, $this->couch->dsnPart('host'));
+    }
+
+    /**
+     * @dataProvider provideParseRawResponse
+     */
+    public function testParseRawResponse($rawData, $jsonAsArray, $expected)
+    {
+        $actual = Couch::parseRawResponse($rawData, $jsonAsArray);
+        $this->assertEquals($expected, $actual);
+    }
+
+    public function provideParseRawResponse()
+    {
+        // Function to load sample response file. It will check that the file has trailing CRLF chars.
+        $loadData = function ($filename) {
+            $path = join(DIRECTORY_SEPARATOR, [__DIR__, '_files', 'CouchTest', $filename]);
+            $contents = file_get_contents($path);
+            if (substr($contents, -2) !== "\r\n") {
+                throw new RuntimeException('Sample request/response files must have CRLF line endings and end with CRLF');
+            }
+            return $contents;
+        };
+        // Function to load multiple sample files and combine them into raw data for testing.
+        $createRawData = function (...$files) use ($loadData) {
+            return join("\r\n", array_map($loadData, $files));
+        };
+        return [
+            'Bare 201 response' => [
+                $createRawData('201-Created-response.dat', 'SampleBody.dat'),
+                false,
+                [
+                    'status_code' => 201,
+                    'status_message' => 'Created',
+                    'body' => json_decode($loadData('SampleBody.dat'), false),
+                ],
+            ],
+            '100 response followed by 201 response' => [
+                $createRawData(
+                    '101-Continue-response-without-headers.dat',
+                    '201-Created-response.dat',
+                    'SampleBody.dat'
+                ),
+                true,
+                [
+                    'status_code' => 201,
+                    'status_message' => 'Created',
+                    'body' => json_decode($loadData('SampleBody.dat'), true),
+                ],
+            ],
+            'Multiple 100 responses followed by 201 response' => [
+                $createRawData(
+                    '101-Continue-response-without-headers.dat',
+                    '101-Continue-response-without-headers.dat',
+                    '201-Created-response.dat',
+                    'SampleBody.dat'
+                ),
+                false,
+                [
+                    'status_code' => 201,
+                    'status_message' => 'Created',
+                    'body' => json_decode($loadData('SampleBody.dat'), false),
+                ],
+            ],
+            '100 response with other headers followed by 201 response' => [
+                $createRawData(
+                    '101-Continue-response-with-more-headers.dat',
+                    '201-Created-response.dat',
+                    'SampleBody.dat'
+                ),
+                true,
+                [
+                    'status_code' => 201,
+                    'status_message' => 'Created',
+                    'body' => json_decode($loadData('SampleBody.dat'), true),
+                ],
+            ],
+            'Multiple mixed 100 response with other headers followed by 201 response' => [
+                $createRawData(
+                    '101-Continue-response-with-more-headers.dat',
+                    '101-Continue-response-without-headers.dat',
+                    '101-Continue-response-with-more-headers.dat',
+                    '201-Created-response.dat',
+                    'SampleBody.dat'
+                ),
+                false,
+                [
+                    'status_code' => 201,
+                    'status_message' => 'Created',
+                    'body' => json_decode($loadData('SampleBody.dat'), false),
+                ],
+            ],
+        ];
     }
 
     public function testStoreFile()

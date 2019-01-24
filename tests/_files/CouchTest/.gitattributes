@@ -1,0 +1,2 @@
+# Enforce CRLF for .dat files here because they are sample HTTP headers.
+*.dat text eol=crlf

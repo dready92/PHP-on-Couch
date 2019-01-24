@@ -207,9 +207,10 @@ class Couch
     {
         if (!strlen($rawData))
             throw new InvalidArgumentException("no data to parse");
-        $httpHeader = "HTTP/1.1 100 Continue\r\n\r\n";
-        while (!substr_compare($rawData, $httpHeader, 0, 25)) {
-            $rawData = substr($rawData, 25);
+        $continueRegex = '@^HTTP/[0-9\\.]+\s+100\s+Continue@i';
+        while (preg_match($continueRegex, $rawData)) {
+            $tmp = explode("\r\n\r\n", $rawData, 2);
+            $rawData = $tmp[1];
         }
         $response = ['body' => null];
         list($headers, $body) = explode("\r\n\r\n", $rawData, 2);

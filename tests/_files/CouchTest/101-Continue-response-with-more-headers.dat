@@ -1,0 +1,4 @@
+HTTP/1.1 100 Continue
+Connection: close
+Date: Tue, 22 Jan 2019 16:43:45 GMT
+Server: MochiWeb/1.0 (Any of you quaids got a smint?)

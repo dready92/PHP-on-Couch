@@ -1,0 +1,10 @@
+HTTP/1.1 201 Created
+Cache-Control: must-revalidate
+Content-Length: 69
+Content-Type: application/json
+Date: Tue, 22 Jan 2019 16:43:45 GMT
+ETag: "1-31f47a29d81307244bb39f8d2eb1d52a"
+Location: http://127.0.0.1:5984/product/2eb147724a29d52a34bb39f81fd8130d
+Server: CouchDB/2.3.0 (Erlang OTP/19)
+X-Couch-Request-ID: 98f8b34c41
+X-CouchDB-Body-Time: 0
