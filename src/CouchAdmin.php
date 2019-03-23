@@ -184,7 +184,7 @@ class CouchAdmin
         }
 
         try {
-            $client = new CouchClient($this->client->dsn(), $this->usersdb);
+            $client = new CouchClient($this->client->dsn(), $this->usersdb, $this->client->options());
             $doc = $client->getDoc(self::USER_PREFIX . $encodedLogin);
             $client->deleteDoc($doc);
         } catch (CouchException $e) {
@@ -249,7 +249,7 @@ class CouchAdmin
         if (strlen($login) < 1) {
             throw new InvalidArgumentException("Login can't be empty");
         }
-        $client = new CouchClient($this->client->dsn(), $this->usersdb);
+        $client = new CouchClient($this->client->dsn(), $this->usersdb, $this->client->options());
         $doc = $client->getDoc(self::USER_PREFIX . $login);
         return $client->deleteDoc($doc);
     }
