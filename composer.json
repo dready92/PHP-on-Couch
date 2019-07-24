@@ -11,7 +11,7 @@
         "driver"
     ],
     "homepage": "https://github.com/PHP-on-Couch/PHP-on-Couch",
-    "license": "GPL-3.0-or-later",
+    "license": "LGPL-3.0-or-later",
     "authors": [
         {
             "name": "Michael Bailly",
