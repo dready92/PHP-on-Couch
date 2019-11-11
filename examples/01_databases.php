@@ -8,9 +8,9 @@
 
 */
 
- //Setup an autoloader (using src/autoload.php)
+ //Setup an autoloader (using src/Autoload.php)
  $srcDir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'src';
- require $srcDir . DIRECTORY_SEPARATOR . 'autoload.php';
+ require $srcDir . DIRECTORY_SEPARATOR . 'Autoload.php';
 
 ### ANON DSN
 //$couchDsn = "http://localhost:5984/";

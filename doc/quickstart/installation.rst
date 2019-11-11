@@ -28,7 +28,7 @@ Once you have composer installed, you are very close to have PHP-on-Couch instal
 
 .. note:: By default, it will take the latest release*
 
-2. Make sure your composer autoloader is called. If not, simply **require** the `autoload.php` file in `vendor` folder.
+2. Make sure your composer autoloader is called. If not, simply **require** the `Autoload.php` file in `vendor` folder.
 3. Start playing with PHPOnCouch!
 
 Composer demo
@@ -46,7 +46,7 @@ The content pasted into the `index.php` file is :
 
     //We need to use an autoloader to import PHPOnCouch classes
     //I will use composer's autoloader for this demo
-    $autoloader = join(DIRECTORY_SEPARATOR,[__DIR__,'vendor','autoload.php']);
+    $autoloader = join(DIRECTORY_SEPARATOR,[__DIR__,'vendor','Autoload.php']);
     require $autoloader;
 
     //We import the classes that we need
@@ -101,7 +101,7 @@ Manual demo
 
     //We need to use an autoloader to import PHPOnCouch classes
     //I will use PHPOnCouch autloader for the demo
-    $autoloader = join(DIRECTORY_SEPARATOR,[__DIR__,'PHPOnCouch','autoload.php']);
+    $autoloader = join(DIRECTORY_SEPARATOR,[__DIR__,'PHPOnCouch','Autoload.php']);
     require $autoloader;
 
     //We import the classes that we need
