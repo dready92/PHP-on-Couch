@@ -15,7 +15,7 @@ class Config
 
     private function __construct()
     {
-        $env = new Dotenv(__DIR__);
+        $env = Dotenv::create(__DIR__);
         try {
             $env->load();
         } catch (InvalidPathException $e) {
