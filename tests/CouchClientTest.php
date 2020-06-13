@@ -122,13 +122,13 @@ EOT;
      */
     public function testRevs()
     {
-        $cd = new CouchDocument($this->client);
+        $cd = new CouchDocument($this->aclient);
         $cd->set(array(
             '_id' => 'somedoc'
         ));
         $cd->property1 = "one";
         $cd->property2 = "two";
-        $doc = $this->client->revs()->revs_info()->getDoc("somedoc");
+        $doc = $this->aclient->revs()->revs_info()->getDoc("somedoc");
         $this->assertObjectHasAttribute("_revisions", $doc);
         $this->assertObjectHasAttribute("ids", $doc->_revisions);
         $this->assertEquals(count($doc->_revisions->ids), 3);
@@ -185,7 +185,7 @@ EOT;
      */
     public function testListDatabases()
     {
-        $expectedDBS = ['_users', $this->dbname, '_replicator', '_global_changes'];
+        $expectedDBS = ['_users', $this->dbname, '_replicator'];
         $dbs = $this->aclient->listDatabases();
         foreach ($expectedDBS as $val) {
             $this->assertContains($val, $dbs);
@@ -219,7 +219,7 @@ EOT;
      */
     public function testGetDatabaseInfos()
     {
-        $infos = $this->client->getDatabaseInfos();
+        $infos = $this->aclient->getDatabaseInfos();
         $this->assertInternalType("object", $infos);
         $propsToCheckValues = [
             'db_name' => "couchclienttest",
@@ -233,7 +233,7 @@ EOT;
             'update_seq',
         ];
 
-        $otherProps = ['disk_size','instance_start_time', 'disk_format_version'];
+        $otherProps = ['instance_start_time', 'disk_format_version'];
         $propsThatShouldBePresent = array_merge(
             array_keys($propsToCheckValues),
             $seqProps,
@@ -273,7 +273,7 @@ EOT;
      */
     public function testGetDatabaseName()
     {
-        $this->assertEquals("couchclienttest", $this->client->getDatabaseName());
+        $this->assertEquals("couchclienttest", $this->aclient->getDatabaseName());
     }
 
     /**
@@ -292,17 +292,11 @@ EOT;
      */
     public function testDatabaseExists()
     {
-        $exist = $this->client->databaseExists();
+        $exist = $this->aclient->databaseExists();
         $this->assertTrue($exist, "testing against an existing database");
 
         $client = new CouchClient($this->couch_server, "foofoofooidontexist");
         $this->assertFalse($client->databaseExists(), "testing against a non-existing database");
-
-
-        $adm = new CouchAdmin($this->aclient);
-        $adm->addDatabaseMemberUser('admin');
-        $this->expectException(\Exception::class);
-        $this->client->databaseExists();
     }
 
     /**
@@ -616,24 +610,24 @@ EOT;
 //Test 1
         $test1 = array("_id" => "great", "type" => "array");
         $this->expectException(InvalidArgumentException::class);
-        $this->client->storeDoc($test1);
+        $this->aclient->storeDoc($test1);
 
 //Test 2
         $test2 = new \stdclass();
         $test2->_id = "great";
         $test2->_type = "object";
         $this->expectException(InvalidArgumentException::class);
-        $this->client->storeDoc($test2);
+        $this->aclient->storeDoc($test2);
 
 //Test 3
-        $infos = $this->client->getDatabaseInfos();
+        $infos = $this->aclient->getDatabaseInfos();
         $test3 = new \stdclass();
         $test3->_id = "great";
         $test3->type = "object";
-        $this->client->storeDoc($test3);
-        $infos2 = $this->client->getDatabaseInfos();
+        $this->aclient->storeDoc($test3);
+        $infos2 = $this->aclient->getDatabaseInfos();
         $this->assertEquals($infos->doc_count + 1, $infos2->doc_count);
-        $doc = $this->client->getDoc("great");
+        $doc = $this->aclient->getDoc("great");
         $this->assertInternalType("object", $doc);
         $this->assertObjectHasAttribute("type", $doc);
         $this->assertEquals("object", $doc->type);
@@ -649,12 +643,12 @@ EOT;
             new \stdclass(),
             new \stdclass()
         );
-        $infos = $this->client->getDatabaseInfos();
+        $infos = $this->aclient->getDatabaseInfos();
         $this->assertEquals($infos->doc_count, 0);
 
-        $stored = $this->client->storeDocs($data);
+        $stored = $this->aclient->storeDocs($data);
 // 		print_r($stored);
-        $infos = $this->client->getDatabaseInfos();
+        $infos = $this->aclient->getDatabaseInfos();
         $this->assertEquals($infos->doc_count, 3);
 
         $data[0]->_id = "test";
@@ -663,17 +657,17 @@ EOT;
         $data[1]->type = "female";
         $data[2]->_id = "test";
         $data[2]->type = "both";
-        $stored = $this->client->storeDocs($data);
-        $infos = $this->client->getDatabaseInfos();
+        $stored = $this->aclient->storeDocs($data);
+        $infos = $this->aclient->getDatabaseInfos();
         $this->assertEquals($infos->doc_count, 4);
 
-        $doc = $this->client->conflicts()->getDoc("test");
+        $doc = $this->aclient->conflicts()->getDoc("test");
         $this->assertInternalType("object", $doc);
         $this->assertObjectNotHasAttribute("_conflicts", $doc);
         $data[0]->_id = "test2";
         $data[1]->_id = "test2";
         $data[2]->_id = "test2";
-        $stored = $this->client->storeDocs($data);
+        $stored = $this->aclient->storeDocs($data);
         $this->assertInternalType("array", $stored);
         $this->assertEquals(count($stored), 3);
         foreach ($stored as $s) {
@@ -683,7 +677,7 @@ EOT;
             $this->assertObjectHasAttribute("error", $s);
             $this->assertEquals($s->error, "conflict");
         }
-        $doc = $this->client->conflicts()->getDoc("test2");
+        $doc = $this->aclient->conflicts()->getDoc("test2");
         $this->assertObjectNotHasAttribute("_conflicts", $doc);
 
 //Part 2
@@ -693,7 +687,7 @@ EOT;
             new \stdclass(),
             new \stdclass()
         );
-        $infos = $this->client->getDatabaseInfos();
+        $infos = $this->aclient->getDatabaseInfos();
         $this->assertEquals($infos->doc_count, 5);
 
         $data[0]->_id = "test";
@@ -702,10 +696,10 @@ EOT;
         $data[1]->type = "female";
         $data[2]->_id = "test";
         $data[2]->type = "both";
-        $stored = $this->client->storeDocs($data);
-        $infos = $this->client->getDatabaseInfos();
+        $stored = $this->aclient->storeDocs($data);
+        $infos = $this->aclient->getDatabaseInfos();
         $this->assertEquals($infos->doc_count, 5);
-        $doc = $this->client->conflicts()->getDoc("test");
+        $doc = $this->aclient->conflicts()->getDoc("test");
         $this->assertObjectNotHasAttribute("_conflicts", $doc); //No conflicts with the new bulk semantic
 
         $data[0]->_id = "test2";
@@ -715,10 +709,10 @@ EOT;
         $data[2]->_id = "test2";
         $data[2]->type = "both";
 
-        $stored = $this->client->storeDocs($data);
-        $infos = $this->client->getDatabaseInfos();
+        $stored = $this->aclient->storeDocs($data);
+        $infos = $this->aclient->getDatabaseInfos();
         $this->assertEquals($infos->doc_count, 5);
-        $doc = $this->client->conflicts()->getDoc("test2");
+        $doc = $this->aclient->conflicts()->getDoc("test2");
         $this->assertObjectNotHasAttribute("_conflicts", $doc);
     }
 
@@ -753,7 +747,7 @@ EOT;
         $this->aclient->storeDoc($ddoc);
         $doc = new stdClass();
         $doc->_id = "foo";
-        $this->client->storeDoc($doc);
+        $this->aclient->storeDoc($doc);
 
 
         $update = $this->aclient->updateDoc("test", "test", array());
@@ -791,7 +785,7 @@ EOT;
         $this->aclient->storeDoc($ddoc);
         $doc = new stdClass();
         $doc->_id = "foo";
-        $this->client->storeDoc($doc);
+        $this->aclient->storeDoc($doc);
 
         $update = $this->aclient->updateDocFullAPI("test", "test", array(
             "data" => array("var1" => "val1/?\"", "var2" => "val2")
@@ -860,7 +854,7 @@ EOT;
         $this->assertObjectHasAttribute("_attachments", $fields);
         $this->assertObjectHasAttribute("file.txt", $fields->_attachments);
 
-        $cd = new CouchDocument($this->client);
+        $cd = new CouchDocument($this->aclient);
         $cd->set(array(
             '_id' => 'somedoc2'
         ));
@@ -919,7 +913,7 @@ EOT;
         $this->assertObjectHasAttribute("_attachments", $fields);
         $this->assertObjectHasAttribute("file.txt", $fields->_attachments);
 
-        $cd = new CouchDocument($this->client);
+        $cd = new CouchDocument($this->aclient);
         $cd->set(array(
             '_id' => 'somedoc2'
         ));
@@ -987,7 +981,7 @@ EOT;
             $this->aclient->deleteDoc($doc);
         } else {
             $validObject = (object)['_id' => 'test2'];
-            $doc = $this->client->storeDoc($validObject);
+            $doc = $this->aclient->storeDoc($validObject);
             $validObject->_rev = $doc->rev;
             $doc = $validObject;
             $result = $this->aclient->deleteDoc($doc);
@@ -1070,14 +1064,14 @@ EOT;
      */
     public function testAsArray()
     {
-        $infos = $this->client->getDatabaseInfos();
+        $infos = $this->aclient->getDatabaseInfos();
         $test = new \stdclass();
         $test->_id = "great";
         $test->type = "object";
-        $this->client->storeDoc($test);
-        $infos2 = $this->client->getDatabaseInfos();
+        $this->aclient->storeDoc($test);
+        $infos2 = $this->aclient->getDatabaseInfos();
         $this->assertEquals($infos->doc_count + 1, $infos2->doc_count);
-        $doc = $this->client->asArray()->getDoc("great");
+        $doc = $this->aclient->asArray()->getDoc("great");
         $this->assertInternalType("array", $doc);
         $this->assertArrayHasKey("type", $doc);
         $this->assertEquals("object", $doc['type']);
@@ -1133,8 +1127,8 @@ EOT;
             array('_id' => 'second', 'type' => 'test2', 'param' => 'hello2'),
             array('_id' => 'third', 'type' => 'test', 'param' => 'hello3')
         );
-        $this->client->storeDocs($docs);
-        $test = $this->client->getList('test', 'list1', 'simple', ['stop' => 'test2']);
+        $this->aclient->storeDocs($docs);
+        $test = $this->aclient->getList('test', 'list1', 'simple', ['stop' => 'test2']);
         $this->assertInternalType("array", $test);
         $this->assertEquals(count($test), 3);
         foreach ($test as $row) {
@@ -1144,7 +1138,7 @@ EOT;
             $this->assertObjectHasAttribute('value', $row);
         }
 
-        $test = $this->client->startkey(array('test'))->endkey(array('test', array()))->getList('test', 'list1', 'simple');
+        $test = $this->aclient->startkey(array('test'))->endkey(array('test', array()))->getList('test', 'list1', 'simple');
         $this->assertInternalType("array", $test);
         $this->assertEquals(count($test), 2);
         foreach ($test as $row) {
@@ -1188,7 +1182,7 @@ EOT;
             array('_id' => 'second', 'type' => 'test2', 'param' => 'hello2'),
             array('_id' => 'third', 'type' => 'test', 'param' => 'hello3')
         );
-        $this->client->storeDocs($docs);
+        $this->aclient->storeDocs($docs);
 
         $doc = new CouchDocument($this->aclient);
         $doc->_id = '_design/test2';
@@ -1206,7 +1200,7 @@ EOT;
         );
         $doc->lists = $lists;
 
-        $test = $this->client->startkey(array('test2'))->endkey(array('test2', array()))->getForeignList('test2', 'list2', 'test', 'simple', ['stop' => 'test2']);
+        $test = $this->aclient->startkey(array('test2'))->endkey(array('test2', array()))->getForeignList('test2', 'list2', 'test', 'simple', ['stop' => 'test2']);
         $this->assertInternalType("array", $test);
         $this->assertEquals(1, count($test));
         foreach ($test as $row) {
@@ -1217,7 +1211,7 @@ EOT;
             $this->assertEquals($row->value, 'test2');
         }
 
-        $test = $this->client
+        $test = $this->aclient
             ->startkey(array('test2'))
             ->endkey(array('test2', array()))
             ->include_docs(true)
@@ -1277,15 +1271,15 @@ EOT;
 			}"
         );
         $doc->shows = $show;
-        $test = $this->client->getShow("test", "simple", "_design/test");
+        $test = $this->aclient->getShow("test", "simple", "_design/test");
         $this->assertEquals($test, "document: _design/test 0");
-        $test = $this->client->getShow("test", "simple", "_design/test", array("param1" => "value1"));
+        $test = $this->aclient->getShow("test", "simple", "_design/test", array("param1" => "value1"));
         $this->assertEquals($test, "document: _design/test 1");
-        $test = $this->client->getShow("test", "simple", null);
+        $test = $this->aclient->getShow("test", "simple", null);
         $this->assertEquals($test, "no document 0");
-        $test = $this->client->getShow("test", "simple", null, array("param1" => "value1"));
+        $test = $this->aclient->getShow("test", "simple", null, array("param1" => "value1"));
         $this->assertEquals($test, "no document 1");
-        $test = $this->client->getShow("test", "json", null);
+        $test = $this->aclient->getShow("test", "json", null);
         $this->assertInternalType("object", $test);
         $this->assertObjectHasAttribute("doc", $test);
         $this->assertObjectHasAttribute("query_length", $test);

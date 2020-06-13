@@ -1,44 +1,39 @@
 language: php
 
 php:
-    - 5.6
-    - 7.0
-    - 7.1
-    - 7.2
-    - hhvm
-    - nightly
+  - 5.6
+  - 7.0
+  - 7.1
+  - 7.2
+  - hhvm
+  - nightly
 
 services:
-    - docker
-    - xvfb
+  - docker
+  - xvfb
 
 install:
-  - composer self-update
-  - composer install --prefer-source --no-interaction --dev
-  - composer dump-autoload
+  - ./bin/install_dependencies.sh
 
-sudo: 
+sudo:
   required
 
-before_install:
-    - docker run -d -it -p 5984:5984 couchdb:latest
-    - sleep 5
-    - curl -X PUT http://127.0.0.1:5984/_users  && curl -X PUT http://127.0.0.1:5984/_replicator && curl -X PUT http://127.0.0.1:5984/_global_changes
 
 before_script:
   - export DISPLAY=:99.0
+  - ./bin/run_couchdb_travis.sh
+
+after_script:
+  - ./bin/stop_couchdb_travis.sh
 
 script:
-    - curl http://localhost:5984
-    - php ./tests/_config/_setupEnvironment.php "nonode@nohost"
-    - vendor/bin/phpunit --coverage-clover=coverage.xml --configuration ./phpunit.xml  --testsuite Ordered
-    - php vendor/phpcheckstyle/phpcheckstyle/run.php --src src --config ./php-on-couch-style.xml
+  - ./bin/run_tests.sh
 
 env:
   - HTTP_ADAPTER=curl
-    
+
 after_success:
-- bash <(curl -s https://codecov.io/bash)
+  - bash <(curl -s https://codecov.io/bash)
 
 matrix:
   allow_failures:

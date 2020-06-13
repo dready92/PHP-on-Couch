@@ -55,7 +55,13 @@ abstract class AbstractCouchHttpAdapter implements CouchHttpAdapterInterface
 
     public function setDsn($dsn)
     {
-        $this->dsn = $dsn;
+        $this->dsn = preg_replace('@/+$@', '', $dsn);
+        if (($parsed = parse_url($this->dsn)))
+            $this->dsnParsed = $parsed;
+
+        if (!isset($this->dsnParsed['port'])) {
+            $this->dsnParsed['port'] = 80;
+        }
     }
 
     public function getDsn()
@@ -76,13 +82,7 @@ abstract class AbstractCouchHttpAdapter implements CouchHttpAdapterInterface
     public function __construct($dsn, $options = [])
     {
         $this->setOptions($options);
-        $this->dsn = preg_replace('@/+$@', '', $dsn);
-        if (($parsed = parse_url($this->dsn)))
-            $this->dsnParsed = $parsed;
-
-        if (!isset($this->dsnParsed['port'])) {
-            $this->dsnParsed['port'] = 80;
-        }
+        $this->setDsn($dsn);
     }
 
     /**

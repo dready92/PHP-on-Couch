@@ -48,15 +48,11 @@ The scripts for testing execute the following:
 
 .. warning:: Before running the scripts, make sure the port 5984 is free. Otherwise, the docker image won't be able to run and the tests will fail. Also, if you already have a local CouchDB, it's not recommended to use it for test. Tests will interact with the database and change it's current state.
 
-For Windows users :
-
-.. code-block :: bash
-
-    sh bin/_runLocalWin.sh
-
-
 For Unix/OSX users :
 
 .. code-block:: bash
 
-    sh bin/_runLocalUnix.sh
+    ./bin/run.sh
+
+
+.. warning:: For Windows users, please use an bash console (eg: git-bash)

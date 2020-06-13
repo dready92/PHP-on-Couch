@@ -14,790 +14,790 @@ require_once join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'config.php']);
 class CouchAdminTest extends PHPUnit_Framework_TestCase
 {
 
-	private $host = 'localhost';
-	private $port = '5984';
-	private $admin = array('login' => 'adm', 'password' => 'sometest');
-
-	/**
-	 *
-	 * @var PHPOnCouch\CouchClient
-	 */
-	private $client;
-
-	/**
-	 *
-	 * @var PHPOnCouch\CouchClient
-	 */
-	private $aclient;
-
-	/**
-	 * Sets up the fixture, for example, opens a network connection.
-	 * This method is called before a test is executed.
-	 */
-	protected function setUp()
-	{
-		$config = \config::getInstance();
-		$this->host =$config->getHost();
-		$this->port = $config->getPort();
-		
-		$url = $config->getUrl($this->host, $this->port, null);
-		$aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
-		$this->client = new CouchClient($url, 'couchclienttest');
-		$this->aclient = new CouchClient($aUrl, 'couchclienttest');
-		$this->setupClient($this->aclient);
-		
-		
-	}
-	
-	protected function setupClient($client){
-		try {
-			$client->deleteDatabase();
-		} catch (Exceptions\CouchNotFoundException $e) {
-			
-		}
-		$client->createDatabase();
-	}
-
-	/**
-	 * Tears down the fixture, for example, closes a network connection.
-	 * This method is called after a test is executed.
-	 */
-	protected function tearDown()
-	{
-		$this->client = null;
-		try {
-			$this->aclient->deleteDatabase();
-		} catch (Exceptions\CouchNotFoundException $e) {
-			
-		}
-		$this->aclient = null;
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::__construct
-	 */
-	public function testConstructor()
-	{
-		$reflectedClass = new \ReflectionClass(CouchAdmin::class);
-		$client = $reflectedClass->getProperty('client');
-		$client->setAccessible(true);
-		$node = $reflectedClass->getProperty('node');
-		$node->setAccessible(true);
-		$usersdb = $reflectedClass->getProperty('usersdb');
-		$usersdb->setAccessible(true);
-
-
-		//Options should be set correctly
-		$expectedUserDB = 'just_a_db_name';
-		$expectedNodeName = 'just_a_node_name';
-		$adm1 = new CouchAdmin($this->aclient, ['users_database' => $expectedUserDB, 'node' => $expectedNodeName]);
-		$actualNode = $node->getValue($adm1);
-		$actualClient = $client->getValue($adm1);
-		$actualDB = $usersdb->getValue($adm1);
-
-		$this->assertEquals($expectedNodeName, $actualNode);
-		$this->assertEquals($expectedUserDB, $actualDB);
-		$this->assertEquals($this->aclient, $actualClient);
-
-		//Node should node be set since the client does not have the required rights
-		$adm2 = new CouchAdmin($this->client);
-		$actualNode2 = $node->getValue($adm2);
-		$this->assertEmpty($actualNode2);
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::_buildUrl
-	 */
-	public function testBuildUrl()
-	{
-		$reflectedClass = new \ReflectionClass(CouchAdmin::class);
-		$method = $reflectedClass->getMethod('_buildUrl');
-		$method->setAccessible(true);
-
-
-		//TODO : Cover more complexe cases
-		
-		$url1 = 'http://user:@'.$this->host.':'.$this->port;
-		$expectedUrl1 = 'http://user@'.$this->host.':'.$this->port.'/';
-		$client = new CouchClient($url1, 'couchdbtest');
-		$adm = new CouchAdmin($client);
-
-		$result1 = $method->invoke($adm, $client->dsnPart());
-		$this->assertEquals($expectedUrl1, $result1);
-
-		//With pass
-		$url2 = 'http://user:pass@'.$this->host.':'.$this->port.'/couchdbtest';
-		$expectedUrl2 = 'http://user:pass@'.$this->host.':'.$this->port.'/couchdbtest';
-		$client2 = new CouchClient($url2, 'couchdbtest');
-		$adm2 = new CouchAdmin($client);
-
-		$result2 = $method->invoke($adm2, $client2->dsnPart());
-		$this->assertEquals($expectedUrl2, $result2);
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::_removeFromArray
-	 */
-	public function testRemoveFromArray()
-	{
-		$reflectedClass = new \ReflectionClass(CouchAdmin::class);
-		$method = $reflectedClass->getMethod('_removeFromArray');
-		$method->setAccessible(true);
-
-		$arr = [1, 2, 1, 3, 1, 1, 4, 1, 1, 1, 1, 5, 1, 1, 6];
-		$adm = new CouchAdmin($this->aclient);
-		$result = $method->invoke($adm, 1, $arr);
-		$this->assertEquals($result, [2, 3, 4, 5, 6]);
-
-		$result2 = $method->invoke($adm, 19, $arr);
-		$this->assertEquals($result2, $arr);
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::getUsersDatabase
-	 */
-	public function testGetUsersDatabase()
-	{
-		$adm = new CouchAdmin($this->aclient, array('users_database' => 'test'));
-		$this->assertEquals('test', $adm->getUsersDatabase());
-		$adm = new CouchAdmin($this->aclient);
-		$this->assertEquals('_users', $adm->getUsersDatabase());
-		$adm->setUsersDatabase('test');
-		$this->assertEquals('test', $adm->getUsersDatabase());
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::setUsersDatabase
-	 * @depends testGetUsersDatabase
-	 */
-	public function testSetUsersDatabase()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$adm->setUsersDatabase('testDB');
-		$this->assertEquals('testDB', $adm->getUsersDatabase());
-		$adm->setUsersDatabase(null);
-		$this->assertEquals(null, $adm->getUsersDatabase());
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::createAdmin
-	 */
-	public function testCreateAdmin()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$adm->createAdmin($this->admin['login'], $this->admin['password']);
-
-		$this->expectException(Exceptions\CouchException::class);
-		$this->expectExceptionCode('412');
-		$this->aclient->createDatabase();
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::createAdmin
-	 */
-	public function testCreateAdminWithoutUsername()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$this->expectException(\InvalidArgumentException::class);
-		$adm->createAdmin('', 'smth');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::createAdmin
-	 */
-	public function testCreateAdminWithoutPassword()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$this->expectException(\InvalidArgumentException::class);
-		$adm->createAdmin('smth', '');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::createAdmin
-	 */
-	public function testCreateAdminNoPermissions()
-	{
-		$adm2 = new CouchAdmin($this->client);
-		$this->expectException(Exceptions\CouchException::class);
-		$adm2->createAdmin('someone', 'pass');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::createAdmin
-	 * @depends testCreateAdmin
-	 */
-	public function testAdminRights()
-	{
-		$this->aclient->deleteDatabase();
-
-		$ok = $this->aclient->createDatabase();
-		$this->assertInternalType('object', $ok);
-		$this->assertObjectHasAttribute('ok', $ok);
-		$this->assertEquals($ok->ok, true);
-		$ok = $this->aclient->deleteDatabase();
-		$this->assertInternalType('object', $ok);
-		$this->assertObjectHasAttribute('ok', $ok);
-		$this->assertEquals($ok->ok, true);
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::deleteAdmin
-	 */
-	public function testDeleteAdmin()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$adm->createAdmin('secondAdmin', 'password');
-		$adm->deleteAdmin('secondAdmin');
-		$adm->createAdmin('secondAdmin', 'password');
-
-		//Non existing
-		$adm->deleteAdmin(time());
-
-		//No rights
-		$adm2 = new CouchAdmin($this->client);
-		$this->expectException(Exceptions\CouchException::class);
-		$adm2->deleteAdmin('someone');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::deleteAdmin
-	 */
-	public function testDeleteAdminNoLogin()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$this->expectException(InvalidArgumentException::class);
-		$adm->deleteAdmin('');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::createUser
-	 */
-	public function testCreateUser()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$ok = $adm->createUser('joe', 'dalton');
-		$this->assertInternalType('object', $ok);
-		$this->assertObjectHasAttribute('ok', $ok);
-		$this->assertEquals($ok->ok, true);
-
-		//Invalid parameters
-		$this->expectException(InvalidArgumentException::class);
-		$adm->createUser('', 'asdasdasd');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::createUser
-	 */
-	public function testCreateUserNoPassword()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$this->expectException(InvalidArgumentException::class);
-		$adm->createUser('alskdalskdl', '');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::getUser
-	 * @depends testCreateUser
-	 */
-	public function testGetUser()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$ok = $adm->getUser('joe');
-		$this->assertInternalType('object', $ok);
-		$this->assertObjectHasAttribute('_id', $ok);
-		$this->assertObjectHasAttribute('name', $ok);
-		$this->assertEquals('joe', $ok->name);
-
-		//invalid parameters
-		$this->expectException(InvalidArgumentException::class);
-		$adm->getUser('');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::deleteUser
-	 * @depends testGetUser
-	 */
-	public function testDeleteUser()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$ok = $adm->deleteUser('joe');
-		$this->assertInternalType('object', $ok);
-		$this->assertObjectHasAttribute('ok', $ok);
-		$this->assertEquals($ok->ok, true);
-		$ok = $adm->getAllUsers(true);
-		$this->assertInternalType('array', $ok);
-		$this->assertEquals(count($ok), 2);
-
-		//Invalid parameters
-		$this->expectException(InvalidArgumentException::class);
-		$adm->deleteUser("");
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::getAllUsers
-	 */
-	public function testGetAllUsers()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$ok = $adm->getAllUsers(true);
-		$this->assertInternalType('array', $ok);
-		$this->assertEquals(count($ok), 2);
-
-		$result2 = $adm->getAllUsers();
-		$this->assertInternalType('array', $result2);
-		$this->assertEquals(count($result2), 2);
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::addRolesToUser
-	 * @covers PHPOnCouch\CouchAdmin::_addRolesToUser
-	 */
-	public function testAddRolesToUser()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$login = 'addRolesToUser';
-		$adm->createUser($login, 'password');
-
-		//We set few roles
-		$newRoles = ['tester'];
-		$adm->addRolesToUser($login, $newRoles);
-
-		$updatedUser = $adm->getUser($login);
-
-		$this->assertCount(1, $updatedUser->roles);
-		$this->assertEquals($updatedUser->roles, $newRoles);
-
-		//Test by passing user object and duplicates roles
-		$adm->addRolesToUser($updatedUser, $newRoles);
-		$updatedUser2 = $adm->getUser($login);
-		$this->assertCount(1, $updatedUser2->roles);
-		$this->assertEquals($updatedUser2->roles, $newRoles);
-
-		//Trigger exception
-		$this->expectException('InvalidArgumentException');
-		$adm->addRolesToUser((object) ['_id' => 'someone_like_you'], []);
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::addRoleToUser
-	 */
-	public function testAddRoleToUser()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$login = 'addRoleToUSer';
-		$adm->createUser($login, 'password');
-
-		//We set few roles
-		$newRoles = ['tester'];
-		$adm->addRoleToUser($login, $newRoles[0]);
-
-		$updatedUser = $adm->getUser($login);
-
-		$this->assertCount(1, $updatedUser->roles);
-		$this->assertEquals($updatedUser->roles, $newRoles);
-
-		//Test by passing user object and duplicates roles
-		$newRoles[] = 'developer';
-		$adm->addRoleToUser($updatedUser, $newRoles[1]);
-		$updatedUser2 = $adm->getUser($login);
-		$this->assertCount(2, $updatedUser2->roles);
-		$this->assertEquals($updatedUser2->roles, $newRoles);
-
-		//Should work without an roles
-		$adm->addRoleToUser($updatedUser2, '');
-		$updatedUser3 = $adm->getUser($login);
-		$this->assertCount(2, $updatedUser3->roles);
-		$this->assertEquals($updatedUser3->roles, $newRoles);
-
-		//Trigger exception
-		$this->expectException(InvalidArgumentException::class);
-		$adm->addRoleToUser((object) ['_id' => 'someone_like_you'], '');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::addRoleToUser
-	 */
-	public function testAddRoleToUserNoRole()
-	{
-		$login = 'addRoleToUSer';
-		$adm = new CouchAdmin($this->aclient);
-		$expectedRoles = $adm->getUser($login)->roles;
-		$adm->addRoleToUser($login, '');
-		
-		$actualRoles = $adm->getUser($login)->roles;
-		$this->assertEquals($expectedRoles,$actualRoles);
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::addRoleToUser
-	 */
-	public function testAddRoleToUserNotString()
-	{
-		$login = 'addRoleToUSer';
-		$adm = new CouchAdmin($this->aclient);
-		$this->expectException(InvalidArgumentException::class);
-		$adm->addRoleToUser($login, []);
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::removeRoleFromUser
-	 * @depends testAddRolesToUser
-	 */
-	public function testRemoveRoleFromUser()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$login = 'username';
-		$adm->createUser($login, 'password');
-
-		//We set few roles
-		$newRoles = ['tester', 'developer'];
-		$adm->addRolesToUser($login, $newRoles);
-
-		$updatedUser = $adm->getUser($login);
-
-		$this->assertCount(2, $updatedUser->roles);
-		$this->assertEquals($updatedUser->roles, $newRoles);
-
-		//Test by passing user object and duplicates roles
-		$adm->removeRoleFromUser($login, 'inexisting');
-		$updatedUser2 = $adm->getUser($login);
-		$this->assertCount(2, $updatedUser2->roles);
-
-		$adm->removeRoleFromUser($updatedUser2, 'developer');
-		$updatedUser3 = $adm->getUser($login);
-		$this->assertCount(1, $updatedUser3->roles);
-		$this->assertEquals('tester', $updatedUser3->roles[0]);
-
-
-		//Trigger exception
-		$this->expectException(InvalidArgumentException::class);
-		$adm->removeRoleFromUser((object) ['_id' => 'someone_like_you'], '');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::getSecurity
-	 */
-	public function testGetSecurity()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$security = $adm->getSecurity();
-		$this->assertObjectHasAttribute('admins', $security);
-		$this->assertObjectHasAttribute('members', $security);
-		$this->assertObjectHasAttribute('names', $security->admins);
-		$this->assertObjectHasAttribute('roles', $security->admins);
-		$this->assertObjectHasAttribute('names', $security->members);
-		$this->assertObjectHasAttribute('roles', $security->members);
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::setSecurity
-	 */
-	public function testSetSecurity()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$security = $adm->getSecurity();
-		$security->admins->names[] = 'joe';
-		$security->members->names[] = 'jack';
-		$ok = $adm->setSecurity($security);
-		$this->assertInternalType('object', $ok);
-		$this->assertObjectHasAttribute('ok', $ok);
-		$this->assertEquals($ok->ok, true);
-
-		$security = $adm->getSecurity();
-		$this->assertEquals(count($security->members->names), 1);
-		$this->assertEquals(reset($security->members->names), 'jack');
-		$this->assertEquals(count($security->admins->names), 1);
-		$this->assertEquals(reset($security->admins->names), 'joe');
-
-		$this->expectException(InvalidArgumentException::class);
-		$adm->setSecurity(true);
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::addDatabaseMemberUser
-	 * @covers PHPOnCouch\CouchAdmin::removeDatabaseMemberRole
-	 */
-	public function testAddDatabaseMemberUser()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$ok = $adm->removeDatabaseMemberUser('jack');
-		$this->assertInternalType('boolean', $ok);
-		$this->assertEquals($ok, true);
-		$security = $adm->getSecurity();
-		$this->assertEquals(count($security->members->names), 0);
-		$this->assertTrue($adm->addDatabaseMemberUser('jack'));
-		$security = $adm->getSecurity();
-		$this->assertEquals(count($security->members->names), 1);
-		$this->assertEquals(reset($security->members->names), 'jack');
-
-		$this->expectException(InvalidArgumentException::class);
-		$adm->addDatabaseMemberUser('');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::addDatabaseAdminUser
-	 * @covers PHPOnCouch\CouchAdmin::removeDatabaseAdminUser
-	 */
-	public function testAddDatabaseAdminUser()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$ok = $adm->removeDatabaseAdminUser('joe');
-		$this->assertInternalType('boolean', $ok);
-		$this->assertEquals($ok, true);
-		$security = $adm->getSecurity();
-		$this->assertEquals(count($security->admins->names), 0);
-		$this->assertTrue($adm->addDatabaseAdminUser('joe'));
-		$this->assertInternalType('boolean', $ok);
-		$security = $adm->getSecurity();
-		$this->assertEquals(count($security->admins->names), 1);
-		$this->assertEquals(reset($security->admins->names), 'joe');
-
-		$this->expectException(InvalidArgumentException::class);
-		$adm->addDatabaseAdminUser('');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::getDatabaseAdminUsers
-	 * @depends testAddDatabaseAdminUser
-	 */
-	public function testGetDatabaseAdminUsers()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$users = $adm->getDatabaseAdminUsers();
-		$this->assertInternalType('array', $users);
-		$this->assertEquals(0, count($users));
-
-		$ok = $adm->addDatabaseAdminUser('joe');
-		$users = $adm->getDatabaseAdminUsers();
-		$this->assertInternalType('array', $users);
-		$this->assertEquals(1, count($users));
-		$this->assertEquals('joe', reset($users));
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::getDatabaseMemberUsers
-	 * @depends testAddDatabaseMemberUser
-	 */
-	public function testGetDatabaseMemberUsers()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$users = $adm->getDatabaseMemberUsers();
-		$this->assertInternalType('array', $users);
-		$this->assertEquals(0, count($users));
-
-		$adm->addDatabaseMemberUser('jack');
-		$users = $adm->getDatabaseMemberUsers();
-		$this->assertInternalType('array', $users);
-		$this->assertEquals(1, count($users));
-		$this->assertEquals('jack', reset($users));
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::removeDatabaseMemberUser
-	 */
-	public function testRemoveDatabaseMemberUser()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$users = $adm->getDatabaseMemberUsers();
-		$initCount = count($users);
-		$login = 'johnny';
-
-		$adm->addDatabaseMemberUser($login);
-		$this->assertCount($initCount + 1, $adm->getDatabaseMemberUsers());
-
-		$this->assertTrue($adm->removeDatabaseMemberUser($login));
-		$this->assertCount($initCount, $adm->getDatabaseMemberUsers());
-
-		//Invalid params
-		$this->expectException(InvalidArgumentException::class);
-		$adm->removeDatabaseMemberUser('');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::removeDatabaseAdminUser
-	 */
-	public function testRemoveDatabaseAdminUser()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$admins = $adm->getDatabaseAdminUsers();
-		$initCount = count($admins);
-		$login = 'johnny';
-
-		$adm->addDatabaseAdminUser($login);
-		$this->assertCount($initCount + 1, $adm->getDatabaseAdminUsers());
-
-		$this->assertTrue($adm->removeDatabaseAdminUser($login));
-		$this->assertCount($initCount, $adm->getDatabaseAdminUsers());
-
-		//Invalid params
-		$this->expectException(InvalidArgumentException::class);
-		$adm->removeDatabaseAdminUser('');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::addDatabaseMemberRole
-	 */
-	public function testAddDatabaseMemberRole()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$security = $adm->getSecurity();
-		$this->assertEquals(count($security->members->roles), 0);
-		$ok = $adm->addDatabaseMemberRole('cowboy');
-		$this->assertInternalType('boolean', $ok);
-		$this->assertEquals($ok, true);
-		$security = $adm->getSecurity();
-		$this->assertEquals(count($security->members->roles), 1);
-		$this->assertEquals(reset($security->members->roles), 'cowboy');
-		$this->assertTrue($adm->removeDatabaseMemberRole('cowboy'));
-		$security = $adm->getSecurity();
-		$this->assertEquals(count($security->members->roles), 0);
-
-		//Invalid param
-		$this->expectException(InvalidArgumentException::class);
-		$adm->addDatabaseMemberRole('');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::removeDatabaseMemberRole
-	 */
-	public function testRemoveDatabaseMemberRole()
-	{
-		$adm = new CouchAdmin($this->aclient);
-
-
-		$role = "tester";
-		$this->assertCount(0, $adm->getDatabaseMemberRoles());
-
-		//Remove inexisting role
-		$this->assertTrue($adm->removeDatabaseMemberRole($role));
-
-		//Add role
-		$this->assertTrue($adm->addDatabaseMemberRole($role));
-
-		//Should have the new role
-		$result = $adm->getDatabaseMemberRoles();
-		$this->assertcount(1, $result);
-		$this->assertEquals($role, $result[0]);
-
-		//Should throw an exception
-		$this->expectException(InvalidArgumentException::class);
-		$adm->removeDatabaseMemberRole('');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::removeDatabaseAdminRole
-	 */
-	public function testRemoveDatabaseAdminRole()
-	{
-		$adm = new CouchAdmin($this->aclient);
-
-
-		$role = "tester";
-		$this->assertCount(0, $adm->getDatabaseAdminRoles());
-
-		//Remove inexisting role
-		$this->assertTrue($adm->removeDatabaseAdminRole($role));
-
-		//Add role
-		$this->assertTrue($adm->addDatabaseAdminRole($role));
-
-		//Should have the new role
-		$result = $adm->getDatabaseAdminRoles();
-		$this->assertcount(1, $result);
-		$this->assertEquals($role, $result[0]);
-
-		//Should throw an exception
-		$this->expectException(InvalidArgumentException::class);
-		$adm->removeDatabaseAdminRole('');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::addDatabaseAdminRole
-	 */
-	public function testAddDatabaseAdminRole()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$security = $adm->getSecurity();
-		$this->assertEquals(count($security->admins->roles), 0);
-		$ok = $adm->addDatabaseAdminRole('cowboy');
-		$this->assertInternalType('boolean', $ok);
-		$this->assertEquals($ok, true);
-		$security = $adm->getSecurity();
-		$this->assertEquals(count($security->admins->roles), 1);
-		$this->assertEquals(reset($security->admins->roles), 'cowboy');
-		$ok = $adm->removeDatabaseAdminRole('cowboy');
-		$this->assertInternalType('boolean', $ok);
-		$this->assertEquals($ok, true);
-		$security = $adm->getSecurity();
-		$this->assertEquals(count($security->admins->roles), 0);
-
-		//Invalid param
-		$this->expectException(InvalidArgumentException::class);
-		$adm->addDatabaseAdminRole('');
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::getDatabaseAdminRoles
-	 */
-	public function testGetDatabaseAdminRoles()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$roles = $adm->getDatabaseAdminRoles();
-		$this->assertInternalType('array', $roles);
-		$this->assertCount(0, $roles);
-
-		$role = 'tester';
-		$this->assertTrue($adm->addDatabaseAdminRole($role));
-
-		$updatedRoles = $adm->getDatabaseAdminRoles();
-		$this->assertCount(1, $updatedRoles);
-		$this->assertEquals($role, $updatedRoles[0]);
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::getDatabaseMemberRoles
-	 */
-	public function testGetDatabaseMemberRoles()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$roles = $adm->getDatabaseMemberRoles();
-		$this->assertInternalType('array', $roles);
-		$this->assertCount(0, $roles);
-
-		$role = 'tester';
-		$this->assertTrue($adm->addDatabaseMemberRole($role));
-
-		$updatedRoles = $adm->getDatabaseMemberRoles();
-		$this->assertCount(1, $updatedRoles);
-		$this->assertEquals($role, $updatedRoles[0]);
-	}
-
-	/**
-	 * @covers PHPOnCouch\CouchAdmin::setRolesToUser
-	 */
-	public function testSetRolesForUser()
-	{
-		$adm = new CouchAdmin($this->aclient);
-		$login = 'setRolesForUser';
-		$adm->createUser($login, 'password');
-
-		//We set few roles
-		$newRoles = ['tester', 'dev'];
-		$adm->setRolesToUser($login, $newRoles);
-
-		$updatedUser = $adm->getUser($login);
-
-		$this->assertCount(2, $updatedUser->roles);
-		$this->assertEquals($updatedUser->roles, $newRoles);
-
-		//Test by passing user object
-		$adm->setRolesToUser($updatedUser, []);
-		$updatedUser2 = $adm->getUser($login);
-		$this->assertCount(0, $updatedUser2->roles);
-
-		//Trigger exception
-		$this->expectException(InvalidArgumentException::class);
-		$adm->setRolesToUser((object) ['_id' => 'someone_like_you']);
-	}
+    private $host = 'localhost';
+    private $port = '5984';
+    private $admin = array('login' => 'adm', 'password' => 'sometest');
+
+    /**
+     *
+     * @var PHPOnCouch\CouchClient
+     */
+    private $client;
+
+    /**
+     *
+     * @var PHPOnCouch\CouchClient
+     */
+    private $aclient;
+
+    /**
+     * Sets up the fixture, for example, opens a network connection.
+     * This method is called before a test is executed.
+     */
+    protected function setUp()
+    {
+        $config = \config::getInstance();
+        $this->host = $config->getHost();
+        $this->port = $config->getPort();
+
+        $url = $config->getUrl($this->host, $this->port, null);
+        $aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
+        $this->client = new CouchClient($url, 'couchclienttest');
+        $this->aclient = new CouchClient($aUrl, 'couchclienttest');
+        $this->setupClient($this->aclient);
+
+
+    }
+
+    protected function setupClient($client)
+    {
+        try {
+            $client->deleteDatabase();
+        } catch (Exceptions\CouchNotFoundException $e) {
+
+        }
+        $client->createDatabase();
+    }
+
+    /**
+     * Tears down the fixture, for example, closes a network connection.
+     * This method is called after a test is executed.
+     */
+    protected function tearDown()
+    {
+        $this->client = null;
+        try {
+            $this->aclient->deleteDatabase();
+        } catch (Exceptions\CouchNotFoundException $e) {
+
+        }
+        $this->aclient = null;
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::__construct
+     */
+    public function testConstructor()
+    {
+        $reflectedClass = new \ReflectionClass(CouchAdmin::class);
+        $client = $reflectedClass->getProperty('client');
+        $client->setAccessible(true);
+        $node = $reflectedClass->getProperty('node');
+        $node->setAccessible(true);
+        $usersdb = $reflectedClass->getProperty('usersdb');
+        $usersdb->setAccessible(true);
+
+
+        //Options should be set correctly
+        $expectedUserDB = 'just_a_db_name';
+        $expectedNodeName = 'just_a_node_name';
+        $adm1 = new CouchAdmin($this->aclient, ['users_database' => $expectedUserDB, 'node' => $expectedNodeName]);
+        $actualNode = $node->getValue($adm1);
+        $actualClient = $client->getValue($adm1);
+        $actualDB = $usersdb->getValue($adm1);
+
+        $this->assertEquals($expectedNodeName, $actualNode);
+        $this->assertEquals($expectedUserDB, $actualDB);
+        $this->assertEquals($this->aclient, $actualClient);
+
+        //Node should node be set since the client does not have the required rights
+        $adm2 = new CouchAdmin($this->client);
+        $actualNode2 = $node->getValue($adm2);
+        $this->assertEmpty($actualNode2);
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::_buildUrl
+     */
+    public function testBuildUrl()
+    {
+        $reflectedClass = new \ReflectionClass(CouchAdmin::class);
+        $method = $reflectedClass->getMethod('_buildUrl');
+        $method->setAccessible(true);
+
+
+        //TODO : Cover more complexe cases
+
+        $url1 = 'http://user:@'.$this->host.':'.$this->port;
+        $expectedUrl1 = 'http://user@'.$this->host.':'.$this->port.'/';
+        $client = new CouchClient($url1, 'couchdbtest');
+        $adm = new CouchAdmin($client);
+
+        $result1 = $method->invoke($adm, $client->dsnPart());
+        $this->assertEquals($expectedUrl1, $result1);
+
+        //With pass
+        $url2 = 'http://user:pass@'.$this->host.':'.$this->port.'/couchdbtest';
+        $expectedUrl2 = 'http://user:pass@'.$this->host.':'.$this->port.'/couchdbtest';
+        $client2 = new CouchClient($url2, 'couchdbtest');
+        $adm2 = new CouchAdmin($client);
+
+        $result2 = $method->invoke($adm2, $client2->dsnPart());
+        $this->assertEquals($expectedUrl2, $result2);
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::_removeFromArray
+     */
+    public function testRemoveFromArray()
+    {
+        $reflectedClass = new \ReflectionClass(CouchAdmin::class);
+        $method = $reflectedClass->getMethod('_removeFromArray');
+        $method->setAccessible(true);
+
+        $arr = [1, 2, 1, 3, 1, 1, 4, 1, 1, 1, 1, 5, 1, 1, 6];
+        $adm = new CouchAdmin($this->aclient);
+        $result = $method->invoke($adm, 1, $arr);
+        $this->assertEquals($result, [2, 3, 4, 5, 6]);
+
+        $result2 = $method->invoke($adm, 19, $arr);
+        $this->assertEquals($result2, $arr);
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::getUsersDatabase
+     */
+    public function testGetUsersDatabase()
+    {
+        $adm = new CouchAdmin($this->aclient, array('users_database' => 'test'));
+        $this->assertEquals('test', $adm->getUsersDatabase());
+        $adm = new CouchAdmin($this->aclient);
+        $this->assertEquals('_users', $adm->getUsersDatabase());
+        $adm->setUsersDatabase('test');
+        $this->assertEquals('test', $adm->getUsersDatabase());
+    }
+
+    /**
+     * @covers  PHPOnCouch\CouchAdmin::setUsersDatabase
+     * @depends testGetUsersDatabase
+     */
+    public function testSetUsersDatabase()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $adm->setUsersDatabase('testDB');
+        $this->assertEquals('testDB', $adm->getUsersDatabase());
+        $adm->setUsersDatabase(null);
+        $this->assertEquals(null, $adm->getUsersDatabase());
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::createAdmin
+     */
+    public function testCreateAdmin()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $adm->createAdmin($this->admin['login'], $this->admin['password']);
+
+        $this->expectException(Exceptions\CouchException::class);
+        $this->expectExceptionCode('412');
+        $this->aclient->createDatabase();
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::createAdmin
+     */
+    public function testCreateAdminWithoutUsername()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $this->expectException(\InvalidArgumentException::class);
+        $adm->createAdmin('', 'smth');
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::createAdmin
+     */
+    public function testCreateAdminWithoutPassword()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $this->expectException(\InvalidArgumentException::class);
+        $adm->createAdmin('smth', '');
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::createAdmin
+     */
+    public function testCreateAdminNoPermissions()
+    {
+        $adm2 = new CouchAdmin($this->client);
+        $this->expectException(Exceptions\CouchException::class);
+        $adm2->createAdmin('someone', 'pass');
+    }
+
+    /**
+     * @covers  PHPOnCouch\CouchAdmin::createAdmin
+     * @depends testCreateAdmin
+     */
+    public function testAdminRights()
+    {
+        $this->aclient->deleteDatabase();
+
+        $ok = $this->aclient->createDatabase();
+        $this->assertInternalType('object', $ok);
+        $this->assertObjectHasAttribute('ok', $ok);
+        $this->assertEquals($ok->ok, true);
+        $ok = $this->aclient->deleteDatabase();
+        $this->assertInternalType('object', $ok);
+        $this->assertObjectHasAttribute('ok', $ok);
+        $this->assertEquals($ok->ok, true);
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::deleteAdmin
+     */
+    public function testDeleteAdmin()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $adm->createAdmin('secondAdmin', 'password');
+        $adm->deleteAdmin('secondAdmin');
+        $adm->createAdmin('secondAdmin', 'password');
+
+        //Non existing
+        $adm->deleteAdmin(time());
+
+        //No rights
+        $adm2 = new CouchAdmin($this->client);
+        $this->expectException(Exceptions\CouchException::class);
+        $adm2->deleteAdmin('someone');
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::deleteAdmin
+     */
+    public function testDeleteAdminNoLogin()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $this->expectException(InvalidArgumentException::class);
+        $adm->deleteAdmin('');
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::createUser
+     */
+    public function testCreateUser()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $ok = $adm->createUser('joe', 'dalton');
+        $this->assertInternalType('object', $ok);
+        $this->assertObjectHasAttribute('ok', $ok);
+        $this->assertEquals($ok->ok, true);
+
+        //Invalid parameters
+        $this->expectException(InvalidArgumentException::class);
+        $adm->createUser('', 'asdasdasd');
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::createUser
+     */
+    public function testCreateUserNoPassword()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $this->expectException(InvalidArgumentException::class);
+        $adm->createUser('alskdalskdl', '');
+    }
+
+    /**
+     * @covers  PHPOnCouch\CouchAdmin::getUser
+     * @depends testCreateUser
+     */
+    public function testGetUser()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $ok = $adm->getUser('joe');
+        $this->assertInternalType('object', $ok);
+        $this->assertObjectHasAttribute('_id', $ok);
+        $this->assertObjectHasAttribute('name', $ok);
+        $this->assertEquals('joe', $ok->name);
+
+        //invalid parameters
+        $this->expectException(InvalidArgumentException::class);
+        $adm->getUser('');
+    }
+
+    /**
+     * @covers  PHPOnCouch\CouchAdmin::deleteUser
+     * @depends testGetUser
+     */
+    public function testDeleteUser()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $ok = $adm->deleteUser('joe');
+        $this->assertInternalType('object', $ok);
+        $this->assertObjectHasAttribute('ok', $ok);
+        $this->assertEquals($ok->ok, true);
+        $ok = $adm->getAllUsers(true);
+        $this->assertInternalType('array', $ok);
+        $this->assertCount(3,$ok);
+
+        //Invalid parameters
+        $this->expectException(InvalidArgumentException::class);
+        $adm->deleteUser("");
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::getAllUsers
+     */
+    public function testGetAllUsers()
+    {
+        $adm = new CouchAdmin($this->aclient);
+
+        $result2 = $adm->getAllUsers();
+        $this->assertInternalType('array', $result2);
+        $this->assertCount(3, $result2);
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::addRolesToUser
+     * @covers PHPOnCouch\CouchAdmin::_addRolesToUser
+     */
+    public function testAddRolesToUser()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $login = 'addRolesToUser';
+        $adm->createUser($login, 'password');
+
+        //We set few roles
+        $newRoles = ['tester'];
+        $adm->addRolesToUser($login, $newRoles);
+
+        $updatedUser = $adm->getUser($login);
+
+        $this->assertCount(1, $updatedUser->roles);
+        $this->assertEquals($updatedUser->roles, $newRoles);
+
+        //Test by passing user object and duplicates roles
+        $adm->addRolesToUser($updatedUser, $newRoles);
+        $updatedUser2 = $adm->getUser($login);
+        $this->assertCount(1, $updatedUser2->roles);
+        $this->assertEquals($updatedUser2->roles, $newRoles);
+
+        //Trigger exception
+        $this->expectException('InvalidArgumentException');
+        $adm->addRolesToUser((object)['_id' => 'someone_like_you'], []);
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::addRoleToUser
+     */
+    public function testAddRoleToUser()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $login = 'addRoleToUSer';
+        $adm->createUser($login, 'password');
+
+        //We set few roles
+        $newRoles = ['tester'];
+        $adm->addRoleToUser($login, $newRoles[0]);
+
+        $updatedUser = $adm->getUser($login);
+
+        $this->assertCount(1, $updatedUser->roles);
+        $this->assertEquals($updatedUser->roles, $newRoles);
+
+        //Test by passing user object and duplicates roles
+        $newRoles[] = 'developer';
+        $adm->addRoleToUser($updatedUser, $newRoles[1]);
+        $updatedUser2 = $adm->getUser($login);
+        $this->assertCount(2, $updatedUser2->roles);
+        $this->assertEquals($updatedUser2->roles, $newRoles);
+
+        //Should work without an roles
+        $adm->addRoleToUser($updatedUser2, '');
+        $updatedUser3 = $adm->getUser($login);
+        $this->assertCount(2, $updatedUser3->roles);
+        $this->assertEquals($updatedUser3->roles, $newRoles);
+
+        //Trigger exception
+        $this->expectException(InvalidArgumentException::class);
+        $adm->addRoleToUser((object)['_id' => 'someone_like_you'], '');
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::addRoleToUser
+     */
+    public function testAddRoleToUserNoRole()
+    {
+        $login = 'addRoleToUSer';
+        $adm = new CouchAdmin($this->aclient);
+        $expectedRoles = $adm->getUser($login)->roles;
+        $adm->addRoleToUser($login, '');
+
+        $actualRoles = $adm->getUser($login)->roles;
+        $this->assertEquals($expectedRoles, $actualRoles);
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::addRoleToUser
+     */
+    public function testAddRoleToUserNotString()
+    {
+        $login = 'addRoleToUSer';
+        $adm = new CouchAdmin($this->aclient);
+        $this->expectException(InvalidArgumentException::class);
+        $adm->addRoleToUser($login, []);
+    }
+
+    /**
+     * @covers  PHPOnCouch\CouchAdmin::removeRoleFromUser
+     * @depends testAddRolesToUser
+     */
+    public function testRemoveRoleFromUser()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $login = 'username';
+        $adm->createUser($login, 'password');
+
+        //We set few roles
+        $newRoles = ['tester', 'developer'];
+        $adm->addRolesToUser($login, $newRoles);
+
+        $updatedUser = $adm->getUser($login);
+
+        $this->assertCount(2, $updatedUser->roles);
+        $this->assertEquals($updatedUser->roles, $newRoles);
+
+        //Test by passing user object and duplicates roles
+        $adm->removeRoleFromUser($login, 'inexisting');
+        $updatedUser2 = $adm->getUser($login);
+        $this->assertCount(2, $updatedUser2->roles);
+
+        $adm->removeRoleFromUser($updatedUser2, 'developer');
+        $updatedUser3 = $adm->getUser($login);
+        $this->assertCount(1, $updatedUser3->roles);
+        $this->assertEquals('tester', $updatedUser3->roles[0]);
+
+
+        //Trigger exception
+        $this->expectException(InvalidArgumentException::class);
+        $adm->removeRoleFromUser((object)['_id' => 'someone_like_you'], '');
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::getSecurity
+     */
+    public function testGetSecurity()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $security = $adm->getSecurity();
+        $this->assertObjectHasAttribute('admins', $security);
+        $this->assertObjectHasAttribute('members', $security);
+        $this->assertObjectHasAttribute('names', $security->admins);
+        $this->assertObjectHasAttribute('roles', $security->admins);
+        $this->assertObjectHasAttribute('names', $security->members);
+        $this->assertObjectHasAttribute('roles', $security->members);
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::setSecurity
+     */
+    public function testSetSecurity()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $security = $adm->getSecurity();
+        $security->admins->names[] = 'joe';
+        $security->members->names[] = 'jack';
+        $ok = $adm->setSecurity($security);
+        $this->assertInternalType('object', $ok);
+        $this->assertObjectHasAttribute('ok', $ok);
+        $this->assertEquals($ok->ok, true);
+
+        $security = $adm->getSecurity();
+        $this->assertCount(1, $security->members->names);
+        $this->assertEquals(reset($security->members->names), 'jack');
+        $this->assertCount(1, $security->admins->names);
+        $this->assertEquals(reset($security->admins->names), 'joe');
+
+        $this->expectException(InvalidArgumentException::class);
+        $adm->setSecurity(true);
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::addDatabaseMemberUser
+     * @covers PHPOnCouch\CouchAdmin::removeDatabaseMemberRole
+     */
+    public function testAddDatabaseMemberUser()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $ok = $adm->removeDatabaseMemberUser('jack');
+        $this->assertInternalType('boolean', $ok);
+        $this->assertTrue($ok);
+        $security = $adm->getSecurity();
+        $this->assertCount(0, $security->members->names);
+        $this->assertTrue($adm->addDatabaseMemberUser('jack'));
+        $security = $adm->getSecurity();
+        $this->assertCount(1, $security->members->names);
+        $this->assertContains('jack', $security->members->names);
+
+        $this->expectException(InvalidArgumentException::class);
+        $adm->addDatabaseMemberUser('');
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::addDatabaseAdminUser
+     * @covers PHPOnCouch\CouchAdmin::removeDatabaseAdminUser
+     */
+    public function testAddDatabaseAdminUser()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $ok = $adm->removeDatabaseAdminUser('joe');
+        $this->assertInternalType('boolean', $ok);
+        $this->assertTrue($ok);
+        $security = $adm->getSecurity();
+        $this->assertCount(0, $security->admins->names);
+        $this->assertTrue($adm->addDatabaseAdminUser('joe'));
+        $this->assertInternalType('boolean', $ok);
+        $security = $adm->getSecurity();
+        $this->assertCount(1, $security->admins->names);
+        $this->assertEquals(reset($security->admins->names), 'joe');
+
+        $this->expectException(InvalidArgumentException::class);
+        $adm->addDatabaseAdminUser('');
+    }
+
+    /**
+     * @covers  PHPOnCouch\CouchAdmin::getDatabaseAdminUsers
+     * @depends testAddDatabaseAdminUser
+     */
+    public function testGetDatabaseAdminUsers()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $users = $adm->getDatabaseAdminUsers();
+        $this->assertInternalType('array', $users);
+        $this->assertCount(0, $users);
+
+        $ok = $adm->addDatabaseAdminUser('joe');
+        $users = $adm->getDatabaseAdminUsers();
+        $this->assertInternalType('array', $users);
+        $this->assertCount(1, $users);
+        $this->assertEquals('joe', reset($users));
+    }
+
+    /**
+     * @covers  PHPOnCouch\CouchAdmin::getDatabaseMemberUsers
+     * @depends testAddDatabaseMemberUser
+     */
+    public function testGetDatabaseMemberUsers()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $users = $adm->getDatabaseMemberUsers();
+        $this->assertInternalType('array', $users);
+        $this->assertCount(0, $users);
+
+        $adm->addDatabaseMemberUser('jack');
+        $users = $adm->getDatabaseMemberUsers();
+        $this->assertInternalType('array', $users);
+        $this->assertCount(1, $users);
+        $this->assertEquals('jack', reset($users));
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::removeDatabaseMemberUser
+     */
+    public function testRemoveDatabaseMemberUser()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $users = $adm->getDatabaseMemberUsers();
+        $initCount = count($users);
+        $login = 'johnny';
+
+        $adm->addDatabaseMemberUser($login);
+        $this->assertCount($initCount + 1, $adm->getDatabaseMemberUsers());
+
+        $this->assertTrue($adm->removeDatabaseMemberUser($login));
+        $this->assertCount($initCount, $adm->getDatabaseMemberUsers());
+
+        //Invalid params
+        $this->expectException(InvalidArgumentException::class);
+        $adm->removeDatabaseMemberUser('');
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::removeDatabaseAdminUser
+     */
+    public function testRemoveDatabaseAdminUser()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $admins = $adm->getDatabaseAdminUsers();
+        $initCount = count($admins);
+        $login = 'johnny';
+
+        $adm->addDatabaseAdminUser($login);
+        $this->assertCount($initCount + 1, $adm->getDatabaseAdminUsers());
+
+        $this->assertTrue($adm->removeDatabaseAdminUser($login));
+        $this->assertCount($initCount, $adm->getDatabaseAdminUsers());
+
+        //Invalid params
+        $this->expectException(InvalidArgumentException::class);
+        $adm->removeDatabaseAdminUser('');
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::addDatabaseMemberRole
+     */
+    public function testAddDatabaseMemberRole()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $security = $adm->getSecurity();
+        $this->assertCount(1, $security->members->roles);
+        $ok = $adm->addDatabaseMemberRole('cowboy');
+
+        $this->assertTrue($ok);
+        $security = $adm->getSecurity();
+        $this->assertCount(2, $security->members->roles);
+        $this->assertContains('cowboy',$security->members->roles);
+        $this->assertTrue($adm->removeDatabaseMemberRole('cowboy'));
+        $security = $adm->getSecurity();
+        $this->assertCount(1, $security->members->roles);
+
+        //Invalid param
+        $this->expectException(InvalidArgumentException::class);
+        $adm->addDatabaseMemberRole('');
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::removeDatabaseMemberRole
+     */
+    public function testRemoveDatabaseMemberRole()
+    {
+        $adm = new CouchAdmin($this->aclient);
+
+
+        $role = "tester";
+        $this->assertCount(1, $adm->getDatabaseMemberRoles());
+
+        //Remove inexisting role
+        $this->assertTrue($adm->removeDatabaseMemberRole($role));
+
+        //Add role
+        $this->assertTrue($adm->addDatabaseMemberRole($role));
+
+        //Should have the new role
+        $result = $adm->getDatabaseMemberRoles();
+        $this->assertcount(2, $result);
+        $this->assertContains($role, $result);
+
+        //Should throw an exception
+        $this->expectException(InvalidArgumentException::class);
+        $adm->removeDatabaseMemberRole('');
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::removeDatabaseAdminRole
+     */
+    public function testRemoveDatabaseAdminRole()
+    {
+        $adm = new CouchAdmin($this->aclient);
+
+
+        $role = "tester";
+        $this->assertCount(1, $adm->getDatabaseAdminRoles());
+
+        //Remove inexisting role
+        $this->assertTrue($adm->removeDatabaseAdminRole($role));
+
+        //Add role
+        $this->assertTrue($adm->addDatabaseAdminRole($role));
+
+        //Should have the new role
+        $result = $adm->getDatabaseAdminRoles();
+        $this->assertcount(2, $result);
+        $this->assertContains($role, $result);
+
+        //Should throw an exception
+        $this->expectException(InvalidArgumentException::class);
+        $adm->removeDatabaseAdminRole('');
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::addDatabaseAdminRole
+     */
+    public function testAddDatabaseAdminRole()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $security = $adm->getSecurity();
+        $this->assertCount(1, $security->admins->roles);
+
+        $ok = $adm->addDatabaseAdminRole('cowboy');
+        $this->assertTrue($ok);
+
+        $security = $adm->getSecurity();
+        $this->assertCount(2, $security->admins->roles);
+        $this->assertContains('cowboy', $security->admins->roles);
+
+        $ok = $adm->removeDatabaseAdminRole('cowboy');
+        $this->assertTrue($ok);
+
+        $security = $adm->getSecurity();
+        $this->assertCount(1,$security->admins->roles);
+
+        //Invalid param
+        $this->expectException(InvalidArgumentException::class);
+        $adm->addDatabaseAdminRole('');
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::getDatabaseAdminRoles
+     */
+    public function testGetDatabaseAdminRoles()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $roles = $adm->getDatabaseAdminRoles();
+        $this->assertInternalType('array', $roles);
+        $this->assertCount(1, $roles);
+
+        $role = 'tester';
+        $this->assertTrue($adm->addDatabaseAdminRole($role));
+
+        $updatedRoles = $adm->getDatabaseAdminRoles();
+        $this->assertCount(2, $updatedRoles);
+        $this->assertContains($role, $updatedRoles);
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::getDatabaseMemberRoles
+     */
+    public function testGetDatabaseMemberRoles()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $roles = $adm->getDatabaseMemberRoles();
+        $this->assertInternalType('array', $roles);
+        $this->assertCount(1, $roles);
+
+        $role = 'tester';
+        $this->assertTrue($adm->addDatabaseMemberRole($role));
+
+        $updatedRoles = $adm->getDatabaseMemberRoles();
+        $this->assertCount(2, $updatedRoles);
+        $this->assertContains($role, $updatedRoles);
+    }
+
+    /**
+     * @covers PHPOnCouch\CouchAdmin::setRolesToUser
+     */
+    public function testSetRolesForUser()
+    {
+        $adm = new CouchAdmin($this->aclient);
+        $login = 'setRolesForUser';
+        $adm->createUser($login, 'password');
+
+        //We set few roles
+        $newRoles = ['tester', 'dev'];
+        $adm->setRolesToUser($login, $newRoles);
+
+        $updatedUser = $adm->getUser($login);
+
+        $this->assertCount(2, $updatedUser->roles);
+        $this->assertEquals($updatedUser->roles, $newRoles);
+
+        //Test by passing user object
+        $adm->setRolesToUser($updatedUser, []);
+        $updatedUser2 = $adm->getUser($login);
+        $this->assertCount(0, $updatedUser2->roles);
+
+        //Trigger exception
+        $this->expectException(InvalidArgumentException::class);
+        $adm->setRolesToUser((object)['_id' => 'someone_like_you']);
+    }
 
 }

@@ -150,10 +150,6 @@ class CouchClient extends Couch
      */
     public function __construct($dsn, $dbname, $options = [])
     {
-        if (array_key_exists('username', $options) && array_key_exists('password', $options)) {
-            $dsn = $this->buildDSNFromUserPass($dsn, $options['username'], $options['password']);
-        }
-
         // in the case of a cookie based authentification we have to remove user and password infos from the DSN
         if (array_key_exists('cookie_auth', $options) && $options['cookie_auth']) {
             $parts = parse_url($dsn);
@@ -162,8 +158,8 @@ class CouchClient extends Couch
             }
             $user = urlencode($parts['user']);
             $pass = urlencode($parts['pass']);
-            $dsn = $parts['scheme'] . '://' . $parts['host'];
-            $dsn .= array_key_exists('port', $parts) ? ':' . $parts['port'] : '';
+            $dsn = $parts['scheme'].'://'.$parts['host'];
+            $dsn .= array_key_exists('port', $parts) ? ':'.$parts['port'] : '';
             $dsn .= array_key_exists('path', $parts) ? $parts['path'] : '';
 
             $this->useDatabase($dbname);
@@ -183,8 +179,12 @@ class CouchClient extends Couch
             if (empty($this->getSessionCookie())) {
                 throw new Exception('Cookie authentification failed');
             }
-        } else
+        } else {
+            if (array_key_exists('username', $options) && array_key_exists('password', $options)) {
+                $dsn = $this->buildDSNFromUserPass($dsn, $options['username'], $options['password']);
+            }
             $this->useDatabase($dbname);
+        }
         parent::__construct($dsn, $options);
     }
 
@@ -193,9 +193,10 @@ class CouchClient extends Couch
         $parts = parse_url($dsn);
         $user = urlencode($username);
         $pass = urlencode($password);
-        $dsn = $parts['scheme'] . '://' . $user . ':' . $pass . '@' . $parts['host'];
-        $dsn .= array_key_exists('port', $parts) ? ':' . $parts['port'] : '';
+        $dsn = $parts['scheme'].'://'.$user.':'.$pass.'@'.$parts['host'];
+        $dsn .= array_key_exists('port', $parts) ? ':'.$parts['port'] : '';
         $dsn .= array_key_exists('path', $parts) ? $parts['path'] : '';
+
         return $dsn;
     }
 
@@ -212,11 +213,17 @@ class CouchClient extends Couch
      * @param array $parameters additionnal parameters to send with the request
      * @param string|object|array $data the request body. If it's an array or an object, $data is json_encode()d
      * @param string $contentType set the content-type of the request
-     * @throws CouchException
      * @return object
+     * @throws CouchException
      */
-    public function queryAndValid($method, $url, $allowedStatusCodes, $parameters = [], $data = null, $contentType = null)
-    {
+    public function queryAndValid(
+        $method,
+        $url,
+        $allowedStatusCodes,
+        $parameters = [],
+        $data = null,
+        $contentType = null
+    ) {
         $raw = $this->query($method, $url, $parameters, $data, $contentType);
         $response = $this->parseRawResponse($raw, $this->resultAsArray);
         $this->resultAsArray = false;
@@ -264,6 +271,7 @@ class CouchClient extends Couch
         } else {
             $this->queryParameters[$this->queryDefs[$name]['name']] = reset($args);
         }
+
         return $this;
     }
 
@@ -278,9 +286,12 @@ class CouchClient extends Couch
      */
     public function setQueryParameters(array $options)
     {
-        foreach ($options as $option => $val)
-            if (array_key_exists($option, $this->queryDefs))
+        foreach ($options as $option => $val) {
+            if (array_key_exists($option, $this->queryDefs)) {
                 $this->$option($val);
+            }
+        }
+
         return $this;
     }
 
@@ -293,8 +304,9 @@ class CouchClient extends Couch
      */
     public function useDatabase($dbname)
     {
-        if (!strlen($dbname))
+        if (!strlen($dbname)) {
             throw new InvalidArgumentException('Database name can\'t be empty');
+        }
         if (!$this->isValidDatabaseName($dbname)) {
             $errStr = 'Database name contains invalid characters.';
             $errStr .= 'Only lowercase characters (a-z), digits (0-9), and any of the characters';
@@ -302,6 +314,7 @@ class CouchClient extends Couch
             throw new InvalidArgumentException($errStr);
         }
         $this->dbname = $dbname;
+
         return $this;
     }
 
@@ -314,14 +327,17 @@ class CouchClient extends Couch
      */
     public static function isValidDatabaseName($dbname)
     {
-        if (preg_match('/^[_a-z][a-z0-9_$()+\/-]*$/', $dbname))
+        if (preg_match('/^[_a-z][a-z0-9_$()+\/-]*$/', $dbname)) {
             return true;
+        }
+
         return false;
     }
 
     public function setSessionCookie($cookie)
     {
         parent::setSessionCookie($cookie);
+
         return $this;
     }
 
@@ -349,7 +365,7 @@ class CouchClient extends Couch
      */
     public function createDatabase()
     {
-        return $this->queryAndValid('PUT', '/' . urlencode($this->dbname), [201]);
+        return $this->queryAndValid('PUT', '/'.urlencode($this->dbname), [201]);
     }
 
     /**
@@ -360,7 +376,7 @@ class CouchClient extends Couch
      */
     public function deleteDatabase()
     {
-        return $this->queryAndValid('DELETE', '/' . urlencode($this->dbname), [200]);
+        return $this->queryAndValid('DELETE', '/'.urlencode($this->dbname), [200]);
     }
 
     /**
@@ -371,7 +387,7 @@ class CouchClient extends Couch
      */
     public function getDatabaseInfos()
     {
-        return $this->queryAndValid('GET', '/' . urlencode($this->dbname), [200]);
+        return $this->queryAndValid('GET', '/'.urlencode($this->dbname), [200]);
     }
 
     /**
@@ -383,7 +399,7 @@ class CouchClient extends Couch
      */
     public function getDatabaseUri()
     {
-        return $this->dsn . '/' . $this->dbname;
+        return $this->dsn.'/'.$this->dbname;
     }
 
     /**
@@ -418,11 +434,13 @@ class CouchClient extends Couch
     {
         try {
             $this->getDatabaseInfos();
+
             return true;
         } catch (Exception $e) {
             // if status code = 404 database does not exist
-            if ($e->getCode() == 404)
+            if ($e->getCode() == 404) {
                 return false;
+            }
             // we met another exception so we throw it
             throw $e;
         }
@@ -437,7 +455,7 @@ class CouchClient extends Couch
      */
     public function compactDatabase()
     {
-        return $this->queryAndValid('POST', '/' . urlencode($this->dbname) . '/_compact', [202]);
+        return $this->queryAndValid('POST', '/'.urlencode($this->dbname).'/_compact', [202]);
     }
 
     /**
@@ -467,18 +485,22 @@ class CouchClient extends Couch
     public function getConfig($nodeName, $section = null, $key = null)
     {
         //Parameter validation
-        if (!is_string($nodeName))
+        if (!is_string($nodeName)) {
             throw new InvalidArgumentException('The node name must be of type String');
-        if ($section === null && $key !== $section)
-            throw new InvalidArgumentException('The section parameter can\'t be empty or null');
-
-        $url = '/_node/' . urlencode($nodeName) . '/_config';
-        if (!empty($section) && is_string($section)) {
-            $url .= '/' . urlencode($section);
-            if (!empty($key) && is_string($key))
-                $url .= '/' . urlencode($key);
         }
-        return $this->queryAndValid('GET', $url . '/', [200]);
+        if ($section === null && $key !== $section) {
+            throw new InvalidArgumentException('The section parameter can\'t be empty or null');
+        }
+
+        $url = '/_node/'.urlencode($nodeName).'/_config';
+        if (!empty($section) && is_string($section)) {
+            $url .= '/'.urlencode($section);
+            if (!empty($key) && is_string($key)) {
+                $url .= '/'.urlencode($key);
+            }
+        }
+
+        return $this->queryAndValid('GET', $url.'/', [200]);
     }
 
     /**
@@ -487,21 +509,24 @@ class CouchClient extends Couch
      * @param string $section The section name to update.
      * @param string $key The key of the section to update.
      * @param mixed $value The value to set to the key.
-     * @throws InvalidArgumentException
      * @return object    Returns the old value  for example when you change the debug level : 'info'
+     * @throws InvalidArgumentException
      * @throws CouchException
      */
     public function setConfig($nodeName, $section, $key, $value)
     {
         //Parameter validation
-        if (!is_string($nodeName))
+        if (!is_string($nodeName)) {
             throw new InvalidArgumentException('The node name must be of type String');
-        if (empty($section) || empty($key))
+        }
+        if (empty($section) || empty($key)) {
             throw new InvalidArgumentException('You must supply a section and key parameter.');
-        $nodeUrl = '/_node/' . urlencode($nodeName) . '/';
-        $configUrl = urlencode($section) . '/' . urlencode($key);
+        }
+        $nodeUrl = '/_node/'.urlencode($nodeName).'/';
+        $configUrl = urlencode($section).'/'.urlencode($key);
         $encodedValue = json_encode($value);
-        return $this->queryAndValid('PUT', $nodeUrl . '_config/' . $configUrl, [200], [], $encodedValue);
+
+        return $this->queryAndValid('PUT', $nodeUrl.'_config/'.$configUrl, [200], [], $encodedValue);
     }
 
     /**
@@ -509,20 +534,23 @@ class CouchClient extends Couch
      * @param string $nodeName The node name following the FQDN. For example : couchdb@localhost
      * @param string $section The section name to update.
      * @param string $key The key of the section to update.
-     * @throws InvalidArgumentException
      * @return object    Returns the old value  for example when you change the debug level : 'info'
+     * @throws InvalidArgumentException
      * @throws CouchException
      */
     public function deleteConfig($nodeName, $section, $key)
     {
         //Parameter validation
-        if (!is_string($nodeName))
+        if (!is_string($nodeName)) {
             throw new InvalidArgumentException('The node name must be of type String');
-        if (empty($section) || empty($key))
+        }
+        if (empty($section) || empty($key)) {
             throw new InvalidArgumentException('You must supply a section and key parameter.');
-        $nodeUrl = '/_node/' . urlencode($nodeName) . '/';
-        $configUrl = urlencode($section) . '/' . urlencode($key);
-        return $this->queryAndValid('DELETE', $nodeUrl . '_config/' . $configUrl, [200]);
+        }
+        $nodeUrl = '/_node/'.urlencode($nodeName).'/';
+        $configUrl = urlencode($section).'/'.urlencode($key);
+
+        return $this->queryAndValid('DELETE', $nodeUrl.'_config/'.$configUrl, [200]);
     }
 
     /**
@@ -534,7 +562,7 @@ class CouchClient extends Couch
      */
     public function cleanupDatabaseViews()
     {
-        return $this->queryAndValid('POST', '/' . urlencode($this->dbname) . '/_view_cleanup', [202]);
+        return $this->queryAndValid('POST', '/'.urlencode($this->dbname).'/_view_cleanup', [202]);
     }
 
     /**
@@ -555,11 +583,14 @@ class CouchClient extends Couch
             $this->queryParameters['feed'] = $value;
             $this->queryParameters['continuous_feed'] = $continuousCallback;
         } else {
-            if (!empty($this->queryParameters['feed']))
+            if (!empty($this->queryParameters['feed'])) {
                 unset($this->queryParameters['feed']);
-            if (!empty($this->queryParameters['continuous_feed']))
+            }
+            if (!empty($this->queryParameters['continuous_feed'])) {
                 unset($this->queryParameters['continuous_feed']);
+            }
         }
+
         return $this;
     }
 
@@ -569,7 +600,7 @@ class CouchClient extends Couch
      *
      * @link http://books.couchdb.org/relax/reference/change-notifications
      * @param string $value designdocname/filtername
-     * @param  array $additionalQueryOpts additional query options
+     * @param array $additionalQueryOpts additional query options
      * @return CouchClient $this
      */
     public function filter($value, array $additionalQueryOpts = [])
@@ -578,6 +609,7 @@ class CouchClient extends Couch
             $this->queryParameters['filter'] = trim($value);
             $this->queryParameters = array_merge($additionalQueryOpts, $this->queryParameters);
         }
+
         return $this;
     }
 
@@ -591,16 +623,18 @@ class CouchClient extends Couch
     public function getChanges()
     {
         if (!empty($this->queryParameters['feed']) && $this->queryParameters['feed'] == 'continuous') {
-            $url = '/' . urlencode($this->dbname) . '/_changes';
+            $url = '/'.urlencode($this->dbname).'/_changes';
             $opts = $this->queryParameters;
             $this->queryParameters = [];
             $callable = $opts['continuous_feed'];
             unset($opts['continuous_feed']);
+
             return $this->continuousQuery($callable, 'GET', $url, $opts, null, $this);
         }
-        $url = '/' . urlencode($this->dbname) . '/_changes';
+        $url = '/'.urlencode($this->dbname).'/_changes';
         $opts = $this->queryParameters;
         $this->queryParameters = [];
+
         return $this->queryAndValid('GET', $url, [200, 201], $opts);
     }
 
@@ -619,6 +653,7 @@ class CouchClient extends Couch
         } elseif (is_array($value)) {
             $this->queryParameters['open_revs'] = json_encode($value);
         }
+
         return $this;
     }
 
@@ -632,13 +667,15 @@ class CouchClient extends Couch
      */
     public function getDoc($id)
     {
-        if (!strlen($id))
+        if (!strlen($id)) {
             throw new InvalidArgumentException('Document ID is empty');
+        }
 
-        if (preg_match('/^_design/', $id))
-            $url = '/' . urlencode($this->dbname) . '/_design/' . urlencode(str_replace('_design/', '', $id));
-        else
-            $url = '/' . urlencode($this->dbname) . '/' . urlencode($id);
+        if (preg_match('/^_design/', $id)) {
+            $url = '/'.urlencode($this->dbname).'/_design/'.urlencode(str_replace('_design/', '', $id));
+        } else {
+            $url = '/'.urlencode($this->dbname).'/'.urlencode($id);
+        }
 
         $docQuery = $this->queryParameters;
         $this->queryParameters = [];
@@ -649,6 +686,7 @@ class CouchClient extends Couch
         }
         $this->resultsAsCouchDocs = false;
         $doc = new CouchDocument($this);
+
         return $doc->loadFromObject($back);
     }
 
@@ -662,22 +700,25 @@ class CouchClient extends Couch
      */
     public function storeDoc($doc, $newEdits = true)
     {
-        if (!is_object($doc))
+        if (!is_object($doc)) {
             throw new InvalidArgumentException('Document should be an object');
+        }
         foreach (array_keys(get_object_vars($doc)) as $key) {
             if (in_array($key, CouchClient::$underscoredPropertiesToRemoveOnStorage)) {
                 unset($doc->$key);
-            } elseif (substr($key, 0, 1) == '_' && !in_array($key, CouchClient::$allowedUnderscoredProperties))
+            } elseif (substr($key, 0, 1) == '_' && !in_array($key, CouchClient::$allowedUnderscoredProperties)) {
                 throw new InvalidArgumentException("Property $key can't begin with an underscore");
+            }
         }
         $method = 'POST';
-        $url = '/' . urlencode($this->dbname);
+        $url = '/'.urlencode($this->dbname);
         if (!empty($doc->_id)) {
             $method = 'PUT';
-            $url .= '/' . urlencode($doc->_id);
+            $url .= '/'.urlencode($doc->_id);
         }
 
         $params = ["new_edits" => $newEdits ? "true" : "false"];
+
         return $this->queryAndValid($method, $url, [200, 201, 202], $params, $doc);
     }
 
@@ -707,7 +748,8 @@ class CouchClient extends Couch
             $request['new_edits'] = false;
         }
 
-        $url = '/' . urlencode($this->dbname) . '/_bulk_docs';
+        $url = '/'.urlencode($this->dbname).'/_bulk_docs';
+
         return $this->queryAndValid('POST', $url, [200, 201, 202], [], $request);
     }
 
@@ -728,22 +770,25 @@ class CouchClient extends Couch
         $request = ['docs' => []];
         foreach ($docs as $doc) {
             $destDoc = null;
-            if ($doc instanceof CouchDocument)
+            if ($doc instanceof CouchDocument) {
                 $destDoc = $doc->getFields();
-            else
+            } else {
                 $destDoc = $doc;
+            }
 
-            if (is_array($destDoc))
+            if (is_array($destDoc)) {
                 $destDoc['_deleted'] = true;
-            else
+            } else {
                 $destDoc->_deleted = true;
+            }
             $request['docs'][] = $destDoc;
         }
         if ($newEdits === false) {
             $request['new_edits'] = false;
         }
 
-        $url = '/' . urlencode($this->dbname) . '/_bulk_docs';
+        $url = '/'.urlencode($this->dbname).'/_bulk_docs';
+
         return $this->queryAndValid('POST', $url, [200, 201, 202], [], $request);
     }
 
@@ -762,16 +807,20 @@ class CouchClient extends Couch
      */
     public function updateDoc($ddocId, $handlerName, $params, $docIds = null)
     {
-        if (!is_array($params) && !is_object($params))
+        if (!is_array($params) && !is_object($params)) {
             throw new InvalidArgumentException('params parameter should be an array or an object');
-        if (is_object($params))
+        }
+        if (is_object($params)) {
             $params = (array)$params;
+        }
 
         $options = [];
-        if ($docIds)
+        if ($docIds) {
             $options['doc_id'] = $docIds;
-        if ($params)
+        }
+        if ($params) {
             $options['params'] = $params;
+        }
 
         return $this->updateDocFullAPI($ddocId, $handlerName, $options);
     }
@@ -799,7 +848,7 @@ class CouchClient extends Couch
         $data = null;
         $contentType = null;
         $method = 'PUT';
-        $url = '/' . urlencode($this->dbname) . '/_design/' . urlencode($ddocId) . '/_update/' . $handlerName . '/';
+        $url = '/'.urlencode($this->dbname).'/_design/'.urlencode($ddocId).'/_update/'.$handlerName.'/';
         if (array_key_exists('doc_id', $options) && is_string($options['doc_id'])) {
             $url .= urlencode($options['doc_id']);
         }
@@ -813,8 +862,9 @@ class CouchClient extends Couch
         if (array_key_exists('data', $options)) {
             if (is_string($options['data'])) {
                 $data = $options['data'];
-                if (!$contentType)
+                if (!$contentType) {
                     $contentType = 'application/x-www-form-urlencoded';
+                }
             } elseif (is_array($options['data']) || is_object($options['data'])) {
                 $data = http_build_query($options['data']);
                 $contentType = 'application/x-www-form-urlencoded';
@@ -835,14 +885,17 @@ class CouchClient extends Couch
      */
     public function copyDoc($id, $newId)
     {
-        if (!strlen($id))
+        if (!strlen($id)) {
             throw new InvalidArgumentException('Document ID is empty');
-        if (!strlen($newId))
+        }
+        if (!strlen($newId)) {
             throw new InvalidArgumentException('New document ID is empty');
+        }
 
         $method = 'COPY';
-        $url = '/' . urlencode($this->dbname);
-        $url .= '/' . urlencode($id);
+        $url = '/'.urlencode($this->dbname);
+        $url .= '/'.urlencode($id);
+
         return $this->queryAndValid($method, $url, [200, 201, 202], [], $newId);
     }
 
@@ -860,16 +913,20 @@ class CouchClient extends Couch
      */
     public function storeAsAttachment($doc, $data, $filename, $contentType = 'application/octet-stream')
     {
-        if (!is_object($doc))
+        if (!is_object($doc)) {
             throw new InvalidArgumentException('Document should be an object');
-        if (!isset($doc->_id))
+        }
+        if (!isset($doc->_id)) {
             throw new InvalidArgumentException('Document should have an ID');
-        $url = '/' . urlencode($this->dbname) . '/' . urlencode($doc->_id) . '/' . urlencode($filename);
-        if ($doc->_rev)
-            $url .= '?rev=' . $doc->_rev;
+        }
+        $url = '/'.urlencode($this->dbname).'/'.urlencode($doc->_id).'/'.urlencode($filename);
+        if ($doc->_rev) {
+            $url .= '?rev='.$doc->_rev;
+        }
         $raw = $this->storeAsFile($url, $data, $contentType);
         $response = $this->parseRawResponse($raw, $this->resultAsArray);
         $this->resultAsArray = false;
+
         return $response['body'];
     }
 
@@ -883,13 +940,17 @@ class CouchClient extends Couch
      */
     public function getAttachment($doc, $attName)
     {
-        if (!is_object($doc))
+        if (!is_object($doc)) {
             throw new InvalidArgumentException('Document should be an object');
-        if (!isset($doc->_id))
+        }
+        if (!isset($doc->_id)) {
             throw new InvalidArgumentException('Document should have an ID');
-        $url = '/' . urlencode($this->dbname) . '/' . urlencode($doc->_id) . '/' . $attName;
-        if ($doc->_rev)
-            $url .= '?rev=' . urlencode($doc->_rev);
+        }
+        $url = '/'.urlencode($this->dbname).'/'.urlencode($doc->_id).'/'.$attName;
+        if ($doc->_rev) {
+            $url .= '?rev='.urlencode($doc->_rev);
+        }
+
         return $this->queryAndValid('GET', $url, [200]);
     }
 
@@ -907,18 +968,23 @@ class CouchClient extends Couch
      */
     public function storeAttachment($doc, $file, $contentType = 'application/octet-stream', $filename = null)
     {
-        if (!is_object($doc))
+        if (!is_object($doc)) {
             throw new InvalidArgumentException('Document should be an object');
-        if (!isset($doc->_id))
+        }
+        if (!isset($doc->_id)) {
             throw new InvalidArgumentException('Document should have an ID');
-        if (!is_file($file))
+        }
+        if (!is_file($file)) {
             throw new InvalidArgumentException("File $file does not exist");
-        $url = '/' . urlencode($this->dbname) . '/' . urlencode($doc->_id) . '/';
+        }
+        $url = '/'.urlencode($this->dbname).'/'.urlencode($doc->_id).'/';
         $url .= empty($filename) ? urlencode(basename($file)) : urlencode($filename);
-        if ($doc->_rev)
-            $url .= '?rev=' . $doc->_rev;
+        if ($doc->_rev) {
+            $url .= '?rev='.$doc->_rev;
+        }
         $raw = $this->storeFile($url, $file, $contentType);
         $response = $this->parseRawResponse($raw, $this->resultAsArray);
+
         return $response['body'];
     }
 
@@ -933,15 +999,19 @@ class CouchClient extends Couch
      */
     public function deleteAttachment($doc, $attachmentName)
     {
-        if (!is_object($doc))
+        if (!is_object($doc)) {
             throw new InvalidArgumentException('Document should be an object');
-        if (!isset($doc->_id))
+        }
+        if (!isset($doc->_id)) {
             throw new InvalidArgumentException('Document should have an ID');
-        if (!strlen($attachmentName))
+        }
+        if (!strlen($attachmentName)) {
             throw new InvalidArgumentException('Attachment name not set');
-        $url = '/' . urlencode($this->dbname) .
-            '/' . urlencode($doc->_id) .
-            '/' . urlencode($attachmentName);
+        }
+        $url = '/'.urlencode($this->dbname).
+            '/'.urlencode($doc->_id).
+            '/'.urlencode($attachmentName);
+
         return $this->queryAndValid('DELETE', $url, [200, 202], ['rev' => $doc->_rev]);
     }
 
@@ -955,12 +1025,14 @@ class CouchClient extends Couch
      */
     public function deleteDoc($doc)
     {
-        if (!is_object($doc))
+        if (!is_object($doc)) {
             throw new InvalidArgumentException('Document should be an object');
+        }
         if (empty($doc->_id) || empty($doc->_rev)) {
             throw new Exception('Document should contain _id and _rev');
         }
-        $url = '/' . urlencode($this->dbname) . '/' . urlencode($doc->_id) . '?rev=' . urlencode($doc->_rev);
+        $url = '/'.urlencode($this->dbname).'/'.urlencode($doc->_id).'?rev='.urlencode($doc->_rev);
+
         return $this->queryAndValid('DELETE', $url, [200, 202]);
     }
 
@@ -981,6 +1053,7 @@ class CouchClient extends Couch
     {
         $this->resultsAsCouchDocs = true;
         $this->resultAsArray = false;
+
         return $this;
     }
 
@@ -995,6 +1068,7 @@ class CouchClient extends Couch
     {
         $this->resultAsArray = true;
         $this->resultsAsCouchDocs = false;
+
         return $this;
     }
 
@@ -1015,6 +1089,7 @@ class CouchClient extends Couch
             $data = json_encode(['keys' => $viewQuery['keys']]);
             unset($viewQuery['keys']);
         }
+
         return [$method, $viewQuery, $data];
     }
 
@@ -1030,18 +1105,21 @@ class CouchClient extends Couch
      */
     public function getView($id, $name)
     {
-        if (!$id || !$name)
+        if (!$id || !$name) {
             throw new InvalidArgumentException('You should specify view id and name');
-        $url = '/' . urlencode($this->dbname) . '/_design/' . urlencode($id) . '/_view/' . urlencode($name);
-        if ($this->resultsAsCouchDocs)
+        }
+        $url = '/'.urlencode($this->dbname).'/_design/'.urlencode($id).'/_view/'.urlencode($name);
+        if ($this->resultsAsCouchDocs) {
             $this->include_docs(true);
+        }
         $resultsAsCouchDocs = $this->resultsAsCouchDocs;
         $this->resultsAsCouchDocs = false;
 
         list($method, $viewQuery, $data) = $this->prepareViewQuery();
 
-        if (!$resultsAsCouchDocs)
+        if (!$resultsAsCouchDocs) {
             return $this->queryAndValid($method, $url, [200], $viewQuery, $data);
+        }
 
         return $this->resultsToCouchDocuments(
             $this->queryAndValid($method, $url, [200], $viewQuery, $data)
@@ -1068,36 +1146,43 @@ class CouchClient extends Couch
      */
     public function resultsToCouchDocuments($results)
     {
-        if (!$results->rows || !is_array($results->rows))
+        if (!$results->rows || !is_array($results->rows)) {
             return false;
+        }
         $back = [];
         foreach ($results->rows as $row) { // should have $row->key & $row->doc
-            if (!$row->key || !$row->doc)
+            if (!$row->key || !$row->doc) {
                 return false;
+            }
             // create CouchDocument
             $cd = new CouchDocument($this);
             $cd->loadFromObject($row->doc);
 
             // set key name
-            if (is_string($row->key))
+            if (is_string($row->key)) {
                 $key = $row->key;
-            elseif (is_array($row->key)) {
-                if (!is_array(end($row->key)) && !is_object(end($row->key)))
+            } elseif (is_array($row->key)) {
+                if (!is_array(end($row->key)) && !is_object(end($row->key))) {
                     $key = end($row->key);
-                else
+                } else {
                     continue;
-            } else continue;
+                }
+            } else {
+                continue;
+            }
 
             // set value in result array
             if (isset($back[$key])) {
-                if (is_array($back[$key]))
+                if (is_array($back[$key])) {
                     $back[$key][] = $cd;
-                else
+                } else {
                     $back[$key] = [$back[$key], $cd];
+                }
             } else {
                 $back[$key] = $cd;
             }
         }
+
         return $back;
     }
 
@@ -1115,18 +1200,21 @@ class CouchClient extends Couch
      */
     public function getList($id, $name, $viewName, $additionalParameters = [])
     {
-        if (!$id || !$name)
+        if (!$id || !$name) {
             throw new InvalidArgumentException('You should specify list id and name');
-        if (!$viewName)
+        }
+        if (!$viewName) {
             throw new InvalidArgumentException('You should specify view name');
-        $urlEnd = '/_list/' . urlencode($name) . '/' . urlencode($viewName);
-        $url = '/' . urlencode($this->dbname) . '/_design/' . urlencode($id) . $urlEnd;
+        }
+        $urlEnd = '/_list/'.urlencode($name).'/'.urlencode($viewName);
+        $url = '/'.urlencode($this->dbname).'/_design/'.urlencode($id).$urlEnd;
         $this->resultsAsCouchDocs = false;
         list($method, $viewQuery, $data) = $this->prepareViewQuery();
 
         if (is_array($additionalParameters) && count($additionalParameters)) {
             $viewQuery = array_merge($additionalParameters, $viewQuery);
         }
+
         return $this->queryAndValid($method, $url, [200], $viewQuery, $data);
     }
 
@@ -1154,19 +1242,22 @@ class CouchClient extends Couch
      */
     public function getForeignList($id, $name, $viewId, $viewName, $additionalParams = [])
     {
-        if (!$id || !$name)
+        if (!$id || !$name) {
             throw new InvalidArgumentException('You should specify list id and name');
-        if (!$viewId || !$viewName)
+        }
+        if (!$viewId || !$viewName) {
             throw new InvalidArgumentException('You should specify view id and view name');
-        $url = '/' . urlencode($this->dbname) .
-            '/_design/' . urlencode($id) . '/_list/' . urlencode($name) .
-            '/' . urlencode($viewId) . '/' . urlencode($viewName);
+        }
+        $url = '/'.urlencode($this->dbname).
+            '/_design/'.urlencode($id).'/_list/'.urlencode($name).
+            '/'.urlencode($viewId).'/'.urlencode($viewName);
         $this->resultsAsCouchDocs = false;
         list($method, $viewQuery, $data) = $this->prepareViewQuery();
 
         if (is_array($additionalParams) && count($additionalParams)) {
             $viewQuery = array_merge($additionalParams, $viewQuery);
         }
+
         return $this->queryAndValid($method, $url, [200], $viewQuery, $data);
     }
 
@@ -1184,11 +1275,14 @@ class CouchClient extends Couch
      */
     public function getShow($id, $name, $docId = null, $additionalParams = [])
     {
-        if (!$id || !$name)
+        if (!$id || !$name) {
             throw new InvalidArgumentException('You should specify list id and name');
-        $url = '/' . urlencode($this->dbname) . '/_design/' . urlencode($id) . '/_show/' . urlencode($name);
-        if ($docId)
-            $url .= '/' . urlencode($docId);
+        }
+        $url = '/'.urlencode($this->dbname).'/_design/'.urlencode($id).'/_show/'.urlencode($name);
+        if ($docId) {
+            $url .= '/'.urlencode($docId);
+        }
+
         return $this->queryAndValid('GET', $url, [200], $additionalParams);
     }
 
@@ -1203,9 +1297,11 @@ class CouchClient extends Couch
      */
     public function getViewInfos($id)
     {
-        if (!$id)
+        if (!$id) {
             throw new InvalidArgumentException('You should specify view id');
-        $url = '/' . urlencode($this->dbname) . '/_design/' . urlencode($id) . '/_info';
+        }
+        $url = '/'.urlencode($this->dbname).'/_design/'.urlencode($id).'/_info';
+
         return $this->queryAndValid('GET', $url, [200]);
     }
 
@@ -1221,7 +1317,8 @@ class CouchClient extends Couch
     public function compactViews($id)
     {
         $formattedId = preg_replace('@^_design/@', '', $id);
-        $url = '/' . urlencode($this->dbname) . '/_compact/' . urlencode($formattedId);
+        $url = '/'.urlencode($this->dbname).'/_compact/'.urlencode($formattedId);
+
         return $this->queryAndValid('POST', $url, [202]);
     }
 
@@ -1252,8 +1349,9 @@ class CouchClient extends Couch
      */
     public function getAllDocs()
     {
-        $url = '/' . urlencode($this->dbname) . '/_all_docs';
+        $url = '/'.urlencode($this->dbname).'/_all_docs';
         list($method, $viewQuery, $data) = $this->prepareViewQuery();
+
         return $this->queryAndValid($method, $url, [200], $viewQuery, $data);
     }
 
@@ -1269,8 +1367,9 @@ class CouchClient extends Couch
     public function getUuids($count = 1)
     {
         $validCount = (int)$count;
-        if ($validCount < 1)
+        if ($validCount < 1) {
             throw new InvalidArgumentException('Uuid count should be greater than 0');
+        }
 
         $url = '/_uuids';
 
@@ -1278,6 +1377,7 @@ class CouchClient extends Couch
         if ($back && property_exists($back, 'uuids')) {
             return $back->uuids;
         }
+
         return false;
     }
 
@@ -1290,7 +1390,8 @@ class CouchClient extends Couch
     public function ensureFullCommit()
     {
         $method = 'POST';
-        $url = '/' . urlencode($this->dbname) . '/_ensure_full_commit';
+        $url = '/'.urlencode($this->dbname).'/_ensure_full_commit';
+
         return $this->queryAndValid($method, $url, [200, 201]);
     }
 
@@ -1311,33 +1412,38 @@ class CouchClient extends Couch
         $method = 'POST';
         $request = [
             'index' => [
-                'fields' => $fields
-            ]
+                'fields' => $fields,
+            ],
         ];
 
         //Parameter validation
-        if (isset($name))
+        if (isset($name)) {
             $request['name'] = $name;
-        if (isset($ddoc))
+        }
+        if (isset($ddoc)) {
             $request['ddoc'] = $ddoc;
-        if ($type != 'json')
+        }
+        if ($type != 'json') {
             throw new BadMethodCallException('The type parameter has not been implemented yet.');
+        }
 
 
-        $url = '/' . urlencode($this->dbname) . '/_index';
+        $url = '/'.urlencode($this->dbname).'/_index';
+
         return $this->queryAndValid($method, $url, [200], [], $request);
     }
 
     /**
      * Get the list of indexes in the database.
-     * @throws CouchException if an error occured during the request.
      * @return array Returns an array of indexes.
+     * @throws CouchException if an error occured during the request.
      */
     public function getIndexes()
     {
         $method = 'GET';
-        $url = '/' . urlencode($this->dbname) . '/_index';
+        $url = '/'.urlencode($this->dbname).'/_index';
         $result = $this->queryAndValid($method, $url, [200]);
+
         return $result->indexes;
     }
 
@@ -1353,11 +1459,13 @@ class CouchClient extends Couch
      */
     public function deleteIndex($ddoc, $name, $type = 'json')
     {
-        if ($type != 'json')
+        if ($type != 'json') {
             throw new BadMethodCallException('The type parameter has not been implemented yet.');
+        }
         $method = 'DELETE';
-        $urlEnd = urlencode($ddoc) . '/json/' . urlencode($name);
-        $url = '/' . urlencode($this->dbname) . '/_index/' . $urlEnd;
+        $urlEnd = urlencode($ddoc).'/json/'.urlencode($name);
+        $url = '/'.urlencode($this->dbname).'/_index/'.$urlEnd;
+
         return $this->queryAndValid($method, $url, [200]);
     }
 
@@ -1388,41 +1496,44 @@ class CouchClient extends Couch
 
     /**
      * Protected function to call the _find and _explain endpoint
-     * @return object
-     * @throws CouchException if an error occurs during the transaction.
      * @param array|object $selector An associative array or an object that follow Mango Query selector syntax.
      * everything.
      * @param string $endpoint The endpoint to use. Either _explain or _find.
      * @param array|string $index Optional. Let your determine a specific index to use for your query.
      * @returns object Returns an response object with the documents.
+     * @return object
+     * @throws CouchException if an error occurs during the transaction.
      */
     private function _find($endpoint, $selector, $index = null)
     {
         $method = 'POST';
-        $url = '/' . urlencode($this->dbname) . '/' . $endpoint;
+        $url = '/'.urlencode($this->dbname).'/'.$endpoint;
         $request = [
-            'selector' => $selector
+            'selector' => $selector,
         ];
 
         //Parameter validation
         $fieldsToParse = ['fields', 'limit', 'skip'];
-        foreach ($fieldsToParse as $field)
+        foreach ($fieldsToParse as $field) {
             if (isset($this->queryParameters[$field])) {
                 $request[$field] = $this->queryParameters[$field];
                 unset($this->queryParameters[$field]);
             }
+        }
 
         if (isset($this->queryParameters['sort'])) {
             $sort = $this->queryParameters['sort'];
             $firstElem = reset($sort);
-            if (!is_array($firstElem))
+            if (!is_array($firstElem)) {
                 $sort = [$sort];
+            }
             $request['sort'] = $sort;
             unset($this->queryParameters['sort']);
         }
 
-        if (isset($index) && (is_array($index) || is_string($index)))
+        if (isset($index) && (is_array($index) || is_string($index))) {
             $request['use_index'] = $index;
+        }
 
         if (isset($this->queryParameters['conflicts'])) {
             $request['conflicts'] = boolval($this->queryParameters['conflicts']);

@@ -20,6 +20,7 @@ class CouchClientViewTest extends PHPUnit_Framework_TestCase
 
 	private $host = 'localhost';
 	private $port = '5984';
+	private $aclient;
 
 	public function setUp()
 	{
@@ -28,7 +29,6 @@ class CouchClientViewTest extends PHPUnit_Framework_TestCase
 		$this->port = $config->getPort();
 		$url = $config->getUrl($this->host, $this->port, $config->getFirstNormalUser());
 		$aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
-		$this->aclient = new CouchClient($url, 'couchclienttest');
 		$this->aclient = new CouchClient($aUrl, 'couchclienttest');
 		try {
 			$this->aclient->deleteDatabase();
@@ -213,7 +213,7 @@ class CouchClientViewTest extends PHPUnit_Framework_TestCase
 		$this->assertObjectHasAttribute("total_rows", $test);
 		$this->assertEquals($test->total_rows, 5);
 		$this->assertObjectHasAttribute("offset", $test);
-		$this->assertEquals($test->offset, 2);
+		$this->assertEquals($test->offset, 0);
 		$this->assertObjectHasAttribute("rows", $test);
 		$this->assertInternalType("array", $test->rows);
 		$this->assertEquals(count($test->rows), 3);

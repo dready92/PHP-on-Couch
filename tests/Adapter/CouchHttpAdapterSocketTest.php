@@ -7,6 +7,7 @@ use InvalidArgumentException,
 	PHPOnCouch\Exceptions,
 	PHPUnit_Framework_TestCase,
 	stdClass;
+use PhpOnCouch\Couch;
 
 require_once join(DIRECTORY_SEPARATOR, [dirname(__DIR__), '_config', 'config.php']);
 
@@ -22,7 +23,7 @@ class CouchHttpAdapterSocketTest extends PHPUnit_Framework_TestCase
 	private $port = '5984';
 	private $dbName = 'couchclienttest';
 	private $continuousQueryTriggerFile = __DIR__ . DIRECTORY_SEPARATOR . 'continuousquery.lock';
-	private $admin = ["login" => "adm", "password" => "sometest"];
+	private $admin = ["login" => "dm", "password" => "sometest"];
 	protected $adapter;
 
 	/**
@@ -56,7 +57,7 @@ class CouchHttpAdapterSocketTest extends PHPUnit_Framework_TestCase
 			
 		}
 		$this->aclient->createDatabase();
-		$this->adapter = new \PHPOnCouch\Adapter\CouchHttpAdapterSocket("http://".$this->host.':'.$this->port, []);
+		$this->adapter = new CouchHttpAdapterSocket("http://".$this->host.':'.$this->port, []);
 		$this->adapter->setDsn($this->aclient->dsn());
 	}
 
@@ -126,7 +127,7 @@ class CouchHttpAdapterSocketTest extends PHPUnit_Framework_TestCase
 	public function testQuery()
 	{
 		$response = $this->adapter->query('GET', '/' . $this->dbName . "/_all_docs?limit=5");
-		$parsedResponse = \PhpOnCouch\Couch::parseRawResponse($response);
+		$parsedResponse = Couch::parseRawResponse($response);
 		$this->assertArrayHasKey('status_code', $parsedResponse);
 		$this->assertArrayHasKey('status_message', $parsedResponse);
 		$this->assertEquals('200', $parsedResponse['status_code']);
@@ -147,7 +148,7 @@ class CouchHttpAdapterSocketTest extends PHPUnit_Framework_TestCase
 		$url = '/' . $this->dbName . '/' . urlencode($doc->_id) . '/' . urlencode($filename);
 
 		$rawResponse = $this->adapter->storeFile($url, $file, $contentType);
-		$parsedResponse = \PhpOnCouch\Couch::parseRawResponse($rawResponse);
+		$parsedResponse = Couch::parseRawResponse($rawResponse);
 		$this->assertArrayHasKey('status_code', $parsedResponse);
 		$this->assertArrayHasKey('status_message', $parsedResponse);
 		$this->assertEquals('201', $parsedResponse['status_code']);
@@ -168,7 +169,7 @@ class CouchHttpAdapterSocketTest extends PHPUnit_Framework_TestCase
 		$url = '/' . $this->dbName . '/' . urlencode($doc->_id) . '/' . urlencode($filename);
 
 		$rawResponse = $this->adapter->storeAsFile($url, $data, $contentType);
-		$parsedResponse = \PhpOnCouch\Couch::parseRawResponse($rawResponse);
+		$parsedResponse = Couch::parseRawResponse($rawResponse);
 		$this->assertArrayHasKey('status_code', $parsedResponse);
 		$this->assertArrayHasKey('status_message', $parsedResponse);
 		$this->assertEquals('201', $parsedResponse['status_code']);

@@ -405,16 +405,16 @@ class CouchAdmin
         if ($resp['status_code'] != 200) {
             throw new CouchException($raw);
         }
-        if (!property_exists($resp['body'], "admins")) {
-            $resp["body"]->admins = new stdClass();
-            $resp["body"]->admins->names = [];
-            $resp["body"]->admins->roles = [];
+
+        $permissionGroupProperties = ["names", "roles"];
+        $permissionGroups = ["admins","members"];
+
+        foreach($permissionGroups as $group){
+            foreach($permissionGroupProperties as $prop){
+                ObjectUtils::ensurePropertyExist($resp['body'], [$group,$prop], []);
+            }
         }
-        if (!property_exists($resp['body'], "members")) {
-            $resp["body"]->members = new stdClass();
-            $resp["body"]->members->names = [];
-            $resp["body"]->members->roles = [];
-        }
+
         return $resp['body'];
     }
 

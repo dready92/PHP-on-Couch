@@ -48,12 +48,13 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
         $ssl = $this->dsnPart('scheme') == 'https' ? 'ssl://' : '';
         $errNum = -1;
         $errStr = '';
-        $this->socket = fsockopen($ssl . $this->dsnPart('host'), $this->dsnPart('port'), $errNum, $errStr);
+        $this->socket = fsockopen($ssl.$this->dsnPart('host'), $this->dsnPart('port'), $errNum, $errStr);
         if (!$this->socket) {
-            $errMsg = 'Could not open connection to ' . $this->dsnPart('host') . ':';
-            $errMsg .= $this->dsnPart('port') . ': ' . $errStr . ' (' . $errNum . ')';
+            $errMsg = 'Could not open connection to '.$this->dsnPart('host').':';
+            $errMsg .= $this->dsnPart('port').': '.$errStr.' ('.$errNum.')';
             throw new Exception($errMsg);
         }
+
         return true;
     }
 
@@ -67,8 +68,10 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
     {
         fwrite($this->socket, $request);
         $response = '';
-        while (!feof($this->socket))
+        while (!feof($this->socket)) {
             $response .= fgets($this->socket);
+        }
+
         return $response;
     }
 
@@ -98,14 +101,19 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
      */
     protected function startRequestHeaders($method, $url)
     {
-        if ($this->dsnPart('path'))
-            $url = $this->dsnPart('path') . $url;
-        $req = "$method $url HTTP/1.0\r\nHost: " . $this->dsnPart('host') . "\r\n";
-        if ($this->dsnPart('user') && $this->dsnPart('pass')) {
-            $req .= 'Authorization: Basic ' . base64_encode($this->dsnPart('user') . ':' .
-                    $this->dsnPart('pass')) . "\r\n";
-        } elseif ($this->sessioncookie) {
-            $req .= "Cookie: " . $this->sessioncookie . "\r\n";
+        if ($this->dsnPart('path')) {
+            $url = $this->dsnPart('path').$url;
+        }
+        $req = "$method $url HTTP/1.0\r\nHost: ".$this->dsnPart('host')."\r\n";
+        if ($this->sessioncookie) {
+            $req .= "Cookie: ".$this->sessioncookie."\r\n";
+        } else {
+            if ($this->dsnPart('user') && $this->dsnPart('pass')) {
+                $req .= 'Authorization: Basic '.base64_encode(
+                        $this->dsnPart('user').':'.
+                        $this->dsnPart('pass')
+                    )."\r\n";
+            }
         }
         $req .= "Accept: application/json,text/html,text/plain,*/*\r\n";
 
@@ -123,22 +131,24 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
      */
     protected function buildRequest($method, $url, $data, $contentType = null)
     {
-        if (is_object($data) || is_array($data))
+        if (is_object($data) || is_array($data)) {
             $data = json_encode($data);
+        }
         $req = $this->startRequestHeaders($method, $url);
         if ($contentType) {
-            $req .= 'Content-Type: ' . $contentType . "\r\n";
+            $req .= 'Content-Type: '.$contentType."\r\n";
         } else {
-            $req .= 'Content-Type: application/json' . "\r\n";
+            $req .= 'Content-Type: application/json'."\r\n";
         }
         if ($method == 'COPY') {
-            $req .= 'Destination: ' . $data . "\r\n\r\n";
+            $req .= 'Destination: '.$data."\r\n\r\n";
         } elseif ($data) {
-            $req .= 'Content-Length: ' . strlen($data) . "\r\n\r\n";
-            $req .= $data . "\r\n";
+            $req .= 'Content-Length: '.strlen($data)."\r\n\r\n";
+            $req .= $data."\r\n";
         } else {
             $req .= "\r\n";
         }
+
         return $req;
     }
 
@@ -157,15 +167,18 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
      */
     public function query($method, $url, $parameters = [], $data = null, $contentType = null)
     {
-        if (!in_array($method, $this->httpMethods))
+        if (!in_array($method, $this->httpMethods)) {
             throw new Exception("Bad HTTP method: $method");
+        }
 
-        if (is_array($parameters) && count($parameters))
-            $url = $url . '?' . http_build_query($parameters);
+        if (is_array($parameters) && count($parameters)) {
+            $url = $url.'?'.http_build_query($parameters);
+        }
 
         $request = $this->buildRequest($method, $url, $data, $contentType);
-        if (!$this->connect())
+        if (!$this->connect()) {
             return false;
+        }
         $rawResponse = $this->execute($request);
         $this->disconnect();
 
@@ -198,17 +211,21 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
      */
     public function continuousQuery($callable, $method, $url, $parameters = [], $data = null, $caller = null)
     {
-        if (!in_array($method, $this->httpMethods))
+        if (!in_array($method, $this->httpMethods)) {
             throw new Exception("Bad HTTP method: $method");
-        if (!is_callable($callable))
+        }
+        if (!is_callable($callable)) {
             throw new InvalidArgumentException("callable argument have to success to is_callable PHP function");
-        $url = $this->dsn . $url;
-        if (is_array($parameters) && count($parameters))
-            $url = $url . '?' . http_build_query($parameters);
+        }
+        $url = $this->dsn.$url;
+        if (is_array($parameters) && count($parameters)) {
+            $url = $url.'?'.http_build_query($parameters);
+        }
         //Send the request to the socket
         $request = $this->buildRequest($method, $url, $data, null);
-        if (!$this->connect())
+        if (!$this->connect()) {
             return false;
+        }
 
         fwrite($this->socket, $request);
         //Read the headers and check that the response is valid
@@ -220,8 +237,10 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
                 $response = '';
                 continue;
             } //Ignore 'continue' headers, they will be followed by the real header.
-            else if (preg_match("/\r\n\r\n$/", $response)) {
-                $hasHeaders = true;
+            else {
+                if (preg_match("/\r\n\r\n$/", $response)) {
+                    $hasHeaders = true;
+                }
             }
         }
         $headers = explode("\n", trim($response));
@@ -249,11 +268,13 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
                 $line = fgets($this->socket);
                 if (strlen(trim($line))) {
                     $break = call_user_func($callable, json_decode($line), $clone);
-                    if ($break === false)
+                    if ($break === false) {
                         $this->disconnect();
+                    }
                 }
             }
         }
+
         return $code;
     }
 
@@ -272,24 +293,29 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
     public function storeFile($url, $file, $contentType)
     {
 
-        if (!strlen($url))
+        if (!strlen($url)) {
             throw new InvalidArgumentException("Attachment URL can't be empty");
-        if (!strlen($file) || !is_file($file) || !is_readable($file))
+        }
+        if (!strlen($file) || !is_file($file) || !is_readable($file)) {
             throw new InvalidArgumentException("Attachment file does not exist or is not readable");
-        if (!strlen($contentType))
+        }
+        if (!strlen($contentType)) {
             throw new InvalidArgumentException("Attachment Content Type can't be empty");
+        }
         $req = $this->startRequestHeaders('PUT', $url);
-        $req .= 'Content-Length: ' . filesize($file) . "\r\n"
-            . 'Content-Type: ' . $contentType . "\r\n\r\n";
+        $req .= 'Content-Length: '.filesize($file)."\r\n"
+            .'Content-Type: '.$contentType."\r\n\r\n";
         $fstream = fopen($file, 'r');
         $this->connect();
         fwrite($this->socket, $req);
         stream_copy_to_stream($fstream, $this->socket);
         $response = '';
-        while (!feof($this->socket))
+        while (!feof($this->socket)) {
             $response .= fgets($this->socket);
+        }
         $this->disconnect();
         fclose($fstream);
+
         return $response;
     }
 
@@ -307,21 +333,25 @@ class CouchHttpAdapterSocket extends AbstractCouchHttpAdapter implements CouchHt
      */
     public function storeAsFile($url, $data, $contentType)
     {
-        if (!strlen($url))
+        if (!strlen($url)) {
             throw new InvalidArgumentException("Attachment URL can't be empty");
-        if (!strlen($contentType))
+        }
+        if (!strlen($contentType)) {
             throw new InvalidArgumentException("Attachment Content Type can't be empty");
+        }
 
         $req = $this->startRequestHeaders('PUT', $url);
-        $req .= 'Content-Length: ' . strlen($data) . "\r\n"
-            . 'Content-Type: ' . $contentType . "\r\n\r\n";
+        $req .= 'Content-Length: '.strlen($data)."\r\n"
+            .'Content-Type: '.$contentType."\r\n\r\n";
         $this->connect();
         fwrite($this->socket, $req);
         fwrite($this->socket, $data);
         $response = '';
-        while (!feof($this->socket))
+        while (!feof($this->socket)) {
             $response .= fgets($this->socket);
+        }
         $this->disconnect();
+
         return $response;
     }
 

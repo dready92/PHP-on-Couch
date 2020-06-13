@@ -15,7 +15,7 @@
 ### ANON DSN
 $couchDsn = "http://localhost:5984/";
 ### AUTHENTICATED DSN
-//$couchDsn = "http://admin:adminPwd@localhost:5984/";
+//$couchDsn = "http://admin:admin@localhost:5984/";
 $couchDB = "example";
 
 

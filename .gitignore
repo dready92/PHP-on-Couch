@@ -25,3 +25,6 @@ setup.sh
 
 #Doc build files
 doc/_build
+
+coverage.xml
+log.txt

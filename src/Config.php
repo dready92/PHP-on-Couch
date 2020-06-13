@@ -15,7 +15,7 @@ class Config
 
     private function __construct()
     {
-        $env = Dotenv::create(__DIR__);
+        $env = Dotenv::createImmutable(__DIR__);
         try {
             $env->load();
         } catch (InvalidPathException $e) {

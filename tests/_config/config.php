@@ -32,14 +32,18 @@ class config
 
 	private function __construct()
 	{
-		$this->users = [];
-		$path = __DIR__ . DIRECTORY_SEPARATOR . '_users.php';
-		$defaultPath = __DIR__ . DIRECTORY_SEPARATOR . 'defaultUsers.php';
-		if (file_exists($path)) {
-			$this->users = require $path;
-		} else {
-			$this->users = require $defaultPath;
-		}
+		$this->users = [
+            [
+                'username'=>'client',
+                'password'=>'client',
+                'isAdmin'=>false
+            ],
+            [
+                'username'=>'admin',
+                'password'=>'admin',
+                'isAdmin'=>true
+            ]
+        ];
 
 		$hostEnv = getenv('DB_HOST');
 		$portEnv = getenv('DB_PORT');

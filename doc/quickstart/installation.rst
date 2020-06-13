@@ -54,7 +54,7 @@ The content pasted into the `index.php` file is :
     use PHPOnCouch\Exceptions;
 
     //We create a client to access the database
-    $client = new CouchClient('http://admin:adminPwd@localhost:5984','dbname');
+    $client = new CouchClient('http://admin:admin@localhost:5984','dbname');
 
     //We create the database if required
     if(!$client->databaseExists()){
@@ -109,7 +109,7 @@ Manual demo
     use PHPOnCouch\Exceptions;
 
     //We create a client to access the database
-    $client = new CouchClient('http://admin:adminPwd@localhost:5984','dbname');
+    $client = new CouchClient('http://admin:admin@localhost:5984','dbname');
 
     //We create the database if required
     if(!$client->databaseExists()){
