@@ -631,6 +631,14 @@ EOT;
         $this->assertInternalType("object", $doc);
         $this->assertObjectHasAttribute("type", $doc);
         $this->assertEquals("object", $doc->type);
+
+//Test 4
+        $test4 = [0 => 'foo', 1 => 'bar'];
+        $doc4 = new \PHPOnCouch\CouchDocument($this->aclient);
+        $doc4->set($test4);
+        $fields4 = $doc4->getFields();
+        $this->assertTrue(property_exists($fields, 0));
+        $this->assertEquals($fields->{0}, 'foo');
     }
 
     /**

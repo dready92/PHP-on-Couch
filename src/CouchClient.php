@@ -704,7 +704,7 @@ class CouchClient extends Couch
             throw new InvalidArgumentException('Document should be an object');
         }
         foreach (array_keys(get_object_vars($doc)) as $key) {
-            if (in_array($key, CouchClient::$underscoredPropertiesToRemoveOnStorage)) {
+            if (in_array($key, CouchClient::$underscoredPropertiesToRemoveOnStorage, true)) {
                 unset($doc->$key);
             } elseif (substr($key, 0, 1) == '_' && !in_array($key, CouchClient::$allowedUnderscoredProperties)) {
                 throw new InvalidArgumentException("Property $key can't begin with an underscore");
