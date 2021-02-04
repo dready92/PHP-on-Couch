@@ -2,10 +2,6 @@
 
 namespace PHPOnCouch;
 
-
-use Dotenv\Dotenv;
-use Dotenv\Exception\InvalidPathException;
-
 class Config
 {
 
@@ -15,28 +11,33 @@ class Config
 
     private function __construct()
     {
-        $env = Dotenv::createImmutable(__DIR__);
-        try {
-            $env->load();
-        } catch (InvalidPathException $e) {
-            //The file is not available :(
-        }
         //Default
-        if (empty(getenv(self::$adapterKey)))
-            putenv(self::$adapterKey . "=curl");
+        if (empty(getenv(self::$adapterKey))) {
+            putenv(self::$adapterKey."=curl");
+        }
 
-        $env->required(self::$adapterKey)->allowedValues(['curl', 'socket']);
+        $adapterConfigValue = getenv(self::$adapterKey);
+        $allowedValues = ['curl', 'socket'];
+        if (!in_array($adapterConfigValue, ['curl', 'socket'])) {
+            throw new \Exception(
+                "Invalid adapter configuration provided: ".self::$adapterKey."=$adapterConfigValue."." AllowedValues: ".implode(
+                    ',',
+                    $allowedValues
+                )
+            );
+        }
 
         //Get curl options
         $curlOpts = [];
         foreach ($_SERVER as $key => $val) {
-            if (substr($key, 0, 7) == 'CURLOPT')
+            if (substr($key, 0, 7) == 'CURLOPT') {
                 $curlOpts[$key] = $val;
+            }
         }
 
         $this->config = [
-            self::$adapterKey => getenv(self::$adapterKey),
-            'curl' => $curlOpts
+            self::$adapterKey =>$adapterConfigValue,
+            'curl' => $curlOpts,
         ];
     }
 
@@ -54,8 +55,10 @@ class Config
 
     public static function getInstance()
     {
-        if (self::$instance == null)
+        if (self::$instance == null) {
             self::$instance = new Config();
+        }
+
         return self::$instance;
     }
 }
