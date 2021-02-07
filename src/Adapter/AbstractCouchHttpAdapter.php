@@ -19,6 +19,10 @@
 
 namespace PHPOnCouch\Adapter;
 
+define('PHPONCOUCH_AUTH_NONE', 1);
+define('PHPONCOUCH_AUTH_BASIC', 2);
+define('PHPONCOUCH_AUTH_COOKIE', 3);
+
 /**
  * Description of CouchHttpAdapterBase
  *
@@ -44,20 +48,18 @@ abstract class AbstractCouchHttpAdapter implements CouchHttpAdapterInterface
         self::METHOD_POST,
         self::METHOD_GET,
         self::METHOD_DELETE,
-        self::METHOD_COPY
+        self::METHOD_COPY,
     ];
 
-    /**
-     *
-     * @var string the session cookie
-     */
-    protected $sessioncookie = null;
+    protected $authToken = null;
+    protected $authMode = PHPONCOUCH_AUTH_NONE;
 
     public function setDsn($dsn)
     {
         $this->dsn = preg_replace('@/+$@', '', $dsn);
-        if (($parsed = parse_url($this->dsn)))
+        if (($parsed = parse_url($this->dsn))) {
             $this->dsnParsed = $parsed;
+        }
 
         if (!isset($this->dsnParsed['port'])) {
             $this->dsnParsed['port'] = 80;
@@ -83,6 +85,13 @@ abstract class AbstractCouchHttpAdapter implements CouchHttpAdapterInterface
     {
         $this->setOptions($options);
         $this->setDsn($dsn);
+
+        if (array_key_exists('username', $options)) {
+            $username = $options['username'];
+            $password = array_key_exists('password', $options) ? $options['password'] : '';
+            $this->authToken = $username.':'.$password;
+            $this->authMode = PHPONCOUCH_AUTH_BASIC;
+        }
     }
 
     /**
@@ -95,7 +104,9 @@ abstract class AbstractCouchHttpAdapter implements CouchHttpAdapterInterface
      */
     public function setSessionCookie($cookie)
     {
-        $this->sessioncookie = $cookie;
+        $this->authToken = $cookie;
+        $this->authMode = PHPONCOUCH_AUTH_COOKIE;
+
         return $this;
     }
 
@@ -106,7 +117,13 @@ abstract class AbstractCouchHttpAdapter implements CouchHttpAdapterInterface
      */
     public function getSessionCookie()
     {
-        return $this->sessioncookie;
+        if ($this->authMode == PHPONCOUCH_AUTH_COOKIE) {
+            return $this->authToken;
+        } else {
+            throw new \Exception(
+                "The CouchClient is not using a cookie authentication. Current mode: ".$this->authMode
+            );
+        }
     }
 
     /**
@@ -116,7 +133,17 @@ abstract class AbstractCouchHttpAdapter implements CouchHttpAdapterInterface
      */
     public function hasSessionCookie()
     {
-        return (bool)$this->sessioncookie;
+        return $this->authMode == PHPONCOUCH_AUTH_COOKIE && (bool)$this->authToken;
+    }
+
+    public function getAuthMode()
+    {
+        return $this->authMode;
+    }
+
+    public function getAuthToken()
+    {
+        return $this->authToken;
     }
 
     /**

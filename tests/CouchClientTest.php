@@ -112,8 +112,8 @@ EOT;
         $client = new CouchClient($this->aUrl, 'couchclienttest', ['username' => $user, 'password' => $pass]);
         $parts = $client->dsnPart();
         $default = parse_url($this->aUrl);
-        $this->assertEquals($parts['user'], urlencode($user));
-        $this->assertEquals($parts['pass'], urlencode($pass));
+        $this->assertArrayNotHasKey('user', $parts);
+        $this->assertArrayNotHasKey('pass', $parts);
         $this->assertEquals($parts['host'], $default['host']);
     }
 

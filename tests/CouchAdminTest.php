@@ -276,14 +276,42 @@ class CouchAdminTest extends PHPUnit_Framework_TestCase
     public function testCreateUser()
     {
         $adm = new CouchAdmin($this->aclient);
-        $ok = $adm->createUser('joe', 'dalton');
-        $this->assertInternalType('object', $ok);
-        $this->assertObjectHasAttribute('ok', $ok);
-        $this->assertEquals($ok->ok, true);
 
-        //Invalid parameters
-        $this->expectException(InvalidArgumentException::class);
-        $adm->createUser('', 'asdasdasd');
+        { // Happy path
+            $ok = $adm->createUser('joe', 'dalton');
+            $this->assertInternalType('object', $ok);
+            $this->assertObjectHasAttribute('ok', $ok);
+            $this->assertEquals($ok->ok, true);
+        }
+
+        { // Special user
+            $username = "specialuser!";
+            $password = "password!";
+            $ok = $adm->createUser($username, $password);
+            $this->assertInternalType('object', $ok);
+            $this->assertObjectHasAttribute('ok', $ok);
+            $this->assertEquals(true, $ok->ok);
+
+            $url = 'http://'.$this->host.':'.$this->port;
+            $specialUserClient = new CouchClient(
+                $url, $this->aclient->getDatabaseName(), ['username' => $username, 'password' => $password]
+            );
+
+            $adm->addDatabaseAdminUser($username);
+
+            $specialUserClient->getDatabaseInfos();
+        }
+
+        {//Invalid parameters
+            $this->expectException(InvalidArgumentException::class);
+            $adm->createUser('', 'asdasdasd');
+        }
+    }
+
+    public function testCreateUserWithSpecialPassword()
+    {
+
+
     }
 
     /**
@@ -327,7 +355,7 @@ class CouchAdminTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($ok->ok, true);
         $ok = $adm->getAllUsers(true);
         $this->assertInternalType('array', $ok);
-        $this->assertCount(3,$ok);
+        $this->assertCount(4, $ok);
 
         //Invalid parameters
         $this->expectException(InvalidArgumentException::class);
@@ -343,7 +371,7 @@ class CouchAdminTest extends PHPUnit_Framework_TestCase
 
         $result2 = $adm->getAllUsers();
         $this->assertInternalType('array', $result2);
-        $this->assertCount(3, $result2);
+        $this->assertCount(4, $result2);
     }
 
     /**
@@ -645,7 +673,7 @@ class CouchAdminTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($ok);
         $security = $adm->getSecurity();
         $this->assertCount(2, $security->members->roles);
-        $this->assertContains('cowboy',$security->members->roles);
+        $this->assertContains('cowboy', $security->members->roles);
         $this->assertTrue($adm->removeDatabaseMemberRole('cowboy'));
         $security = $adm->getSecurity();
         $this->assertCount(1, $security->members->roles);
@@ -729,7 +757,7 @@ class CouchAdminTest extends PHPUnit_Framework_TestCase
         $this->assertTrue($ok);
 
         $security = $adm->getSecurity();
-        $this->assertCount(1,$security->admins->roles);
+        $this->assertCount(1, $security->admins->roles);
 
         //Invalid param
         $this->expectException(InvalidArgumentException::class);

@@ -52,6 +52,7 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttp
         if ($this->socketAdapter == null) {
             $this->initSocketAdapter();
         }
+
         return $this->socketAdapter->continuousQuery($callable, $method, $url, $parameters, $data, $caller);
     }
 
@@ -83,13 +84,20 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttp
             $data = json_encode($data);
         }
         if ($contentType) {
-            $httpHeaders[] = 'Content-Type: ' . $contentType;
+            $httpHeaders[] = 'Content-Type: '.$contentType;
         } else {
             $httpHeaders[] = 'Content-Type: application/json';
         }
-        if ($this->sessioncookie) {
-            $httpHeaders[] = "Cookie: " . $this->sessioncookie;
+
+        switch ($this->getAuthMode()) {
+            case PHPONCOUCH_AUTH_BASIC:
+                $httpHeaders[] = "Authorization: Basic ".base64_encode($this->getAuthToken());
+                break;
+            case PHPONCOUCH_AUTH_COOKIE:
+                $httpHeaders[] = "Cookie: ".$this->getAuthToken();
+                break;
         }
+
         curl_setopt($http, CURLOPT_CUSTOMREQUEST, $method);
 
         if ($method == 'COPY') {
@@ -99,6 +107,7 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttp
         }
         $httpHeaders[] = 'Expect: ';
         curl_setopt($http, CURLOPT_HTTPHEADER, $httpHeaders);
+
         return $http;
     }
 
@@ -118,12 +127,14 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttp
      */
     public function query($method, $url, $parameters = [], $data = null, $contentType = null)
     {
-        if (!in_array($method, $this->httpMethods))
+        if (!in_array($method, $this->httpMethods)) {
             throw new Exception("Bad HTTP method: $method");
+        }
 
-        $url = $this->dsn . $url;
-        if (is_array($parameters) && count($parameters))
-            $url = $url . '?' . http_build_query($parameters);
+        $url = $this->dsn.$url;
+        if (is_array($parameters) && count($parameters)) {
+            $url = $url.'?'.http_build_query($parameters);
+        }
         $http = $this->buildRequest($method, $url, $data, $contentType);
         $this->addCustomOptions($http);
         curl_setopt($http, CURLOPT_HEADER, true);
@@ -132,6 +143,7 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttp
 
         $response = curl_exec($http);
         curl_close($http);
+
         return $response;
     }
 
@@ -149,21 +161,30 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttp
      */
     public function storeFile($url, $file, $contentType)
     {
-        if (!strlen($url))
+        if (!strlen($url)) {
             throw new InvalidArgumentException("Attachment URL can't be empty");
-        if (!strlen($file) || !is_file($file) || !is_readable($file))
+        }
+        if (!strlen($file) || !is_file($file) || !is_readable($file)) {
             throw new InvalidArgumentException("Attachment file does not exist or is not readable");
-        if (!strlen($contentType))
+        }
+        if (!strlen($contentType)) {
             throw new InvalidArgumentException("Attachment Content Type can't be empty");
-        $url = $this->dsn . $url;
+        }
+        $url = $this->dsn.$url;
         $http = curl_init($url);
         $httpHeaders = [
             'Accept: application/json,text/html,text/plain,*/*',
-            'Content-Type: ' . $contentType,
-            'Expect: '
+            'Content-Type: '.$contentType,
+            'Expect: ',
         ];
-        if ($this->sessioncookie) {
-            $httpHeaders[] = "Cookie: " . $this->sessioncookie;
+
+        switch ($this->getAuthMode()) {
+            case PHPONCOUCH_AUTH_BASIC:
+                $httpHeaders[] = "Authorization: Basic ".base64_encode($this->getAuthToken());
+                break;
+            case PHPONCOUCH_AUTH_COOKIE:
+                $httpHeaders[] = "Cookie: ".$this->getAuthToken();
+                break;
         }
         curl_setopt($http, CURLOPT_PUT, 1);
         curl_setopt($http, CURLOPT_HTTPHEADER, $httpHeaders);
@@ -178,6 +199,7 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttp
         $response = curl_exec($http);
         fclose($fstream);
         curl_close($http);
+
         return $response;
     }
 
@@ -195,20 +217,28 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttp
      */
     public function storeAsFile($url, $data, $contentType)
     {
-        if (!strlen($url))
+        if (!strlen($url)) {
             throw new InvalidArgumentException("Attachment URL can't be empty");
-        if (!strlen($contentType))
+        }
+        if (!strlen($contentType)) {
             throw new InvalidArgumentException("Attachment Content Type can't be empty");
-        $url = $this->dsn . $url;
+        }
+        $url = $this->dsn.$url;
         $http = curl_init($url);
         $httpHeaders = [
             'Accept: application/json,text/html,text/plain,*/*',
-            'Content-Type: ' . $contentType,
+            'Content-Type: '.$contentType,
             'Expect: ',
-            'Content-Length: ' . strlen($data)
+            'Content-Length: '.strlen($data),
         ];
-        if ($this->sessioncookie) {
-            $httpHeaders[] = "Cookie: " . $this->sessioncookie;
+
+        switch ($this->getAuthMode()) {
+            case PHPONCOUCH_AUTH_BASIC:
+                $httpHeaders[] = "Authorization: Basic ".base64_encode($this->getAuthToken());
+                break;
+            case PHPONCOUCH_AUTH_COOKIE:
+                $httpHeaders[] = "Cookie: ".$this->getAuthToken();
+                break;
         }
         curl_setopt($http, CURLOPT_CUSTOMREQUEST, 'PUT');
         curl_setopt($http, CURLOPT_HTTPHEADER, $httpHeaders);
@@ -219,6 +249,7 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttp
         $this->addCustomOptions($http);
         $response = curl_exec($http);
         curl_close($http);
+
         return $response;
     }
 
@@ -227,6 +258,7 @@ class CouchHttpAdapterCurl extends AbstractCouchHttpAdapter implements CouchHttp
         if ($this->socketAdapter) {
             $this->socketAdapter->setSessionCookie($cookie);
         }
+
         return parent::setSessionCookie($cookie);
     }
 

@@ -145,26 +145,25 @@ class CouchClient extends Couch
      *
      * @param string $dsn CouchDB server data source name (eg. http://localhost:5984)
      * @param string $dbname CouchDB database name
-     * @param array $options Additionnal configuration options
+     * @param array $options Additional configuration options
      * @throws Exception
      */
     public function __construct($dsn, $dbname, $options = [])
     {
-        // in the case of a cookie based authentification we have to remove user and password infos from the DSN
+        // in the case of a cookie based authentication we have to remove user and password infos from the DSN
         if (array_key_exists('cookie_auth', $options) && $options['cookie_auth']) {
             $parts = parse_url($dsn);
-            if (!array_key_exists('user', $parts) || !array_key_exists('pass', $parts)) {
-                throw new Exception('You should provide a user and a password to use cookie based authentification');
-            }
-            $user = urlencode($parts['user']);
-            $pass = urlencode($parts['pass']);
+
+            $username = $this->_getUsername($parts, $options);
+            $password = $this->_getPassword($parts, $options);
+
             $dsn = $parts['scheme'].'://'.$parts['host'];
             $dsn .= array_key_exists('port', $parts) ? ':'.$parts['port'] : '';
             $dsn .= array_key_exists('path', $parts) ? $parts['path'] : '';
 
             $this->useDatabase($dbname);
             parent::__construct($dsn, $options);
-            $queryParams = http_build_query(['name' => $user, 'password' => $pass]);
+            $queryParams = http_build_query(['name' => $username, 'password' => $password]);
             $rawData = $this->query('POST', '/_session', null, $queryParams, 'application/x-www-form-urlencoded');
             list($headers) = explode("\r\n\r\n", $rawData, 2);
             $headersArray = explode("\r\n", $headers);
@@ -177,23 +176,45 @@ class CouchClient extends Couch
                 }
             }
             if (empty($this->getSessionCookie())) {
-                throw new Exception('Cookie authentification failed');
+                throw new Exception('Cookie authentication failed');
             }
         } else {
             if (array_key_exists('username', $options) && array_key_exists('password', $options)) {
-                $dsn = $this->buildDSNFromUserPass($dsn, $options['username'], $options['password']);
+                $dsn = $this->removeUserPassFromDsn($dsn);
             }
             $this->useDatabase($dbname);
         }
         parent::__construct($dsn, $options);
     }
 
-    protected function buildDSNFromUserPass($dsn, $username, $password)
+    private function _getUsername($dsn_parts, $options)
+    {
+        if (array_key_exists('user', $dsn_parts)) {
+            return $dsn_parts['user'];
+        }
+        if (array_key_exists('username', $options)) {
+            return $options['username'];
+        }
+
+        throw new Exception('Username not found.');
+    }
+
+    private function _getPassword($dsn_parts, $options)
+    {
+        if (array_key_exists('pass', $dsn_parts)) {
+            return $dsn_parts['pass'];
+        }
+        if (array_key_exists('pass', $options)) {
+            return $options['pass'];
+        }
+
+        throw new Exception('Password not found.');
+    }
+
+    protected function removeUserPassFromDsn($dsn)
     {
         $parts = parse_url($dsn);
-        $user = urlencode($username);
-        $pass = urlencode($password);
-        $dsn = $parts['scheme'].'://'.$user.':'.$pass.'@'.$parts['host'];
+        $dsn = $parts['scheme'].'://'.$parts['host'];
         $dsn .= array_key_exists('port', $parts) ? ':'.$parts['port'] : '';
         $dsn .= array_key_exists('path', $parts) ? $parts['path'] : '';
 
