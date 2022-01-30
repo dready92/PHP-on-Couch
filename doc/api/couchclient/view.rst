@@ -6,8 +6,8 @@ This section describes how to use PHP on Couch to retrieve views results from a 
 Creating views
 ==============
 
-As said in the `documentation <http://docs.couchdb.org/en/stable/api/ddoc/index.html/>`_ , views are stored in CouchDB documents called *design documents*. So to create a view, you have to create a design document.
 
+As said in the `documentation <http://docs.couchdb.org/en/stable/api/ddoc/index.html>`_ , views are stored in CouchDB documents called *design documents*. So to create a view, you have to create a design document.
 Example
 
 .. code-block:: php
