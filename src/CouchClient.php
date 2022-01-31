@@ -1491,28 +1491,17 @@ class CouchClient extends Couch
     }
 
     /**
-     * Use the new Mango Query functionnalities to query your database.
+     * Use the new Mango Query functionalities to query your database.
      * @see http://docs.couchdb.org/en/2.0.0/api/database/find.html#db-find
-     * @return
      * @throws CouchException if an error occurs during the transaction.
      * @param array|object $selector An associative array or an object that follow Mango Query selector syntax.
      * everything.
      * @param array|string $index Optional. Let your determine a specific index to use for your query.
-     * @returns array Returns an array of documents.
+     * @returns object _find response
      */
     public function find($selector, $index = null)
     {
-        /*  TODO: Next major version: Return the response object instead of the docs.
-            find() call can returns warnings or bookmarks.
-        */
-        $asArray = $this->resultAsArray;
-        $result = $this->_find('_find', $selector, $index);
-
-        if ($asArray) {
-            return $result['docs'];
-        } else {
-            return $result->docs;
-        }
+        return $this->_find('_find', $selector, $index);
     }
 
     /**

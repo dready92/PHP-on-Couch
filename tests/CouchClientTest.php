@@ -1484,7 +1484,7 @@ EOT;
     {
         //Validate that their is not docs
         $query = ['_conflicts' => ['$exists' => true]];
-        $firstResponse = $this->aclient->conflicts(true)->find($query);
+        $firstResponse = $this->aclient->conflicts(true)->find($query)->docs;
 
         $this->assertCount(0, $firstResponse);
 
@@ -1495,9 +1495,8 @@ EOT;
         );
 
         //Validate that we have a conflict
-        $response = $this->aclient->conflicts(true)->find($query);
+        $response = $this->aclient->conflicts(true)->find($query)->docs;
         $this->assertCount(1, $response);
-
     }
 
     /**
@@ -1530,7 +1529,7 @@ EOT;
         ];
         $this->aclient->storedocs($docs);
 
-        $response1 = $this->aclient->fields(['age'])->find(['firstName' => ['$eq' => 'John']]);
+        $response1 = $this->aclient->fields(['age'])->find(['firstName' => ['$eq' => 'John']])->docs;
         $this->assertCount(1, $response1);
         $this->assertEquals($response1[0]->age, 35);
         $this->assertFalse(isset($response1[0]->firstName));
@@ -1542,7 +1541,7 @@ EOT;
                     ['gender' => ['$eq' => 'Female']],
                 ],
         ];
-        $response2 = $this->aclient->find($selector2);
+        $response2 = $this->aclient->find($selector2)->docs;
         $this->assertcount(1, $response2);
         $this->assertObjectHasAttribute('firstName', $response2[0]);
         $this->assertObjectHasAttribute('lastName', $response2[0]);
@@ -1553,12 +1552,12 @@ EOT;
         $selector3 = [
             'age' => ['$gt' => 16],
         ];
-        $response3 = $this->aclient->limit(1)->find($selector3);
+        $response3 = $this->aclient->limit(1)->find($selector3)->docs;
         $this->assertCount(1, $response3);
-        $response4 = $this->aclient->skip(1)->find($selector3);
+        $response4 = $this->aclient->skip(1)->find($selector3)->docs;
         $this->assertCount(1, $response4);
 
-        $response5 = $this->aclient->limit(1)->sort([['age' => 'desc']])->find(['firstName' => ['$gt' => null]]);
+        $response5 = $this->aclient->limit(1)->sort([['age' => 'desc']])->find(['firstName' => ['$gt' => null]])->docs;
         $this->assertObjectHasAttribute('age', $response5[0]);
         $this->assertEquals(35, $response5[0]->age);
     }
@@ -1585,7 +1584,7 @@ EOT;
         ];
         $this->aclient->storeDocs($docs);
 
-        $response1 = $this->aclient->asArray()->find(['firstName' => 'John']);
+        $response1 = $this->aclient->asArray()->find(['firstName' => 'John'])['docs'];
         $this->assertCount(1, $response1);
         $this->assertEquals($response1[0]['age'], 35);
         $this->assertTrue(isset($response1[0]['firstName']));
