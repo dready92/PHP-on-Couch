@@ -15,10 +15,11 @@ require_once join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'config.php']);
 class CouchClientTest extends PHPUnit_Framework_TestCase
 {
 
-    private $host = 'localhost';
+    private $host = '127.0.0.1';
     private $port = '5984';
-    private $dbname = 'couchclienttest';
-    private $continuousQueryTriggerFile = __DIR__ . DIRECTORY_SEPARATOR . 'continuousquery.lock';
+    private $dbName = '';
+    private $dbCounter = 0;
+    private $continuousQueryTriggerFile = __DIR__.DIRECTORY_SEPARATOR.'continuousquery.lock';
     private $updateFn = <<<EOT
 function(doc,req) {
 	var resp = {query:null,form:null};
@@ -63,10 +64,11 @@ EOT;
         $this->port = $config->getPort();
         $this->url = $config->getUrl($this->host, $this->port, null);
         $this->aUrl = $config->getUrl($this->host, $this->port, $config->getFirstAdmin());
-        $this->couch_server = 'http://' . $this->host . ':' . $this->port . '/';
+        $this->couch_server = 'http://'.$this->host.':'.$this->port.'/';
 
-        $this->client = new CouchClient($this->url, $this->dbname);
-        $this->aclient = new CouchClient($this->aUrl, $this->dbname);
+        $this->dbName = 'couchclienttest'.$this->dbCounter++;
+        $this->client = new CouchClient($this->url, $this->dbName);
+        $this->aclient = new CouchClient($this->aUrl, $this->dbName);
         $this->setupClient($this->aclient);
     }
 
@@ -74,7 +76,7 @@ EOT;
     {
         try {
             $client->deleteDatabase();
-        } catch (Exceptions\CouchNotFoundException $e) {
+        } catch (Exception $e) {
 
         }
         $client->createDatabase();
@@ -124,7 +126,7 @@ EOT;
     {
         $cd = new CouchDocument($this->aclient);
         $cd->set(array(
-            '_id' => 'somedoc'
+            '_id' => 'somedoc',
         ));
         $cd->property1 = "one";
         $cd->property2 = "two";
@@ -173,7 +175,7 @@ EOT;
             "a(zert)y" => true,
             "4azerty" => false,
             "a_$()+-/test" => true,
-            "_azerty" => true
+            "_azerty" => true,
         );
         foreach ($matches as $key => $val) {
             $this->assertEquals($val, CouchClient::isValidDatabaseName($key));
@@ -185,7 +187,7 @@ EOT;
      */
     public function testListDatabases()
     {
-        $expectedDBS = ['_users', $this->dbname, '_replicator'];
+        $expectedDBS = ['_users', $this->dbName, '_replicator'];
         $dbs = $this->aclient->listDatabases();
         foreach ($expectedDBS as $val) {
             $this->assertContains($val, $dbs);
@@ -222,7 +224,7 @@ EOT;
         $infos = $this->aclient->getDatabaseInfos();
         $this->assertInternalType("object", $infos);
         $propsToCheckValues = [
-            'db_name' => "couchclienttest",
+            'db_name' => $this->dbName,
             "doc_count" => 0,
             "doc_del_count" => 0,
             "compact_running" => false,
@@ -263,7 +265,7 @@ EOT;
     public function testGetDatabaseUri()
     {
         $this->assertEquals(
-            $this->couch_server . "couchclienttest",
+            $this->couch_server.$this->dbName,
             $this->client->getDatabaseUri()
         );
     }
@@ -273,7 +275,7 @@ EOT;
      */
     public function testGetDatabaseName()
     {
-        $this->assertEquals("couchclienttest", $this->aclient->getDatabaseName());
+        $this->assertEquals($this->dbName, $this->aclient->getDatabaseName());
     }
 
     /**
@@ -281,7 +283,7 @@ EOT;
      */
     public function testGetServerUri()
     {
-        $this->assertEquals($this->couch_server . "couchclienttest", $this->client->getDatabaseUri());
+        $this->assertEquals($this->couch_server.$this->dbName, $this->client->getDatabaseUri());
         $expected = trim($this->aUrl, '/');
         $actual = $this->aclient->getServerUri();
         $this->assertEquals($actual, $expected);
@@ -342,11 +344,13 @@ EOT;
     {
         return [
             [
-                [null], InvalidArgumentException::class
+                [null],
+                InvalidArgumentException::class,
             ],
             [
-                ["", null, ""], InvalidArgumentException::class
-            ]
+                ["", null, ""],
+                InvalidArgumentException::class,
+            ],
         ];
     }
 
@@ -395,14 +399,17 @@ EOT;
     {
         return [
             [
-                [null, "", "", ""], InvalidArgumentException::class
+                [null, "", "", ""],
+                InvalidArgumentException::class,
             ],
             [
-                ["", null, "", ""], InvalidArgumentException::class
+                ["", null, "", ""],
+                InvalidArgumentException::class,
             ],
             [
-                ["", "", null, ""], InvalidArgumentException::class
-            ]
+                ["", "", null, ""],
+                InvalidArgumentException::class,
+            ],
         ];
     }
 
@@ -444,13 +451,16 @@ EOT;
     {
         return [
             [
-                [null, "", "", ""], InvalidArgumentException::class
+                [null, "", "", ""],
+                InvalidArgumentException::class,
             ],
             [
-                ["", null, "", ""], InvalidArgumentException::class
+                ["", null, "", ""],
+                InvalidArgumentException::class,
             ],
             [
-                ["", "", null, ""], InvalidArgumentException::class
+                ["", "", null, ""],
+                InvalidArgumentException::class,
             ],
         ];
     }
@@ -547,8 +557,9 @@ EOT;
     public function testGetChanges()
     {
         $config = \config::getInstance();
-        if (file_exists($this->continuousQueryTriggerFile))
+        if (file_exists($this->continuousQueryTriggerFile)) {
             unlink($this->continuousQueryTriggerFile);
+        }
         $db = 'getchanges';
         $cookieClient = new CouchClient($this->aclient->dsn(), $db, ['cookie_auth' => true]);
         try {
@@ -563,8 +574,9 @@ EOT;
         $callable = function ($row, $client) use ($counter) {
             $this->assertInstanceOf(CouchClient::class, $client);
             $counter->cnt++;
-            if ($counter->cnt == 3)
+            if ($counter->cnt == 3) {
                 return false;
+            }
         };
 
         $trigger = escapeshellarg($this->continuousQueryTriggerFile);
@@ -649,7 +661,7 @@ EOT;
         $data = array(
             new \stdclass(),
             new \stdclass(),
-            new \stdclass()
+            new \stdclass(),
         );
         $infos = $this->aclient->getDatabaseInfos();
         $this->assertEquals($infos->doc_count, 0);
@@ -679,8 +691,9 @@ EOT;
         $this->assertInternalType("array", $stored);
         $this->assertEquals(count($stored), 3);
         foreach ($stored as $s) {
-            if ($s == reset($stored))
-                continue; //Skip first document because he's legit.
+            if ($s == reset($stored)) {
+                continue;
+            } //Skip first document because he's legit.
             $this->assertInternalType("object", $s);
             $this->assertObjectHasAttribute("error", $s);
             $this->assertEquals($s->error, "conflict");
@@ -693,7 +706,7 @@ EOT;
         $data = array(
             new \stdclass(),
             new \stdclass(),
-            new \stdclass()
+            new \stdclass(),
         );
         $infos = $this->aclient->getDatabaseInfos();
         $this->assertEquals($infos->doc_count, 5);
@@ -735,8 +748,9 @@ EOT;
         $this->assertEquals(0, $this->aclient->getAllDocs()->total_rows);
         $response = $this->aclient->storeDocs($docs);
         $this->assertEquals(2, $this->aclient->getAllDocs()->total_rows);
-        for ($i = 0; $i < 2; $i++)
+        for ($i = 0; $i < 2; $i++) {
             $docs[$i]->_rev = $response[$i]->rev;
+        }
 
         //Delete them
         $this->aclient->deleteDocs($docs);
@@ -796,7 +810,7 @@ EOT;
         $this->aclient->storeDoc($doc);
 
         $update = $this->aclient->updateDocFullAPI("test", "test", array(
-            "data" => array("var1" => "val1/?\"", "var2" => "val2")
+            "data" => array("var1" => "val1/?\"", "var2" => "val2"),
         ));
         $this->assertInternalType("object", $update);
         $this->assertObjectHasAttribute("query", $update);
@@ -851,7 +865,7 @@ EOT;
     {
         $cd = new CouchDocument($this->aclient);
         $cd->set(array(
-            '_id' => 'somedoc'
+            '_id' => 'somedoc',
         ));
         $back = $cd->storeAsAttachment("This is the content", "file.txt", "text/plain");
         $fields = $cd->getFields();
@@ -864,9 +878,13 @@ EOT;
 
         $cd = new CouchDocument($this->aclient);
         $cd->set(array(
-            '_id' => 'somedoc2'
+            '_id' => 'somedoc2',
         ));
-        $back = $cd->storeAttachment(join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']), "text/plain", "file.txt");
+        $back = $cd->storeAttachment(
+            join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']),
+            "text/plain",
+            "file.txt"
+        );
         $fields = $cd->getFields();
 
         $this->assertInternalType("object", $back);
@@ -910,7 +928,7 @@ EOT;
     {
         $cd = new CouchDocument($this->aclient);
         $cd->set(array(
-            '_id' => 'somedoc'
+            '_id' => 'somedoc',
         ));
         $back = $cd->storeAsAttachment("This is the content", "file.txt", "text/plain");
         $fields = $cd->getFields();
@@ -923,9 +941,13 @@ EOT;
 
         $cd = new CouchDocument($this->aclient);
         $cd->set(array(
-            '_id' => 'somedoc2'
+            '_id' => 'somedoc2',
         ));
-        $back = $cd->storeAttachment(join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']), "text/plain", "file.txt");
+        $back = $cd->storeAttachment(
+            join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']),
+            "text/plain",
+            "file.txt"
+        );
         $fields = $cd->getFields();
 
         $this->assertInternalType("object", $back);
@@ -952,7 +974,12 @@ EOT;
         $resp = $this->aclient->storeDoc($doc);
         $doc->_rev = $resp->rev;
         $docName = 'file.txt';
-        $storeResponse = $this->aclient->storeAttachment($doc, join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']), "text/plain", $docName);
+        $storeResponse = $this->aclient->storeAttachment(
+            $doc,
+            join(DIRECTORY_SEPARATOR, [__DIR__, '_config', 'test.txt']),
+            "text/plain",
+            $docName
+        );
         $doc->_rev = $storeResponse->rev;
         $this->assertNotNull($this->aclient->getAttachment($doc, $docName));
         //We delete it
@@ -1011,7 +1038,7 @@ EOT;
         return [
             ["", InvalidArgumentException::class],
             [$invalidObject, \Exception::class],
-            [null, null]
+            [null, null],
         ];
     }
 
@@ -1042,8 +1069,9 @@ EOT;
 
         $indexedDocs = [];
         $len = count($names);
-        for ($i = 0; $i < $len; $i++)
-            $indexedDocs[$names[$i]] = (object)['_id' => 'doc_' . ($i + 1), 'name' => $names[$i]];
+        for ($i = 0; $i < $len; $i++) {
+            $indexedDocs[$names[$i]] = (object)['_id' => 'doc_'.($i + 1), 'name' => $names[$i]];
+        }
 
 
         $dd = (object)['_id' => '_design/test', 'type' => 'javascript', 'views' => (object)[]];
@@ -1098,8 +1126,8 @@ EOT;
 					if ( doc.type ) {
 						emit( [ doc.type, doc._id ] , doc);
 					}
-				}"
-            )
+				}",
+            ),
         );
         $lists = array(
             "list1" => "function (head, req) {
@@ -1109,7 +1137,7 @@ EOT;
 					back.push(row);
 				}
 				send(JSON.stringify(back));
-			}"
+			}",
         );
         $doc->views = $views;
         $doc->lists = $lists;
@@ -1126,14 +1154,14 @@ EOT;
 					back.push(row);
 				}
 				send(JSON.stringify(back));
-			}"
+			}",
         );
         $doc->lists = $lists;
 
         $docs = array(
             array('_id' => 'first', 'type' => 'test', 'param' => 'hello'),
             array('_id' => 'second', 'type' => 'test2', 'param' => 'hello2'),
-            array('_id' => 'third', 'type' => 'test', 'param' => 'hello3')
+            array('_id' => 'third', 'type' => 'test', 'param' => 'hello3'),
         );
         $this->aclient->storeDocs($docs);
         $test = $this->aclient->getList('test', 'list1', 'simple', ['stop' => 'test2']);
@@ -1146,7 +1174,11 @@ EOT;
             $this->assertObjectHasAttribute('value', $row);
         }
 
-        $test = $this->aclient->startkey(array('test'))->endkey(array('test', array()))->getList('test', 'list1', 'simple');
+        $test = $this->aclient->startkey(array('test'))->endkey(array('test', array()))->getList(
+            'test',
+            'list1',
+            'simple'
+        );
         $this->assertInternalType("array", $test);
         $this->assertEquals(count($test), 2);
         foreach ($test as $row) {
@@ -1170,8 +1202,8 @@ EOT;
 					if ( doc.type ) {
 						emit( [ doc.type, doc._id ] , doc);
 					}
-				}"
-            )
+				}",
+            ),
         );
         $lists = array(
             "list1" => "function (head, req) {
@@ -1181,14 +1213,14 @@ EOT;
 					back.push(row);
 				}
 				send(JSON.stringify(back));
-			}"
+			}",
         );
         $doc->views = $views;
         $doc->lists = $lists;
         $docs = array(
             array('_id' => 'first', 'type' => 'test', 'param' => 'hello'),
             array('_id' => 'second', 'type' => 'test2', 'param' => 'hello2'),
-            array('_id' => 'third', 'type' => 'test', 'param' => 'hello3')
+            array('_id' => 'third', 'type' => 'test', 'param' => 'hello3'),
         );
         $this->aclient->storeDocs($docs);
 
@@ -1204,11 +1236,17 @@ EOT;
 					back.push(row);
 				}
 				send(JSON.stringify(back));
-			}"
+			}",
         );
         $doc->lists = $lists;
 
-        $test = $this->aclient->startkey(array('test2'))->endkey(array('test2', array()))->getForeignList('test2', 'list2', 'test', 'simple', ['stop' => 'test2']);
+        $test = $this->aclient->startkey(array('test2'))->endkey(array('test2', array()))->getForeignList(
+            'test2',
+            'list2',
+            'test',
+            'simple',
+            ['stop' => 'test2']
+        );
         $this->assertInternalType("array", $test);
         $this->assertEquals(1, count($test));
         foreach ($test as $row) {
@@ -1276,7 +1314,7 @@ EOT;
 				ro.body = JSON.stringify(back);
 				ro.headers = { \"content-type\": 'application/json' };
 				return ro;
-			}"
+			}",
         );
         $doc->shows = $show;
         $test = $this->aclient->getShow("test", "simple", "_design/test");
@@ -1334,7 +1372,7 @@ EOT;
         $cd = new CouchDocument($this->aclient);
         $cd->set(array(
             '_id' => '_design/test',
-            'language' => 'javascript'
+            'language' => 'javascript',
         ));
         $this->aclient->compactAllViews();
     }
@@ -1401,9 +1439,9 @@ EOT;
         $expectedName = 'globalIdx';
         $response2 = $this->aclient->createIndex(['firstName', 'birthDate', 'lastName'], $expectedName, $ddocId);
         $this->assertEquals($response2->name, $expectedName);
-        $this->assertStringStartsWith('_design/' . $ddocId, $response2->id);
+        $this->assertStringStartsWith('_design/'.$ddocId, $response2->id);
 
-        $doc = $this->aclient->getDoc('_design/' . $ddocId);
+        $doc = $this->aclient->getDoc('_design/'.$ddocId);
         $this->assertNotEmpty($doc);
 
         $this->expectException("\BadMethodCallException");
@@ -1418,7 +1456,7 @@ EOT;
     {
         $indexNames = ['_all_docs'];
         for ($i = 0; $i < 5; $i++) {
-            $indexNames[] = 'indexName' . $i;
+            $indexNames[] = 'indexName'.$i;
             $this->aclient->createIndex(["firstName", "lastName"], $indexNames[$i]);
         }
 
@@ -1451,7 +1489,10 @@ EOT;
         $this->assertCount(0, $firstResponse);
 
         $this->aclient->storeDoc((object)['_id' => 'doc', 'a' => 1]);
-        $this->aclient->storeDoc((object)['_id' => 'doc', 'a' => 2, '_rev' => "2-23202479633c2b380f79507a776743d5"], false);
+        $this->aclient->storeDoc(
+            (object)['_id' => 'doc', 'a' => 2, '_rev' => "2-23202479633c2b380f79507a776743d5"],
+            false
+        );
 
         //Validate that we have a conflict
         $response = $this->aclient->conflicts(true)->find($query);
@@ -1472,20 +1513,20 @@ EOT;
                 'firstName' => 'John',
                 'lastName' => 'Smith',
                 'age' => 35,
-                'gender' => 'Male'
+                'gender' => 'Male',
             ],
             [
                 'firstName' => 'Jimmy',
                 'lastName' => 'Neutron',
                 'age' => 13,
-                'gender' => 'Male'
+                'gender' => 'Male',
             ],
             [
                 'firstName' => 'Jenny',
                 'lastName' => 'Rugby',
                 'age' => 23,
-                'gender' => 'Female'
-            ]
+                'gender' => 'Female',
+            ],
         ];
         $this->aclient->storedocs($docs);
 
@@ -1498,8 +1539,8 @@ EOT;
             '$and' =>
                 [
                     ['age' => ['$gt' => 16]],
-                    ['gender' => ['$eq' => 'Female']]
-                ]
+                    ['gender' => ['$eq' => 'Female']],
+                ],
         ];
         $response2 = $this->aclient->find($selector2);
         $this->assertcount(1, $response2);
@@ -1510,7 +1551,7 @@ EOT;
 
         //Test limit and skip options
         $selector3 = [
-            'age' => ['$gt' => 16]
+            'age' => ['$gt' => 16],
         ];
         $response3 = $this->aclient->limit(1)->find($selector3);
         $this->assertCount(1, $response3);
@@ -1533,13 +1574,13 @@ EOT;
                 'firstName' => 'John',
                 'lastName' => 'Smith',
                 'age' => 35,
-                'gender' => 'Male'
+                'gender' => 'Male',
             ],
             [
                 'firstName' => 'Bob',
                 'lastName' => 'Jackson',
                 'age' => 38,
-                'gender' => 'Others'
+                'gender' => 'Others',
             ],
         ];
         $this->aclient->storeDocs($docs);
@@ -1567,20 +1608,20 @@ EOT;
                 'firstName' => 'John',
                 'lastName' => 'Smith',
                 'age' => 35,
-                'gender' => 'Male'
+                'gender' => 'Male',
             ],
             [
                 'firstName' => 'Jimmy',
                 'lastName' => 'Neutron',
                 'age' => 13,
-                'gender' => 'Male'
+                'gender' => 'Male',
             ],
             [
                 'firstName' => 'Jenny',
                 'lastName' => 'Rugby',
                 'age' => 23,
-                'gender' => 'Female'
-            ]
+                'gender' => 'Female',
+            ],
         ];
         $this->aclient->storedocs($docs);
 
@@ -1594,8 +1635,8 @@ EOT;
             '$and' =>
                 [
                     ['age' => ['$gt' => 16]],
-                    ['gender' => ['$eq' => 'Female']]
-                ]
+                    ['gender' => ['$eq' => 'Female']],
+                ],
         ];
         $response2 = $method->invoke($this->aclient, '_find', $selector2)->docs;
         $this->assertcount(1, $response2);
@@ -1606,7 +1647,7 @@ EOT;
 
         //Test limit and skip options
         $selector3 = [
-            'age' => ['$gt' => 16]
+            'age' => ['$gt' => 16],
         ];
         $this->aclient->limit(1);
         $response3 = $method->invoke($this->aclient, '_find', $selector3)->docs;
@@ -1633,20 +1674,20 @@ EOT;
                 'firstName' => 'John',
                 'lastName' => 'Smith',
                 'age' => 35,
-                'gender' => 'Male'
+                'gender' => 'Male',
             ],
             [
                 'firstName' => 'Jimmy',
                 'lastName' => 'Neutron',
                 'age' => 13,
-                'gender' => 'Male'
+                'gender' => 'Male',
             ],
             [
                 'firstName' => 'Jenny',
                 'lastName' => 'Rugby',
                 'age' => 23,
-                'gender' => 'Female'
-            ]
+                'gender' => 'Female',
+            ],
         ];
         $this->aclient->storeDocs($docs);
 
@@ -1669,8 +1710,9 @@ EOT;
 
         $indexedDocs = [];
         $len = count($names);
-        for ($i = 0; $i < $len; $i++)
-            $indexedDocs[$names[$i]] = (object)['_id' => 'doc_' . ($i + 1), 'name' => $names[$i], 'stable' => true];
+        for ($i = 0; $i < $len; $i++) {
+            $indexedDocs[$names[$i]] = (object)['_id' => 'doc_'.($i + 1), 'name' => $names[$i], 'stable' => true];
+        }
 
         $designDoc = (object)['_id' => '_design/stable_test', 'type' => 'javascript', 'views' => (object)[]];
         $view = (object)['map' => "function(doc){if(doc.stable)emit(doc.name);}"];

@@ -20,7 +20,7 @@ class CouchTest extends PHPUnit_Framework_TestCase
 
     private $host = 'localhost';
     private $port = '5984';
-    private $dbname = 'couchclienttest';
+    private $dbname = 'couchtest';
 
     /**
      *

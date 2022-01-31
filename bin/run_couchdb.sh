@@ -2,13 +2,13 @@
 
 # Install CouchDB Master
 TEST_DOCKER_IMAGE_NAME="${TEST_DOCKER_IMAGE_NAME:-phponcouch_test_db}"
-DSN=http://admin:admin@127.0.0.1:5984
+DSN=http://admin:password@127.0.0.1:5984
 
 echo "Starting CouchDB 3 Docker with name: $TEST_DOCKER_IMAGE_NAME"
 docker run --ulimit nofile=2048:2048 -d -p 5984:5984 \
-    --env COUCHDB_USER=admin --env COUCHDB_PASSWORD=admin \
+    --env COUCHDB_USER=admin --env COUCHDB_PASSWORD=password \
     --name $TEST_DOCKER_IMAGE_NAME \
-    couchdb --with-haproxy -n 1
+    couchdb
 
 # wait for couchdb to start
 while [ '200' != $(curl -s -o /dev/null -w %{http_code} $DSN/_all_dbs) ]; do

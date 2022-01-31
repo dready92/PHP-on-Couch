@@ -40,7 +40,7 @@ class config
             ],
             [
                 'username'=>'admin',
-                'password'=>'admin',
+                'password'=>'password',
                 'isAdmin'=>true
             ]
         ];
